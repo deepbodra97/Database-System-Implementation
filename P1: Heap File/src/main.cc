@@ -99,13 +99,13 @@ int main () {
 
 
 	// Test: Sequence of reads and writes
-	/*Schema mySchema ("catalog", "lineitem");
-	FILE *tableFile = fopen ("../files/tpch-10mb/lineitem.tbl", "r");
+	Schema mySchema ("catalog", "lineitem");
+	FILE *tableFile = fopen ("../../data/tpch-10mb/lineitem.tbl", "r");
 	Record temp1;
 	Record temp2;
 
 	DBFile dbfile;
-	dbfile.Create((char *)"./temp_output_files/dbfile", heap, NULL);
+	dbfile.Create((char *)"./dbfile.bin", heap, NULL);
 
 	// read from lineitem.tbl and add to dbfile
 	int counter=0;
@@ -119,7 +119,7 @@ int main () {
 	cout<<"nWrite:"<<counter<<endl;
 	
 	// read dbfile from start
-	dbfile.MoveFirst();
+	// dbfile.MoveFirst();
 	temp2 = *(dbfile.ptrCurrentRecord);
 	counter=0;
 	while(1){
@@ -129,7 +129,7 @@ int main () {
 			break;
 		}
 	}
-	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;
+	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 	
 	// read from lineitem.tbl and append to dbfile
 	counter=0;
@@ -140,7 +140,7 @@ int main () {
 			break;
 		}
 	}
-	cout<<"nWrite:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;
+	cout<<"nWrite:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 
 	// read dbfile from start
 	dbfile.MoveFirst();
@@ -153,10 +153,10 @@ int main () {
 			break;
 		}
 	}
-	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;
+	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 
-	dbfile.Close();*/
-
+	dbfile.Close();
+	
 
 
 
@@ -198,7 +198,7 @@ int main () {
 
 
 	// Test: Load
-	Schema mySchema ("catalog", "lineitem");
+	/*Schema mySchema ("catalog", "lineitem");
 	DBFile dbfile;
 	dbfile.Create((char *)"./temp_output_files/test_load", heap, NULL);
 	dbfile.Load(mySchema, "../files/tpch-10mb/lineitem.tbl");
@@ -213,7 +213,7 @@ int main () {
 			break;
 		}
 	}
-	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;
+	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;*/
     // return 0;
 }
 

@@ -11,8 +11,11 @@
 
 DBFile::DBFile () {
 	ptrCurrentRecord = new Record();
-	pageNumber = 0;
+	currentPageNumber = 0;
 	fileMode = WRITE;
+
+	readPageNumber = 0;
+	readPageRecordNumber = 0;
 }
 
 
@@ -47,9 +50,11 @@ int DBFile::Open (const char *f_path) {
 }
 
 void DBFile::MoveFirst () {
+	readPageNumber = 0;
+	readPageRecordNumber = 0;
 	SwitchToReadMode(); // change to read mode
-	pageNumber = 0; // read from start
-	file.GetPage(&page, pageNumber); // get the first page
+	currentPageNumber = 0; // read from start
+	file.GetPage(&page, currentPageNumber); // get the first page
 	page.GetFirst(ptrCurrentRecord); // initialise the current pointer to the first record
 }
 
@@ -62,8 +67,8 @@ void DBFile::Add (Record &rec) {
 	SwitchToWriteMode(); // switch to write mode
 	int addStatus = page.Append(&rec);
 	if(addStatus == 0){ // is page full?
-		file.AddPage(&page, pageNumber); // add new page to the file
-		pageNumber+=1; // increase the current page number by 1
+		file.AddPage(&page, currentPageNumber); // add new page to the file
+		currentPageNumber+=1; // increase the current page number by 1
 		page.EmptyItOut(); // empty out the newly added page because the content is same as the previous page
 		page.Append(&rec); // add the record to the page
 	}
@@ -72,15 +77,18 @@ void DBFile::Add (Record &rec) {
 int DBFile::GetNext (Record &fetchme) {
 	if(page.GetFirst(&fetchme) == 1){ // is there a record to fetch?
 		ptrCurrentRecord = &fetchme; // update ptrCurrentRecord to the newly fetched record
+		readPageRecordNumber++;
 		return 1;
 	}
-	pageNumber+=1; // page has been consumed. Increment page number
-	if(pageNumber == file.GetLength()-1){ // if there is no next page return 0
+	currentPageNumber+=1; // page has been consumed. Increment page number
+	if(currentPageNumber == file.GetLength()-1){ // if there is no next page return 0
 		return 0;
 	}
-	file.GetPage(&page, pageNumber); // get the next page
+	file.GetPage(&page, currentPageNumber); // get the next page
+	readPageNumber+=1;
 	if(page.GetFirst(&fetchme) == 1){ // record found
 		ptrCurrentRecord = &fetchme; // update ptrCurrentRecord to the newly fetched record
+		readPageRecordNumber++;
 		return 1;
 	}
 	return 0; // record not found in the next page return 0
@@ -104,11 +112,11 @@ void DBFile::SwitchToWriteMode(){
 	}
 	fileMode = WRITE; // change fileMode to write
 	/*
-	* if file.GetLength()-2<0, then there are no pages except the first blank page so pageNumber=0
-	* else pageNumber=file.GetLength()-2 because the first page is blank
+	* if file.GetLength()-2<0, then there are no pages except the first blank page so currentPageNumber=0
+	* else currentPageNumber=file.GetLength()-2 because the first page is blank
 	*/
-	pageNumber = file.GetLength()-2<0?0:file.GetLength()-2; 
-	file.GetPage(&page, pageNumber); // get the required page
+	currentPageNumber = file.GetLength()-2<0?0:file.GetLength()-2; 
+	file.GetPage(&page, currentPageNumber); // get the required page
 }
 
 void DBFile::SwitchToReadMode(){
@@ -117,6 +125,13 @@ void DBFile::SwitchToReadMode(){
 	}
 	fileMode = READ; // change fileMode to read
 	if(page.GetNumRecs() != 0){ // if the current page has records
-		file.AddPage(&page, pageNumber); // add the dirty page to the file
+		file.AddPage(&page, currentPageNumber); // add the dirty page to the file
+	}
+	file.GetPage(&page, readPageNumber); // get the page that was being read earlier(before the write started)
+	Record temp;
+	for(int i=0; i<readPageRecordNumber; i++){ // move to the record that was being pointed to earlier (before the write started)
+		if(GetNext(temp)){
+			ptrCurrentRecord = &temp;
+		}
 	}
 }

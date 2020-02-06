@@ -27,9 +27,11 @@ public:
 
 	// extra state variables required
 	Record *ptrCurrentRecord; // pointer to the current record
-	int pageNumber; // current page number that is in the main memory
+	int currentPageNumber; // current page number that is in the main memory
 	fMode fileMode; // to track if the file is currently being written to or read from
 
+	int readPageNumber;
+	int readPageRecordNumber;
 
 	DBFile (); 
 
