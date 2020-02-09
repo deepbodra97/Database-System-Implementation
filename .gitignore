@@ -1,6 +1,7 @@
 data/
 
 *.bin
+*.bin.bigq
 
 *.o
 *.out
