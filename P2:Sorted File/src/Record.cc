@@ -15,6 +15,7 @@ Record :: ~Record () {
 		delete [] bits;
 	}
 	bits = NULL;
+
 }
 
 

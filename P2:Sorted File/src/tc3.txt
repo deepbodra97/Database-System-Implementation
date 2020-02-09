@@ -1,0 +1,4 @@
+2
+6
+128
+(o_totalprice) AND (o_custkey)

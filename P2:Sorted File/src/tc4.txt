@@ -1,0 +1,4 @@
+2
+1
+8
+(n_regionkey) AND (n_name)
