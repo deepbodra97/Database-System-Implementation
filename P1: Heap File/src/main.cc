@@ -119,15 +119,11 @@ int main () {
 	cout<<"nWrite:"<<counter<<endl;
 	
 	// read dbfile from start
-	// dbfile.MoveFirst();
-	temp2 = *(dbfile.ptrCurrentRecord);
+	dbfile.MoveFirst();
 	counter=0;
-	while(1){
-		// temp.Print(&mySchema);
+	while(dbfile.GetNext(temp2) || counter < 5000){
+		// temp2.Print(&mySchema);
 		counter++;
-		if(!dbfile.GetNext(temp2) || counter == 5000){
-			break;
-		}
 	}
 	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 	
@@ -144,19 +140,15 @@ int main () {
 
 	// read dbfile from start
 	dbfile.MoveFirst();
-	temp2 = *(dbfile.ptrCurrentRecord);
 	counter=0;
-	while(1){
-		// temp.Print(&mySchema);
+	while(dbfile.GetNext(temp2)){
+		// temp2.Print(&mySchema);
 		counter++;
-		if(!dbfile.GetNext(temp2)){
-			break;
-		}
 	}
 	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 
 	dbfile.Close();
-	
+		
 
 
 
