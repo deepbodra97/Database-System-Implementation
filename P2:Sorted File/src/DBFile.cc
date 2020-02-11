@@ -11,6 +11,8 @@
 
 DBFile::DBFile () {
 	ptrCurrentRecord = new Record();
+	readAllRecords = false;
+
 	currentPageNumber = 0;
 	fileMode = WRITE;
 
@@ -50,6 +52,7 @@ int DBFile::Open (const char *f_path) {
 }
 
 void DBFile::MoveFirst () {
+	readAllRecords = false;
 	readPageNumber = 0;
 	readPageRecordNumber = 0;
 	SwitchToReadMode(); // change to read mode
@@ -75,23 +78,28 @@ void DBFile::Add (Record &rec) {
 }
 
 int DBFile::GetNext (Record &fetchme) {
-	if(page.GetFirst(&fetchme) == 1){ // is there a record to fetch?
-		ptrCurrentRecord = &fetchme; // update ptrCurrentRecord to the newly fetched record
-		readPageRecordNumber++;
-		return 1;
-	}
-	currentPageNumber+=1; // page has been consumed. Increment page number
-	if(currentPageNumber == file.GetLength()-1){ // if there is no next page return 0
+	if(readAllRecords){ // if the end of the file has been reached
 		return 0;
 	}
-	file.GetPage(&page, currentPageNumber); // get the next page
-	readPageNumber+=1;
-	if(page.GetFirst(&fetchme) == 1){ // record found
-		ptrCurrentRecord = &fetchme; // update ptrCurrentRecord to the newly fetched record
+	fetchme.Consume(ptrCurrentRecord);
+
+	if(page.GetFirst(ptrCurrentRecord) == 1){ // is there a record to fetch?
 		readPageRecordNumber++;
 		return 1;
 	}
-	return 0; // record not found in the next page return 0
+
+	currentPageNumber+=1; // page has been consumed. Increment page number
+	if(currentPageNumber == file.GetLength()-1){ // if there is no next page return 0
+		readAllRecords = true;
+		return 1;
+	}
+
+	file.GetPage(&page, currentPageNumber); // get the next page
+	readPageNumber+=1;
+	if(page.GetFirst(ptrCurrentRecord) == 1){ // record found
+		readPageRecordNumber++;
+		return 1;
+	}
 }
 
 int DBFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
