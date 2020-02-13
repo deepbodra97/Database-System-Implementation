@@ -120,16 +120,16 @@ int main (int argc, char *argv[]) {
 	relation *rel_ptr[] = {n, r, c, p, ps, o, li};
 
 	int tindx = 0;
-	while (tindx < 1 || tindx > 3) {
+	/*while (tindx < 1 || tindx > 3) {
 		cout << " select test option: \n";
 		cout << " \t 1. sort \n";
 		cout << " \t 2. sort + display \n";
 		cout << " \t 3. sort + write \n\t ";
 		cin >> tindx;
-	}
-
+	}*/
+	tindx = 1;
 	int findx = 0;
-	while (findx < 1 || findx > 7) {
+	/*while (findx < 1 || findx > 7) {
 		cout << "\n select dbfile to use: \n";
 		cout << "\t 1. nation \n";
 		cout << "\t 2. region \n";
@@ -139,13 +139,14 @@ int main (int argc, char *argv[]) {
 		cout << "\t 6. orders \n";
 		cout << "\t 7. lineitem \n \t ";
 		cin >> findx;
-	}
+	}*/
+	findx = 7;
 	rel = rel_ptr [findx - 1];
 
 	int runlen;
 	cout << "\t\n specify runlength:\n\t ";
-	cin >> runlen;
-	
+	// cin >> runlen;
+	runlen = 5;
 	test1 (tindx, runlen);
 
 	cleanup ();
