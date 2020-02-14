@@ -140,7 +140,7 @@ int main (int argc, char *argv[]) {
 		cout << "\t 7. lineitem \n \t ";
 		cin >> findx;
 	}*/
-	findx = 7;
+	findx = 1;
 	rel = rel_ptr [findx - 1];
 
 	int runlen;

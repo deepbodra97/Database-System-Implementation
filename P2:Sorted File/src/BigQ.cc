@@ -64,7 +64,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	bigQMemberHolder = (BigQMemberHolder*)arg;
 
 	Record recordFromPipe;
-	Schema mySchema ("catalog", "lineitem");
+	Schema mySchema ("catalog", "nation");
 
 	File runFile;
 	Page runPage;
