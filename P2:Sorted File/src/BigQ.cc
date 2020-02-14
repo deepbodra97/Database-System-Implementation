@@ -31,12 +31,40 @@ class RecordComparator{
 		}
 };
 
+class RunRecord{
+	public:
+		Record record;
+		int runNumber;
+};
+
+class RunRecordComparator{
+	ComparisonEngine comparisonEngine;
+	OrderMaker *sortorder;
+
+	public:
+		RunRecordComparator(OrderMaker sortorder){
+			this->sortorder = &sortorder;
+		}
+
+		bool operator()(RunRecord *left, RunRecord *right){
+			return comparisonEngine.Compare(&(left->record), &(right->record), sortorder)<0;
+		}
+};
+
+class RunRecordMetaData{
+	public:
+		Page page;
+		int currentPageNumber;
+		int endPageNumber;
+};
+
+
 void *TwoPassMultiwayMergeSort (void *arg) {
 	BigQMemberHolder *bigQMemberHolder;
 	bigQMemberHolder = (BigQMemberHolder*)arg;
 
 	Record recordFromPipe;
-	// Schema mySchema ("catalog", "nation");
+	Schema mySchema ("catalog", "lineitem");
 
 	File runFile;
 	Page runPage;
@@ -65,7 +93,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 					// (*it)->Print(&mySchema);
 
 					if(runPage.Append(*it) == 0){
-						cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
+						// cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
 						runFile.AddPage(&runPage, runFile.GetLength()-1<0?0:runFile.GetLength()-1);
 						runPage.EmptyItOut();
 						runPage.Append(*it);
@@ -73,7 +101,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 				}
 
 				if(runPage.GetNumRecs()!=0){
-					cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
+					// cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
 					runFile.AddPage(&runPage, runFile.GetLength()-1<0?0:runFile.GetLength()-1);
 					runPage.EmptyItOut();
 				}
@@ -93,7 +121,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 		for(std::vector<Record*>::iterator it=runVector.begin(); it!=runVector.end(); ++it){ // print the records of this run
 			// (*it)->Print(&mySchema);
 			if(runPage.Append(*it) == 0){
-				cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
+				// cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
 				runFile.AddPage(&runPage, runFile.GetLength()-1<0?0:runFile.GetLength()-1);
 				runPage.EmptyItOut();
 				runPage.Append(*it);
@@ -101,16 +129,69 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 		}
 
 		if(runPage.GetNumRecs()!=0){
-			cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
+			// cout<<"runFile.GetLength() = "<<runFile.GetLength()<<endl;
 			runFile.AddPage(&runPage, runFile.GetLength()-1<0?0:runFile.GetLength()-1);
 			runPage.EmptyItOut();
 		}
 
 		nPagesFilledForARun = 0;
+		// free the Record objects lying around in the memory
+		for(vector<Record *>::iterator it=runVector.begin();it!=runVector.end();++it){
+	        delete *it;
+	    }
 		runVector.clear();
 	}
 	runFile.Close();
 
+	// Phase 2
+	runFile.Open(1, "./runFile.bin");
+	int nPages = runFile.GetLength()-1;
+
+	priority_queue<RunRecord*, vector<RunRecord*>, RunRecordComparator> priorityQueue(*bigQMemberHolder->sortorder);
+
+	if(nPages==0){
+		cout<<"There are no pages in the runFile";
+	}else{
+
+		int nRuns = ceil((float)nPages/bigQMemberHolder->runVectorlen);
+		
+		RunRecordMetaData runRecordMetaData[nRuns];
+
+		for(int i=0, startPageNumber=0; i<nRuns; i++, startPageNumber+=bigQMemberHolder->runVectorlen){
+			cout<<"(startPageNumber, endPageNumber):"<<startPageNumber<<","<<startPageNumber+bigQMemberHolder->runVectorlen-1<<endl;
+			runRecordMetaData[i].currentPageNumber = startPageNumber;
+			runRecordMetaData[i].endPageNumber = startPageNumber+bigQMemberHolder->runVectorlen-1;
+			runFile.GetPage(&runRecordMetaData[i].page, startPageNumber);
+			if(i==nRuns-1 && nPages%bigQMemberHolder->runVectorlen!=0){
+				runRecordMetaData[i].endPageNumber=nPages%bigQMemberHolder->runVectorlen;
+			}
+			RunRecord *runRecord = new RunRecord;
+			runRecordMetaData[i].page.GetFirst(&(runRecord->record));
+			runRecord->runNumber = i;
+			priorityQueue.push(runRecord);
+		}
+
+		// priorityQueue.top()->record.Print(&mySchema);
+		while(!priorityQueue.empty()){
+			RunRecord *outputRunRecord = priorityQueue.top();
+			priorityQueue.pop();
+			bigQMemberHolder->out->Insert(&(outputRunRecord->record));
+
+			RunRecord *newRunRecord = new RunRecord;
+			if(runRecordMetaData[outputRunRecord->runNumber].page.GetFirst(&(newRunRecord->record)) == 1){
+				newRunRecord->runNumber = outputRunRecord->runNumber;
+				priorityQueue.push(newRunRecord);
+			} else{
+				if(runRecordMetaData[outputRunRecord->runNumber].currentPageNumber <= runRecordMetaData[outputRunRecord->runNumber].endPageNumber){
+					runRecordMetaData[outputRunRecord->runNumber].currentPageNumber += 1;
+					runFile.GetPage(&(runRecordMetaData[outputRunRecord->runNumber].page), runRecordMetaData[outputRunRecord->runNumber].currentPageNumber);
+					runRecordMetaData[outputRunRecord->runNumber].page.GetFirst(&(newRunRecord->record));
+					priorityQueue.push(newRunRecord);
+				}
+			}
+		}
+	}
+	runFile.Close();
 	bigQMemberHolder->out->ShutDown();
 }
 
