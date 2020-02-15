@@ -55,6 +55,10 @@ void *consumer (void *arg) {
 		if (prev && last) {
 			if (ceng.Compare (prev, last, t->order) == 1) {
 				err++;
+				cout<<"-----"<<endl;
+				prev->Print(rel->schema());
+				last->Print(rel->schema());
+				cout<<"-----"<<endl;
 			}
 			if (t->write) {
 				dbfile.Add (*prev);
@@ -144,7 +148,6 @@ int main (int argc, char *argv[]) {
 	int runlen;
 	cout << "\t\n specify runlength:\n\t ";
 	cin >> runlen;
-	runlen = 5;
 	test1 (tindx, runlen);
 
 	cleanup ();
