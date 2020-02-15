@@ -51,7 +51,7 @@ class RunRecordComparator{
 		}
 
 		bool operator()(RunRecord *left, RunRecord *right){
-			return comparisonEngine.Compare(&(left->record), &(right->record), sortorder)<0;
+			return comparisonEngine.Compare(&(left->record), &(right->record), sortorder)>=0;
 		}
 };
 
@@ -141,7 +141,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 		for(vector<Record *>::iterator it=runVector.begin();it!=runVector.end();++it){
 	        delete *it;
 	    }
-		runVector.clear();
+		runVector.clear(); // free the space occupied by the vector
 	}
 	
 
@@ -154,15 +154,32 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	
 	runFile.Open(1, "./runFile.bin");
 	int nPages = runFile.GetLength()-1;
-	cout<<"nPages:"<<nPages<<endl;
+	// cout<<"nPages:"<<nPages<<endl;
 	priority_queue<RunRecord*, vector<RunRecord*>, RunRecordComparator> priorityQueue(*bigQMemberHolder->sortorder); // priority queue to merge the records
 
 	if(nPages==0){
-		cout<<"There are no pages in the runFile";
+		cout<<"RunFile is empty! There are no pages in the runFile"<<endl;
 	}else{
 
+		// test
+		// print entire runFile
+		/*Schema mySchema("catalog", "partsupp");
+		Page printPage;
+		int printPageNumber=0;
+		Record printRecord;
+		for(int i=0; i<10; i++){
+			runFile.GetPage(&printPage, printPageNumber);
+			if(printPage.GetFirst(&printRecord) == 1){
+				printRecord.Print(&mySchema);
+			}
+			while(printPage.GetFirst(&printRecord) == 1){
+					
+			}
+			printPageNumber+=1;
+		}*/
+
 		int nRuns = ceil((float)nPages/bigQMemberHolder->runVectorlen); // total number of runs = ceil(number of pages/run length)
-		cout<<"nRuns:"<<nRuns<<endl;
+		// cout<<"nRuns:"<<nRuns<<endl;
 		RunRecordMetaData runRecordMetaData[nRuns]; // acts as a buffer for the merge phase. new records will be  picked from this and added to the priority queue
 
 		// init runRecordMetaData
@@ -177,10 +194,10 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 			runRecordMetaData[i].page.GetFirst(&(runRecord->record)); // get the first record from the page
 			runRecord->runNumber = i; // set the run number
 			priorityQueue.push(runRecord); // push the record to the priority queue
-			cout<<"(startPageNumber, endPageNumber):"<<runRecordMetaData[i].currentPageNumber<<","<<runRecordMetaData[i].endPageNumber<<endl;
+			// cout<<"(startPageNumber, endPageNumber):"<<runRecordMetaData[i].currentPageNumber<<","<<runRecordMetaData[i].endPageNumber<<endl;
 		}
 
-		// priorityQueue.top()->record.Print(&mySchema);
+		
 		while(!priorityQueue.empty()){ // while the queue has runrecords
 			RunRecord *outputRunRecord = priorityQueue.top(); // get a pointer to the smallest runrecord in the queue
 			priorityQueue.pop(); // remove the runrecord from the queue
@@ -203,6 +220,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 			}
 		}
 	}
+
 	runFile.Close();
 	remove("./runFile.bin");
 	
