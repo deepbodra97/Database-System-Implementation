@@ -7,6 +7,10 @@ ifdef linux
 tag = -n
 endif
 
+# remove
+readRun.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o readRun.o
+	$(CC) -o readRun.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o readRun.o -lfl
+
 main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o Pipe.o y.tab.o lex.yy.o main.o
 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o Pipe.o y.tab.o lex.yy.o main.o -lfl -lpthread
 
@@ -15,6 +19,10 @@ test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile
 	
 a1test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o
 	$(CC) -o a1test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o -lfl
+
+# remove
+readRun.o: readRun.cpp
+	$(CC) -g -c readRun.cpp
 	
 test.o: test.cc
 	$(CC) -g -c test.cc

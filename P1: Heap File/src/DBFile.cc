@@ -67,7 +67,6 @@ int DBFile::Close () {
 }
 
 void DBFile::Add (Record &rec) {
-	cout<<file.GetLength();
 	SwitchToWriteMode(); // switch to write mode
 	int addStatus = page.Append(&rec);
 	if(addStatus == 0){ // is page full?
