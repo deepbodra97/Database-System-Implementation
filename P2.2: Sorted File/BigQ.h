@@ -2,9 +2,14 @@
 #define BIGQ_H
 #include <pthread.h>
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <queue>
+#include <cmath>
 #include "Pipe.h"
 #include "File.h"
 #include "Record.h"
+
 
 using namespace std;
 
