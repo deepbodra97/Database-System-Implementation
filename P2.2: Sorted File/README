@@ -1,0 +1,33 @@
+022608-1703
+
+readme 
+=========
+
+this driver is for milestone 2 of the assignment 2
+
+To compile the driver, type
+	make test.out
+
+To run the driver, type
+	test.out
+and follow the on-screen instructions.
+
+Using the driver:
+==================
+
+1. SETTINGS: The following variables control the various file locations and they
+are declared in test.h:
+	o dbfile_dir -- this is where the driver can locate the binary heap
+dbfiles. The driver assumes that the dbfiles have the extension '.bin'.  By
+default, this is set to "" (thus all the heap dbfiles should be locatable in the
+same directory as the test driver).
+
+IMPORTANT: All additional files that you create (metadata and other things) 
+should be stored in the location specified by dbfile_dir.Donot hard code 
+specific paths into your files.Always use the dbfile_dir variable to 
+determine the location to store additional files.
+
+2. Next replace the stub files DBFile.h, DBFile.cc, BigQ.h, and BigQ.cc with your
+own code. If you are using additional headers, modify the Makefile to include
+them as well. Then compile and execute the driver and follow the on-screen
+instructions.
