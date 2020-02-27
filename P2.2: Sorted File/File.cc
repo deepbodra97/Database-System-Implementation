@@ -157,6 +157,11 @@ void Page :: FromBinary (char *bits) {
 	delete temp;
 }
 
+// get number of records in a page
+int Page::GetNumRecs(){
+	return numRecs;
+}
+
 File :: File () {
 }
 
