@@ -8,7 +8,7 @@ class BigQMemberHolder{
 		Pipe *out; // output pipe
 		OrderMaker *sortorder; // ordermaker
 		int runVectorlen; // run length: in pages
-		File file; // file instance
+		// File file; // file instance
 
 		BigQMemberHolder(Pipe &in, Pipe &out, OrderMaker &sortorder, int runVectorlen){
 			this->in = &in;

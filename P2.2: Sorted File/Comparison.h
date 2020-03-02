@@ -13,6 +13,7 @@ class Comparison {
 
 	friend class ComparisonEngine;
 	friend class CNF;
+	friend class SortedFile;
 
 	Target operand1;
 	int whichAtt1;
@@ -42,6 +43,7 @@ class OrderMaker {
 
 	friend class ComparisonEngine;
 	friend class CNF;
+	friend class SortedFile;
 
 	int numAtts;
 
@@ -70,6 +72,7 @@ class Record;
 class CNF {
 
 	friend class ComparisonEngine;
+	friend class SortedFile;
 
 	Comparison orList[MAX_ANDS][MAX_ORS];
 	
@@ -84,6 +87,11 @@ public:
 	// only if it is impossible to determine an acceptable ordering
 	// for the given comparison
 	int GetSortOrders (OrderMaker &left, OrderMaker &right);
+
+	int GetOrder (OrderMaker &left, OrderMaker &right);
+
+
+	OrderMaker* CreateQueryMaker(OrderMaker& order);
 
 	// print the comparison structure to the screen
 	void Print ();
