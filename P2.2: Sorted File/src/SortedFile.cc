@@ -402,7 +402,7 @@ int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requi
 	
 		Record *r1 = new Record();
 
-		cout<<"matchpage called usortInfong "<< queryOrder<<endl;
+		// cout<<"matchpage called usortInfong "<< queryOrder<<endl;
 			
 		r1 = GetMatchPage(literal);
 		
@@ -772,7 +772,7 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
 	if(result==0){
 		nomore = true;
-		cout<<"nomore: "<<nomore<<endl;
+		// cout<<"nomore: "<<nomore<<endl;
 	}
 
 	//cout<<"nomore is "<<nomore<<endl;
@@ -787,7 +787,7 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 			//rtemp->Print(&nu);
 
 			while(ce->Compare(rFromFile,rtemp,sortInfo->myOrder)<0){ 		// merging this record with others
-				cout<<"rFromFile<rtemp"<<endl;
+				// cout<<"rFromFile<rtemp"<<endl;
 
 				if(ptowrite->Append(rFromFile)==0){		// merge already existing record
 						// page full
@@ -875,7 +875,7 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 		do{
 
 			// rtemp->Print(&nu);	
-			cout<<"at the last\n";
+			// cout<<"at the last\n";
 		
 			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
 						//int currentPageNumber = newFile->GetLength()==0? 0:newFile->GetLength()-1;		// page full
@@ -957,76 +957,3 @@ SortedFile::~SortedFile() {
 	delete inPipe;
 	delete outPipe;
 }
-
-
-
-// void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
-// 	file.Open(1, this->fileName);
-	
-// 	Schema mySchema ("catalog", "nation");
-	
-
-// 	inPipe->ShutDown();
-// 	Record fromFile, fromPipe;
-//   	bool fileNotEmpty = !file.IsEmpty(), pipeNotEmpty = outPipe->Remove(&fromPipe);
-//   	DBFile tmp;
-// 	tmp.Create("./mergedFile.tmp.bin", heap, NULL);  // temporary file for the merge result; will be renamed in the end
- 
-//   	ComparisonEngine ce;
-
-//   	// initializes
-//   	if (fileNotEmpty) {
-//   		currentPageNumber=0;
-//     	file.GetPage(&page, currentPageNumber);           // move first
-//     	fileNotEmpty = GetNext(fromFile);
-//   	}
-
-//   	// two-way merge
-//   	while (fileNotEmpty || pipeNotEmpty){
-// 	    if (!fileNotEmpty || (pipeNotEmpty && ce.Compare(&fromFile, &fromPipe, sortInfo->myOrder) > 0)) {
-//       		tmp.Add(fromPipe);
-//       		// fromPipe.Print(&mySchema);
-//       		pipeNotEmpty = outPipe->Remove(&fromPipe);
-//     	} else if (!pipeNotEmpty || (fileNotEmpty && ce.Compare(&fromFile, &fromPipe, sortInfo->myOrder) <= 0)) {
-//       		tmp.Add(fromFile);
-//       		// fromPipe.Print(&mySchema);
-//       		fileNotEmpty = GetNext(fromFile);
-//     	} //else FATAL("Two-way merge failed.");
-// 	}
-//   	// write back
-//   	tmp.Close();
-//   	int renameStatus = rename("mergedFile.tmp.bin", fileName);
-//   	cout<<"fileName:"<<fileName<<" renameStatus:"<<renameStatus<<endl;
-//   	DeleteBigQ();
-// }
-
-// void SortedFile::CreateBigQ() {
-//     inPipe = new Pipe(PIPE_SIZE), outPipe = new Pipe(PIPE_SIZE);
-//     bq = new BigQ(*inPipe, *outPipe, *sortInfo->myOrder, sortInfo->runLength);
-// }
-
-// void SortedFile::DeleteBigQ() {
-//     delete inPipe; delete outPipe; delete bq;
-//   	inPipe = outPipe = NULL; bq = NULL;
-// }
-
-// void SortedFile::SwitchToWriteMode(){
-// 	if(fileMode == WRITE){ // if file mode is already write
-// 		return;
-// 	}
-// 	fileMode = WRITE; // change fileMode to write
-// 	CreateBigQ();
-// }
-
-// void SortedFile::SwitchToReadMode(){
-// 	if(fileMode==READ){ // if file mode is already read
-// 		return;
-// 	}
-// 	fileMode = READ; // change fileMode to read
-// 	MergeFromOutpipe();
-// }
-
-
-// SortedFile::~SortedFile() {
-// 	// delete current;
-// }
