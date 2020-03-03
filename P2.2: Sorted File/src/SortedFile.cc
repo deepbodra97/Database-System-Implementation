@@ -241,190 +241,75 @@ int SortedFile::GetNext (Record &fetchme, CNF &applyMe, Record &literal) {
 
 Record* SortedFile::LoadProspectivePage(Record &literal) {			//returns the first record which equals to literal based on queryorder;
 	
-	if(didCNFChange) {
-		int low = currentPageNumber;
-		int high = file.GetLength()-2;
-		int matchPage = BinarySearch(low, high, queryOrder, literal);
-		if(matchPage == -1) {
-			//not found
+	if(didCNFChange) { //  if the CNF changed
+		int low = currentPageNumber; // current page is the lower page for binary search
+		int high = file.GetLength()-2; // last page is the lower page for binary search
+		int prospectivePageNumber = BinarySearch(low, high, queryOrder, literal); // get the page that might have the record we want
+		if(prospectivePageNumber == -1) { // such a page does not exist
 			return NULL;
 		}
-		if(matchPage != currentPageNumber) {
+
+		if(prospectivePageNumber != currentPageNumber) { // load the page if not already loaded
 			page.EmptyItOut();
-			file.GetPage(&page, matchPage);
-			currentPageNumber = matchPage+1;
+			file.GetPage(&page, prospectivePageNumber);
+			currentPageNumber = prospectivePageNumber+1;
 		}
-		didCNFChange = false;
+		didCNFChange = false; // assuming that the CNF will not change unless explicitly done by MoveFirst,.. etc
 	}
 
 	//find the potential page, make reader buffer pointer to the first record
 	// that equal to query order
-	Record *returnRcd = new Record;
-	ComparisonEngine cmp1;
-	while(page.GetFirst(returnRcd)) {
-		if(cmp1.Compare(returnRcd, &literal, queryOrder) == 0) {
-			//find the first one
-			return returnRcd;
+	Record *resultRecord = new Record();
+	ComparisonEngine comparisonEngine;
+	while(page.GetFirst(resultRecord)) { // sequentially search the page until we find a matching record
+		if(comparisonEngine.Compare(resultRecord, &literal, queryOrder) == 0) { // record found
+			return resultRecord;
 		}
 	}
-	if(currentPageNumber >= file.GetLength()-2) {
+
+	if(currentPageNumber >= file.GetLength()-2) { // if there are no more pages
 		return NULL;
 	} else {
-		//sortInfonce the first record may exist on the next page
 		currentPageNumber++;
-		file.GetPage(&page, currentPageNumber);
-		while(page.GetFirst(returnRcd)) {
-			if(cmp1.Compare(returnRcd, &literal, queryOrder) == 0) {
-				//find the first one
-				return returnRcd;
+		file.GetPage(&page, currentPageNumber); // load next page
+		while(page.GetFirst(resultRecord)) { // sequentially search the page until we find a matching record
+			if(comparisonEngine.Compare(resultRecord, &literal, queryOrder) == 0) { // record found
+				return resultRecord;
 			}
 		}
 	}
-	return NULL;
-		
-
+	return NULL; // not found :(
 }
+
 
 int SortedFile::BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Record &literal) {
+
+	if(low > high) return -1;
+	if(low == high) return low;
+	int mid = (high+low)/2;
+
+	Page tempPage;
+	Record tempRecord;
 	
-	cout<<"serach OM "<<endl;
-	queryOrderMaker->Print();
-	cout<<endl<<"file om"<<endl;
-	sortInfo->myOrder->Print();
+	file.GetPage(&tempPage, mid);
+	tempPage.GetFirst(&tempRecord); // get 1st record from the page
 
-	if(high < low) return -1;
-	if(high == low) return low;
-	//high > low
-	
-	ComparisonEngine *comp;
-	Page *tmpPage = new Page;
-	Record *tmpRcd = new Record;
-	int mid = (int) (high+low)/2;
-	file.GetPage(tmpPage, mid);
-	
-	int res;
+	int compareStatus;
+	ComparisonEngine comparisonEngine;
+	compareStatus = comparisonEngine.Compare(&tempRecord, sortInfo->myOrder, &literal, queryOrderMaker);
 
-	Schema nu("catalog","lineitem");
-
-	tmpPage->GetFirst(tmpRcd);
-
-	tmpRcd->Print(&nu);
-	res = comp->Compare(tmpRcd,sortInfo->myOrder, &literal,queryOrderMaker );
-	delete tmpPage;
-	delete tmpRcd;
-
-	if( res == -1) {
-		if(low==mid)
+	if(compareStatus == -1){
+		if(low==mid){
 			return mid;
-		return BinarySearch(low, mid-1, queryOrderMaker, literal);
+		}
+		return BinarySearch(low, mid-1, queryOrderMaker, literal); // search before the mid page
+	} else if(compareStatus == 0) { // prospective page found
+		return mid;
+	}else{ 
+		return BinarySearch(mid+1, high,queryOrderMaker, literal); // search past the mid page
 	}
-	else if(res == 0) {
-		return mid;//BinarySearch(low, mid-1, queryOrderMaker, literal);
-	}
-	else
-		return BinarySearch(mid+1, high,queryOrderMaker, literal);
 }
 
-/*void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
-
-	inPipe->ShutDown();
-	// get sorted records from output pipe
-	ComparisonEngine *ce;
-
-	// following four lines get the first record from those already present (not done)
-	Record *rFromFile = new Record();
-	GetNew(rFromFile);						// loads the first record from existing records
-
-	Record *rtemp = new Record();		
-	Page *ptowrite = new Page();			// new page that would be added
-	File *newFile = new File();				// new file after merging
-	newFile->Open(0,"mergedFile");				
-
-	bool nomore = false;
-    int result =GetNew(rFromFile);
-	int currentPageNumber = 0;
-
-
-	Schema nu("catalog","nation");
-
-
-	if(result==0){
-		nomore = true;
-	}
-
-	while(isPipeDirty!=0&&!nomore){
-		if(outPipe->Remove(rtemp)==1){		// got the record from out pipe
-			while(ce->Compare(rFromFile,rtemp,sortInfo->myOrder)<0){ 		// merging this record with others
-				if(ptowrite->Append(rFromFile)==0){		// merge already existing record
-						// page full
-						// write this page to file
-						newFile->AddPage(ptowrite,currentPageNumber++);
-						//currentPageNumber++;
-						// empty this out
-						ptowrite->EmptyItOut();
-						// append the ptrCurrentRecord record ?
-						ptowrite->Append(rFromFile);		// does this consume the record ?
-				}
-				if(!GetNew(rFromFile)){ nomore = true; break; }	// bring next rFromFile record ?// check if records already present are exhausted
-			}
-			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
-						// page full
-						// write this page to file
-						newFile->AddPage(ptowrite,currentPageNumber++);
-						// empty this out
-						ptowrite->EmptyItOut();
-						// append the ptrCurrentRecord record ?
-						ptowrite->Append(rtemp);		// does this consume the record ?
-			}
-		}
-		else{
-			// pipe is empty now, copy rest of records to new file
-			do{				
-				if(ptowrite->Append(rFromFile)!=1){
-					newFile->AddPage(ptowrite,currentPageNumber++);
-					// empty this out
-					ptowrite->EmptyItOut();
-					// append the ptrCurrentRecord record ?
-					ptowrite->Append(rFromFile);		// does this consume the record ?
-				}
-			}while(GetNew(rFromFile)!=0);
-			break;
-		}
-	}
-	outPipe->Remove(rtemp);//1 missing record
-
-	if(nomore==true){									// file is empty
-		do{
-			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
-						// write this page to file
-						newFile->AddPage(ptowrite,currentPageNumber++);
-						// empty this out
-						ptowrite->EmptyItOut();
-						// append the ptrCurrentRecord record ?
-						ptowrite->Append(rtemp);		// does this consume the record ?
-			}
-		}while(outPipe->Remove(rtemp)!=0);
-	}
-	newFile->AddPage(ptowrite,currentPageNumber);
-	newFile->Close();
-	file.Close();
-
-	// delete resources that are not required
-	if(rename(fileName,"mergefile.tmp")!=0) {				// making merged file the new file
-		cerr <<"rename file error!"<<endl;
-		return;
-	}
-	
-	remove("mergefile.tmp");
-
-	if(rename("mergedFile",fileName)!=0) {				// making merged file the new file
-		cerr <<"rename file error!"<<endl;
-		return;
-	}
-
-	page.EmptyItOut();
-	file.Open(1, this->fileName);
-}*/
 
 void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
@@ -445,26 +330,6 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
     // int fileNotEmpty = !file.IsEmpty();
 
 	int currentPageNumber = 0;
-
-
-	// if file has no records then write out all the records from pipe to the new file
-	/*if(result == 0){
-		while(outPipe->Remove(rtemp)){
-			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
-				// write this page to file
-				newFile->AddPage(ptowrite,currentPageNumber++);
-				// empty this out
-				ptowrite->EmptyItOut();
-				// append the ptrCurrentRecord record ?
-				ptowrite->Append(rtemp);		// does this consume the record ?
-			}
-		}
-		if(!ptowrite->IsEmpty()){
-			newFile->AddPage(ptowrite,currentPageNumber++);
-		}	
-	} else{
-
-	}*/
 
 	int counter = 0;
 	if(fileNotEmpty){
