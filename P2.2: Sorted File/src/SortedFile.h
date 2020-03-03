@@ -34,11 +34,8 @@ private:
 	Pipe *inPipe;
 	Pipe *outPipe;
 	BigQ *bigQ;
-	// change
-	
 	
 	pthread_t bigQThread;
-
 
 	struct bigQThreadParams{
 	
@@ -50,6 +47,8 @@ private:
 	}threadParams;
 
 	typedef struct bigQThreadParams bigQThreadParams; 
+
+	int end = 0;
 
 public:
 	SortedFile (); 

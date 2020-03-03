@@ -98,7 +98,6 @@ void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 		// In read mode, so direct movefirst is possortInfoble
 		if(file.GetLength()!=0){
 			file.GetPage(&page,currentPageNumber); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
-	
 			int result = page.GetFirst(ptrCurrentRecord);
 		}
 	}
@@ -355,10 +354,7 @@ int SortedFile::BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Rec
 		return BinarySearch(mid+1, high,queryOrderMaker, literal);
 }
 
-void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
-
-	// close input pipe
-	//cout<<inPipe<<endl;
+/*void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
 	inPipe->ShutDown();
 	// get sorted records from output pipe
@@ -457,6 +453,99 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
 	page.EmptyItOut();
 	file.Open(1, this->fileName);
+}*/
+
+void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
+
+	inPipe->ShutDown();
+	// get sorted records from output pipe
+	ComparisonEngine *ce;
+
+	// following four lines get the first record from those already present (not done)
+	Record *rFromFile = new Record();
+
+	Record *rtemp = new Record();		
+	Page *ptowrite = new Page();			// new page that would be added
+	File *newFile = new File();				// new file after merging
+	newFile->Open(0,"mergedFile");				
+
+	bool nomore = false;
+    int fileNotEmpty = GetNew(rFromFile);
+	int currentPageNumber = 0;
+
+
+	// if file has no records then write out all the records from pipe to the new file
+	/*if(result == 0){
+		while(outPipe->Remove(rtemp)){
+			if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
+				// write this page to file
+				newFile->AddPage(ptowrite,currentPageNumber++);
+				// empty this out
+				ptowrite->EmptyItOut();
+				// append the ptrCurrentRecord record ?
+				ptowrite->Append(rtemp);		// does this consume the record ?
+			}
+		}
+		if(!ptowrite->IsEmpty()){
+			newFile->AddPage(ptowrite,currentPageNumber++);
+		}	
+	} else{
+
+	}*/
+
+	int pipeNotEmpty = outPipe->Remove(rtemp);	
+
+	while (fileNotEmpty || pipeNotEmpty){
+	    if (!fileNotEmpty || (pipeNotEmpty && ce->Compare(rFromFile, rtemp, sortInfo->myOrder) > 0)) {
+      		
+	    	if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
+				// write this page to file
+				newFile->AddPage(ptowrite,currentPageNumber++);
+				// empty this out
+				ptowrite->EmptyItOut();
+				// append the ptrCurrentRecord record ?
+				ptowrite->Append(rtemp);		// does this consume the record ?
+			}
+
+      		// fromPipe.Print(&mySchema);
+      		pipeNotEmpty = outPipe->Remove(rtemp);
+    	} else if (!pipeNotEmpty || (fileNotEmpty && ce->Compare(rFromFile, rtemp, sortInfo->myOrder) <= 0)) {
+    		if(ptowrite->Append(rFromFile)!=1){				// copy record from pipe
+				// write this page to file
+				newFile->AddPage(ptowrite,currentPageNumber++);
+				// empty this out
+				ptowrite->EmptyItOut();
+				// append the ptrCurrentRecord record ?
+				ptowrite->Append(rFromFile);		// does this consume the record ?
+			}
+      		// fromPipe.Print(&mySchema);
+      		fileNotEmpty = GetNew(rFromFile);
+    	}
+    }
+    if(!ptowrite->IsEmpty()){
+		newFile->AddPage(ptowrite,currentPageNumber++);
+	}	
+
+	Schema nu("catalog","nation");
+	
+	newFile->Close();
+	file.Close();
+
+	// delete resources that are not required
+	if(rename(fileName,"mergefile.tmp")!=0) {				// making merged file the new file
+		cerr <<"rename file error!"<<endl;
+		return;
+	}
+	
+	remove("mergefile.tmp");
+
+	if(rename("mergedFile",fileName)!=0) {				// making merged file the new file
+		cerr <<"rename file error!"<<endl;
+		return;
+	}
+
+	page.EmptyItOut();
+	file.Open(1, this->fileName);
 }
 
 
@@ -476,8 +565,13 @@ int SortedFile:: GetNew(Record *r1){
 
 
 SortedFile::~SortedFile() {
+	delete sortInfo;
+	delete queryOrder;
+	delete ptrCurrentRecord;
 	delete inPipe;
 	delete outPipe;
+	delete bigQ;
+	delete fileName;
 }
 
 /*OrderMaker *SortedFile::CheckIfMatches(CNF &cnf, OrderMaker &sortOrder) {
