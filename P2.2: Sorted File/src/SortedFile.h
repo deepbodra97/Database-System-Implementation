@@ -4,8 +4,6 @@
 #include "File.h"
 #include "Comparison.h"
 #include "ComparisonEngine.h"
-//#include "DBFile.h"
-
 
 struct SortInfo { 
 	OrderMaker *myOrder; 
@@ -21,45 +19,45 @@ private:
 	int isThisEndOfFile;
 
 	int mergePageNumber;
-	Page *mergePage;
+	Page mergePage;
 
 	fMode fileMode;
 
 	SortInfo *sortInfo;
 
+	char *fileName;
+
+	int isPipeDirty;
 	// change
 
-	char *fileName;
+	
 	Pipe *inPipe;
 	Pipe *outPipe;
-	BigQ *bq;
+	BigQ *bigQ;
 	
 	
 	
 	
 	
 	
-	Record* current;
-	
-	off_t writeIndex;
-	
+	Record* ptrCurrentRecord;
+		
 	int recordIndex;
 	bool queryChange;
 	OrderMaker *queryOrder;
 	pthread_t bigQ_t;
-	int isDirty;
 
 
-	struct thread_arguments{
+	struct bigQThreadParams{
 	
-		Pipe *in;
-		Pipe *out;
-		SortInfo s;
-		BigQ *b; 
+		Pipe *inPipe;
+		Pipe *outPipe;
+		SortInfo sortInfo;
+		BigQ *bigQ; 
 
-	}thread_args;
+	}threadParams;
 
-	typedef struct thread_arguments thread_arguments; 
+	typedef struct bigQThreadParams bigQThreadParams; 
 
 public:
 	SortedFile (); 
@@ -76,20 +74,14 @@ public:
 	int GetNext (Record &fetchme, CNF &cnf, Record &literal);
 
 	// Utils
-	void CreateBigQ();	
-	void DeleteBigQ();	
-
-	void SwitchToWriteMode();
-	void SwitchToReadMode();
-
 	void MergeFromOutpipe();
 	int GetNew(Record *r1);	
 
-	int bsearch(int low, int high, OrderMaker *queryOM, Record &literal);
+	int binarySearch(int low, int high, OrderMaker *queryOM, Record &literal);
 	Record* GetMatchPage(Record &literal);
 	OrderMaker* checkIfMatches(CNF &c, OrderMaker &o);
 
-	static void *instantiate_BigQ(void*);
+	static void *triggerBigQThread(void*);
 
 	~SortedFile();
 };
