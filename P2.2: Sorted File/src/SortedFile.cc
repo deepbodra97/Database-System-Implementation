@@ -68,6 +68,25 @@ int SortedFile::Open (char *name) {
 	isThisEndOfFile = 0;
 }
 
+
+void SortedFile::Load (Schema &mySchema, char *loadMe) {
+	if(fileMode != WRITE){
+		fileMode = WRITE; // set mode to WRITE
+		isPipeDirty=1; // pipe is dirty
+		if(bigQ==NULL){ // setup bigQ if null
+			bigQ = new BigQ(*inPipe,*outPipe,*(sortInfo->myOrder),sortInfo->runLength);
+		}
+	}
+
+	FILE* tableFile = fopen (loadMe, "r"); // open table file
+	Record temp;
+	while(temp.SuckNextRecord(&mySchema, tableFile)!=0){
+		inPipe->Insert(&temp); // add record to pipe
+	}
+	fclose(tableFile); // close table file
+}
+
+
 void* SortedFile::TriggerBigQThread(void* arg){
 	bigQThreadParams *params;
 	params = (bigQThreadParams *) arg;
@@ -75,45 +94,52 @@ void* SortedFile::TriggerBigQThread(void* arg){
 }
 
 
-void SortedFile::Load (Schema &f_schema, char *loadpath) {
-	if(fileMode!=WRITE){
-		fileMode = WRITE;
-		isPipeDirty=1;
-		if(bigQ==NULL)bigQ = new BigQ(*inPipe,*outPipe,*(sortInfo->myOrder),sortInfo->runLength);
-	}
+void SortedFile::Add (Record &addMe) {	// requires BigQ instance		done
+	if(fileMode != WRITE){
+		fileMode = WRITE; // set mode to WRITE
+		isPipeDirty=1; // pipe is dirty
+		
+		inPipe= new Pipe(PIPE_SIZE);
+		outPipe= new Pipe(PIPE_SIZE);
 
-	FILE* tableFile = fopen (loadpath,"r");
-	Record temp;
-	while(temp.SuckNextRecord(&f_schema,tableFile)!=0){
-		inPipe->Insert(&temp);
-	}
-	fclose(tableFile);	
-}
-
-void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
-
-	isPipeDirty=0;	
-	currentPageNumber = 0;
-
-	if(fileMode==READ){
-		// In read mode, so direct movefirst is possortInfoble
-		if(file.GetLength()!=0){
-			file.GetPage(&page,currentPageNumber); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
-			int result = page.GetFirst(ptrCurrentRecord);
+		if(bigQ==NULL){ // setup big thread
+			threadParams.inPipe = inPipe;
+			threadParams.outPipe = outPipe;
+			threadParams.sortInfo.myOrder = sortInfo->myOrder;
+			threadParams.sortInfo.runLength =  sortInfo->runLength;
+			threadParams.bigQ = bigQ;
+			pthread_create(&bigQThread, NULL, &SortedFile::TriggerBigQThread , (void *)&threadParams); // create bigq thread	
 		}
 	}
-	else{
-		// change mode to read
-		fileMode = READ;
-		// Merge contents if any from BigQ
-		MergeFromOutpipe();
-		file.GetPage(&page,currentPageNumber); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
+	inPipe->Insert(&addMe); // add to pipe
+	didCNFChange = true; // assuming that the CNF will change
+}
+
+
+void SortedFile::MoveFirst () {
+	currentPageNumber = 0;
+	isPipeDirty=0;	
+
+	/*if(fileMode==READ){ // file mode is read so we can safely fetch the first page and the first record
+		if(file.GetLength()!=0){
+			file.GetPage(&page,currentPageNumber); // fetch the first page
+			page.GetFirst(ptrCurrentRecord); // fetch the first record
+		}
+	} else{
+		fileMode = READ; // set mode to read
+		MergeFromOutpipe(); // merge the pipe with the sorted file
+		file.GetPage(&page, currentPageNumber); // 
 		page.GetFirst(ptrCurrentRecord);
-		// bring the first page into page
-		// Set curr Record to first record
-		// 
+	}*/
+	if(fileMode != READ){ // file mode is read so we can safely fetch the first page and the first record
+		fileMode = READ; // set mode to read
+		MergeFromOutpipe(); // merge the pipe with the sorted file
 	}
-	didCNFChange = true;
+	if(file.GetLength()!=0){
+		file.GetPage(&page,currentPageNumber); // fetch the first page
+		page.GetFirst(ptrCurrentRecord); // fetch the first record
+	}
+	didCNFChange = true; // assuming that the CNF will change
 }
 
 int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
@@ -142,26 +168,6 @@ int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 	ofs.close();
 }
 
-void SortedFile::Add (Record &rec) {	// requires BigQ instance		done
-	if(fileMode!=WRITE){
-		isPipeDirty=1;
-		fileMode = WRITE;
-
-		inPipe= new Pipe(100);
-		outPipe= new Pipe(100);
-
-		if(bigQ==NULL){
-			threadParams.inPipe = inPipe;
-			threadParams.outPipe = outPipe;
-			threadParams.sortInfo.myOrder = sortInfo->myOrder;
-			threadParams.sortInfo.runLength =  sortInfo->runLength;
-			threadParams.bigQ = bigQ;
-			pthread_create(&bigQThread, NULL, &SortedFile::TriggerBigQThread , (void *)&threadParams);		
-		}
-	}
-	inPipe->Insert(&rec);
-	didCNFChange = true;
-}
 
 int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		done
 
