@@ -4,6 +4,8 @@ data/
 *.runfile
 *.bin.runfile
 *.bin.bigq
+*.meta
+*.bin.meta
 
 *.o
 *.out

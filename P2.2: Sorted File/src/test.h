@@ -14,7 +14,8 @@ using namespace std;
 
 char *catalog_path = "catalog"; 
 char *dbfile_dir = ""; 
-char *tpch_dir ="./table_files/"; 
+char *tpch_dir ="../data/tpch-10mb/"; // dir where dbgen tpch files (extension *.tbl) can be found
+
 
 
 extern "C" {

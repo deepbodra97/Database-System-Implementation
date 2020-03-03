@@ -47,7 +47,7 @@ int SortedFile::Create (char *f_path, fType f_type, void *startup) {	// done
 	
 	// use startup to get runlength and ordermaker
 	sortInfo = (SortInfo *) startup;
-	currentPageNumber=1;
+	currentPageNumber=0;
 	recordIndex = 0;
 	isThisEndOfFile=1;
 	return 1;
@@ -160,7 +160,7 @@ int SortedFile::Open (char *f_path) {
 	//fclose(f);
 
 	file.Open(1, f_path);	// open the corresponding file
-	currentPageNumber = 1;
+	currentPageNumber = 0;
 	recordIndex = 0;
 	isThisEndOfFile = 0;
 }
@@ -168,7 +168,7 @@ int SortedFile::Open (char *f_path) {
 void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 
 	isDirty=0;	
-	currentPageNumber = 1;
+	currentPageNumber = 0;
 	recordIndex = 0;
 
 	if(fileMode==READ){
@@ -181,11 +181,11 @@ void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 			int result = page.GetFirst(current);
 			//cout<<result<<endl;
 			
-		//	currentPageNumber = 1;
+		//	currentPageNumber = 0;
 			
 		}
 		else{
-		//	currentPageNumber = 1;
+		//	currentPageNumber = 0;
 
 		}
 
@@ -301,7 +301,7 @@ int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		d
 
 	}
 
-	/*if(isThisEndOfFile==1) return 0;
+	if(isThisEndOfFile==1) return 0;
 
 	fetchme.Copy(current);
 
@@ -309,7 +309,7 @@ int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		d
 
 		if(currentPageNumber>=this->file.GetLength()-2){
 				isThisEndOfFile = 1;
-				return 0;	
+				return 1;	
 		}
 		else {
 			currentPageNumber++;
@@ -319,10 +319,10 @@ int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		d
 		}
 	}
 
-	return 1;*/
+	return 1;
 
 
-	if(isThisEndOfFile){ // if the end of the file has been reached
+	/*if(isThisEndOfFile){ // if the end of the file has been reached
 		return 0;
 	}
 	fetchme.Copy(current); // Consume?
@@ -343,7 +343,7 @@ int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		d
 	if(page.GetFirst(current) == 1){ // record found
 		// readPageRecordNumber++;
 		return 1;
-	}
+	}*/
 }
 
 int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requires binary search // requires MergeFromOuputPipe()
@@ -763,8 +763,8 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 	newFile->Open(0,"mergedFile");				
 
 	bool nomore = false;
-        int result =GetNew(rFromFile);
-	int currentPageNumber = 1;
+    int result =GetNew(rFromFile);
+	int currentPageNumber = 0;
 
 
 	Schema nu("catalog","nation");
