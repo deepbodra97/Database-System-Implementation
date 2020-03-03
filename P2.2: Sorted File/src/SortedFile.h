@@ -67,7 +67,7 @@ public:
 	int GetNew(Record *r1);	
 
 	int BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Record &literal);
-	Record* GetMatchPage(Record &literal);
+	Record* LoadProspectivePage(Record &literal);
 	// OrderMaker* CheckIfMatches(CNF &cnf, OrderMaker &o);
 
 	static void *TriggerBigQThread(void*);

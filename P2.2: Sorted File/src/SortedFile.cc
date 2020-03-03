@@ -120,17 +120,6 @@ void SortedFile::MoveFirst () {
 	currentPageNumber = 0;
 	isPipeDirty=0;	
 
-	/*if(fileMode==READ){ // file mode is read so we can safely fetch the first page and the first record
-		if(file.GetLength()!=0){
-			file.GetPage(&page,currentPageNumber); // fetch the first page
-			page.GetFirst(ptrCurrentRecord); // fetch the first record
-		}
-	} else{
-		fileMode = READ; // set mode to read
-		MergeFromOutpipe(); // merge the pipe with the sorted file
-		file.GetPage(&page, currentPageNumber); // 
-		page.GetFirst(ptrCurrentRecord);
-	}*/
 	if(fileMode != READ){ // file mode is read so we can safely fetch the first page and the first record
 		fileMode = READ; // set mode to read
 		MergeFromOutpipe(); // merge the pipe with the sorted file
@@ -141,6 +130,7 @@ void SortedFile::MoveFirst () {
 	}
 	didCNFChange = true; // assuming that the CNF will change
 }
+
 
 int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 	
@@ -171,100 +161,74 @@ int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 
 int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		done
 
-	if(fileMode!=READ){
-		isPipeDirty=0;
+	if(fileMode != READ){
 		fileMode = READ;
-		page.EmptyItOut();		// requires flush
-		MergeFromOutpipe();		// 
-		MoveFirst();	// always start from first record
-
+		isPipeDirty=0; // pipe is dirty
+		page.EmptyItOut(); // empty the page
+		MergeFromOutpipe(); // merge pipe with the sorted file
+		MoveFirst(); // move to the start of the file
 	}
 
-	if(isThisEndOfFile==1) return 0;
-
-	fetchme.Copy(ptrCurrentRecord);
-
-	if(!page.GetFirst(ptrCurrentRecord)) {
-
-		if(currentPageNumber>=this->file.GetLength()-2){
-				isThisEndOfFile = 1;
-				return 1;	
-		}
-		else {
-			currentPageNumber++;
-			file.GetPage(&page,currentPageNumber);
-			page.GetFirst(ptrCurrentRecord);
-
-		}
-	}
-
-	return 1;
-
-	/*if(isThisEndOfFile){ // if the end of the file has been reached
+	if(isThisEndOfFile==1){
 		return 0;
 	}
-	fetchme.Copy(ptrCurrentRecord); // Consume?
 
-	if(page.GetFirst(ptrCurrentRecord) == 1){ // is there a record to fetch?
-		// readPageRecordNumber++;
-		return 1;
+	fetchme.Consume(ptrCurrentRecord); // put the record in fetchMe
+
+	if(!page.GetFirst(ptrCurrentRecord)) { // if there is no next record
+		if(currentPageNumber >= file.GetLength()-2){ // if all records have been read
+			isThisEndOfFile = 1; // we have reached the end of the file
+			return 1;	
+		} else{
+			currentPageNumber++;
+			file.GetPage(&page, currentPageNumber); // get next page
+			page.GetFirst(ptrCurrentRecord); // get first record from this page
+		}
 	}
-
-	currentPageNumber+=1; // page has been consumed. Increment page number
-	if(currentPageNumber == file.GetLength()-1){ // if there is no next page return 0
-		isThisEndOfFile = 1;
-		return 1;
-	}
-
-	file.GetPage(&page, currentPageNumber); // get the next page
-	// readPageNumber+=1;
-	if(page.GetFirst(ptrCurrentRecord) == 1){ // record found
-		// readPageRecordNumber++;
-		return 1;
-	}*/
+	return 1;
 }
 
-int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requires binary search // requires MergeFromOuputPipe()
+
+int SortedFile::GetNext (Record &fetchme, CNF &applyMe, Record &literal) {
 
 	if(fileMode!=READ){
-		isPipeDirty=0;
 		fileMode = READ;
-		page.EmptyItOut();
-		MergeFromOutpipe();
-		MoveFirst();
+		isPipeDirty=0; // pipe is dirty
+		page.EmptyItOut(); // empty the page
+		MergeFromOutpipe(); // merge pipe with the sorted file
+		MoveFirst(); // move to the start of the file
 	}
 
-	if(didCNFChange){
-		queryOrder = cnf.CreateQueryMaker(*(sortInfo->myOrder));				
+	if(didCNFChange){ // if the CNF changed
+		queryOrder = applyMe.CreateQueryMaker(*(sortInfo->myOrder)); // generate new order maker				
 	}
 	
-	ComparisonEngine *comp;
+	ComparisonEngine comparisonEngine;
 		
-	if(queryOrder==NULL) {		// no compatible order maker; return first record that matches the Record literal
-		while(GetNext(fetchme)){			// linear scan from ptrCurrentRecord record
-			if(comp->Compare(&fetchme, &literal, &cnf)) {		//record found, return 1
+	if(queryOrder==NULL) { // if the order maker is not compatible the get the first record that matchses the literal
+		while(GetNext(fetchme)){ // sequential scan from ptrCurrentRecord
+			if(comparisonEngine.Compare(&fetchme, &literal, &applyMe)) { // if required record found
 				return 1;
 			}
 		}
-		return 0;					// record not found
-	}
-	else{							 // some order maker compatible to given CNF is constructed
-		Record *r1 = new Record();			
-		r1 = GetMatchPage(literal);
-		if(r1==NULL) return 0;
-		fetchme.Consume(r1);
+		return 0; // if required not record found
+	}else{	// if the order maker is compatible then we can apply binary search on the file
+		Record *result = new Record();
+		result = LoadProspectivePage(literal); // load the page which might have the record we are looking for
+		if(result==NULL){ // no matching record found
+			return 0;
+		}
+		fetchme.Consume(result); // put the record into fetchMe
 
-		if(comp->Compare(&fetchme,&literal,&cnf)){
-			 return 1;
+		if(comparisonEngine.Compare(&fetchme, &literal, &applyMe)){ // if the record matches
+			return 1;
 		}
 		
-		while(GetNext(fetchme)) {
-			if(comp->Compare(&fetchme, &literal, queryOrder)!=0) {
-				//not match to query order
+		while(GetNext(fetchme)) { // sequential search in the prospective page
+			if(comparisonEngine.Compare(&fetchme, &literal, queryOrder)!=0) { // if the record does not match
 				return 0;
 			} else {
-				if(comp->Compare(&fetchme, &literal, &cnf)) {
-					//find the right record
+				if(comparisonEngine.Compare(&fetchme, &literal, &applyMe)) { // if the record matches
 					return 1;
 				}
 			}
@@ -275,7 +239,7 @@ int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requi
 }
 
 
-Record* SortedFile::GetMatchPage(Record &literal) {			//returns the first record which equals to literal based on queryorder;
+Record* SortedFile::LoadProspectivePage(Record &literal) {			//returns the first record which equals to literal based on queryorder;
 	
 	if(didCNFChange) {
 		int low = currentPageNumber;
