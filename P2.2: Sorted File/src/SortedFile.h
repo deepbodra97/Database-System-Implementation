@@ -48,7 +48,8 @@ private:
 
 	typedef struct bigQThreadParams bigQThreadParams; 
 
-	int end = 0;
+	int end;
+	Record *currentRecord;
 
 public:
 	SortedFile (); 

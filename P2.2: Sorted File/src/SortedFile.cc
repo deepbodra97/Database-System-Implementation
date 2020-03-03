@@ -21,6 +21,8 @@ SortedFile::SortedFile () {
 	didCNFChange = true;
 
 	ptrCurrentRecord = new Record();
+	currentRecord = new Record();
+	end = 0;
 
 	currentPageNumber = 0;
 	mergePageNumber = 0;
@@ -471,6 +473,8 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
 	bool nomore = false;
     int fileNotEmpty = GetNew(rFromFile);
+    // int fileNotEmpty = !file.IsEmpty();
+
 	int currentPageNumber = 0;
 
 
@@ -492,6 +496,19 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 	} else{
 
 	}*/
+
+	int counter = 0;
+	if(fileNotEmpty){
+		/*counter++;
+		while(GetNew(rFromFile) != 0){
+			counter++;
+		}*/
+		// mergePageNumber = 0; // duplicates
+		// file.GetPage(&mergePage, mergePageNumber);
+		// fileNotEmpty = GetNew(rFromFile);
+	}
+	cout<<"nRecordsInFile: "<<counter<<endl;
+
 
 	int pipeNotEmpty = outPipe->Remove(rtemp);	
 
@@ -544,8 +561,11 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 		return;
 	}
 
+	end = 0;
+
 	page.EmptyItOut();
 	file.Open(1, this->fileName);
+	file.GetPage(&page, 0);
 }
 
 
@@ -561,6 +581,26 @@ int SortedFile:: GetNew(Record *r1){
 	}
 
 	return 1;
+
+	/*if(end){ // if the end of the file has been reached
+		return 0;
+	}
+	r1->Consume(currentRecord);
+
+	if(page.GetFirst(currentRecord) == 1){ // is there a record to fetch?
+		return 1;
+	}
+
+	mergePageNumber+=1; // page has been consumed. Increment page number
+	if(mergePageNumber == file.GetLength()-1){ // if there is no next page return 0
+		end = 1;
+		return 1;
+	}
+
+	file.GetPage(&mergePage, mergePageNumber); // get the next page
+	if(page.GetFirst(currentRecord) == 1){ // record found
+		return 1;
+	}*/
 }	
 
 
