@@ -12,22 +12,60 @@
 #include <unistd.h>
 
 SortedFile::SortedFile () {
-	inPipe = NULL;
-	outPipe = NULL;
-	bigQ = NULL;
+	inPipe = NULL; // input pipe
+	outPipe = NULL; // output pipe
+	bigQ = NULL; // bigQ instance
 
-	sortInfo = NULL;
-	queryOrder = NULL;
-	didCNFChange = true;
+	sortInfo = NULL; // SortInfo from startup
+	queryOrder = NULL; // OrderMaker from startup
+	didCNFChange = true; // did the CNF/Query change 
 
-	ptrCurrentRecord = new Record();
-	currentRecord = new Record();
-	end = 0;
+	ptrCurrentRecord = new Record(); // pointer to current record
 
+	currentPageNumber = 0; // current page number
+	runPageNumber = 0; // used to read records from sorted file while merging sorted file with pipe
+	isPipeDirty=0; // does pipe have records?
+	fileMode = READ; // set the initial mode to read
+}
+
+
+int SortedFile::Create (char *name, fType myType, void *startup) {	// done
+	file.Open(0, name); // create a file for sorted file
+	fileName = name; // store name
+	isPipeDirty=0; // pipe is not dirty
+	
+	sortInfo = (SortInfo *) startup; // cast void* to startup
+	currentPageNumber=0;
+	// isThisEndOfFile=1;
+	return 1;
+}
+
+
+int SortedFile::Open (char *name) {
+
+	isPipeDirty=0; // pipe is not dirty
+	char *metaFileName = new char[20]; // 
+	sprintf(metaFileName, "%s.meta", name);
+
+	fileName = name;
+
+	ifstream metaFile(metaFileName, ios::binary); // open meta file in binary mode
+	metaFile.seekg(sizeof(fileName)-1);
+	
+	// init sortInfo if null
+	if(sortInfo==NULL){
+		sortInfo = new SortInfo;
+		sortInfo->myOrder = new OrderMaker();
+	}
+
+	metaFile.read((char*)sortInfo->myOrder, sizeof(*(sortInfo->myOrder))); //read myOrder from meta file
+	metaFile.read((char*)&(sortInfo->runLength), sizeof(sortInfo->runLength)); // read runLength from meta file
+	metaFile.close(); // close meta files
+
+	fileMode = READ; // set mode to read
+	file.Open(1, name); // open file for this sorted file
 	currentPageNumber = 0;
-	mergePageNumber = 0;
-	isPipeDirty=0;
-	fileMode = READ;	
+	isThisEndOfFile = 0;
 }
 
 void* SortedFile::TriggerBigQThread(void* arg){
@@ -36,19 +74,6 @@ void* SortedFile::TriggerBigQThread(void* arg){
 	params->bigQ = new BigQ(*(params->inPipe),*(params->outPipe),*((params->sortInfo).myOrder),(params->sortInfo).runLength);
 }
 
-int SortedFile::Create (char *f_path, fType f_type, void *startup) {	// done
-	file.Open(0,f_path);	
-
-	fileName = (char *)malloc(sizeof(f_path)+1);
-	strcpy(fileName,f_path);
-	isPipeDirty=0;
-	
-	// use startup to get runlength and ordermaker
-	sortInfo = (SortInfo *) startup;
-	currentPageNumber=0;
-	isThisEndOfFile=1;
-	return 1;
-}
 
 void SortedFile::Load (Schema &f_schema, char *loadpath) {
 	if(fileMode!=WRITE){
@@ -63,32 +88,6 @@ void SortedFile::Load (Schema &f_schema, char *loadpath) {
 		inPipe->Insert(&temp);
 	}
 	fclose(tableFile);	
-}
-
-int SortedFile::Open (char *f_path) {
-
-	isPipeDirty=0;
-	char *fName = new char[20];
-	sprintf(fName, "%s.meta", f_path);
-
-	fileName = (char *)malloc(sizeof(f_path)+1);
-	strcpy(fileName,f_path);
-
-	ifstream ifs(fName,ios::binary);
-
-	ifs.seekg(sizeof(fileName)-1);//,ifs.beg);
-	
-	if(sortInfo==NULL){
-		sortInfo = new SortInfo;
-		sortInfo->myOrder = new OrderMaker();
-	}
-	ifs.read((char*)sortInfo->myOrder, sizeof(*(sortInfo->myOrder)));
-	ifs.read((char*)&(sortInfo->runLength), sizeof(sortInfo->runLength));
-	ifs.close();
-	fileMode = READ;
-	file.Open(1, f_path);
-	currentPageNumber = 0;
-	isThisEndOfFile = 0;
 }
 
 void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
@@ -503,8 +502,8 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 		while(GetNew(rFromFile) != 0){
 			counter++;
 		}*/
-		// mergePageNumber = 0; // duplicates
-		// file.GetPage(&mergePage, mergePageNumber);
+		// runPageNumber = 0; // duplicates
+		// file.GetPage(&runPage, runPageNumber);
 		// fileNotEmpty = GetNew(rFromFile);
 	}
 	cout<<"nRecordsInFile: "<<counter<<endl;
@@ -561,8 +560,6 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 		return;
 	}
 
-	end = 0;
-
 	page.EmptyItOut();
 	file.Open(1, this->fileName);
 	file.GetPage(&page, 0);
@@ -570,37 +567,15 @@ void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 
 
 int SortedFile:: GetNew(Record *r1){
-
-	while(!this->mergePage.GetFirst(r1)) {
-		if(mergePageNumber >= file.GetLength()-1)
+	while(!this->runPage.GetFirst(r1)) {
+		if(runPageNumber >= file.GetLength()-1)
 			return 0;
 		else {
-			file.GetPage(&mergePage, mergePageNumber);
-			mergePageNumber++;
+			file.GetPage(&runPage, runPageNumber);
+			runPageNumber++;
 		}
 	}
-
 	return 1;
-
-	/*if(end){ // if the end of the file has been reached
-		return 0;
-	}
-	r1->Consume(currentRecord);
-
-	if(page.GetFirst(currentRecord) == 1){ // is there a record to fetch?
-		return 1;
-	}
-
-	mergePageNumber+=1; // page has been consumed. Increment page number
-	if(mergePageNumber == file.GetLength()-1){ // if there is no next page return 0
-		end = 1;
-		return 1;
-	}
-
-	file.GetPage(&mergePage, mergePageNumber); // get the next page
-	if(page.GetFirst(currentRecord) == 1){ // record found
-		return 1;
-	}*/
 }	
 
 
@@ -613,128 +588,3 @@ SortedFile::~SortedFile() {
 	delete bigQ;
 	delete fileName;
 }
-
-/*OrderMaker *SortedFile::CheckIfMatches(CNF &cnf, OrderMaker &sortOrder) {
-	
-
-	OrderMaker *matchOrder= new OrderMaker;	// create new order make
-	
-	for(int i = 0; i<sortOrder.numAtts; i++) {	// over every attribute of sortorder
-
-		bool match = false;
-		
-		for(int j = 0; j<cnf.numAnds; j++) {			// 
-
-			if(!match) {
-				
-				for(int k=0; k<cnf.orLens[j]; k++) {	//
-					
-					if(cnf.orList[j][k].op == Equals) {
-		
-						if(cnf.orList[j][k].operand1 == Literal) {
-	
-							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt1)
-									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
-								
-								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
-								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
-								match = true;
-								break;
-							}
-	
-						} else if(cnf.orList[j][k].operand2 == Literal) {
-						
-							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt2)
-									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
-						
-								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
-								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
-								match = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		if(!match) break;
-	}
-	if(matchOrder->numAtts == 0)
-	{
-		cout <<"No query OrderMaker can be constructed!"<<endl;
-		delete matchOrder;
-		return NULL;
-	}
-	return matchOrder;
-}*/
-
-// void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
-// 	file.Open(1, this->fileName);
-	
-// 	Schema mySchema ("catalog", "nation");
-	
-
-// 	inPipe->ShutDown();
-// 	Record fromFile, fromPipe;
-//   	bool fileNotEmpty = !file.IsEmpty(), pipeNotEmpty = outPipe->Remove(&fromPipe);
-//   	DBFile tmp;
-// 	tmp.Create("./mergedFile.tmp.bin", heap, NULL);  // temporary file for the merge result; will be renamed in the end
- 
-//   	ComparisonEngine ce;
-
-//   	// initializes
-//   	if (fileNotEmpty) {
-//   		currentPageNumber=0;
-//     	file.GetPage(&page, currentPageNumber);           // move first
-//     	fileNotEmpty = GetNext(fromFile);
-//   	}
-
-//   	// two-way merge
-//   	while (fileNotEmpty || pipeNotEmpty){
-// 	    if (!fileNotEmpty || (pipeNotEmpty && ce.Compare(&fromFile, &fromPipe, sortInfo->myOrder) > 0)) {
-//       		tmp.Add(fromPipe);
-//       		// fromPipe.Print(&mySchema);
-//       		pipeNotEmpty = outPipe->Remove(&fromPipe);
-//     	} else if (!pipeNotEmpty || (fileNotEmpty && ce.Compare(&fromFile, &fromPipe, sortInfo->myOrder) <= 0)) {
-//       		tmp.Add(fromFile);
-//       		// fromPipe.Print(&mySchema);
-//       		fileNotEmpty = GetNext(fromFile);
-//     	} //else FATAL("Two-way merge failed.");
-// 	}
-//   	// write back
-//   	tmp.Close();
-//   	int renameStatus = rename("mergedFile.tmp.bin", fileName);
-//   	cout<<"fileName:"<<fileName<<" renameStatus:"<<renameStatus<<endl;
-//   	DeleteBigQ();
-// }
-
-// void SortedFile::CreateBigQ() {
-//     inPipe = new Pipe(PIPE_SIZE), outPipe = new Pipe(PIPE_SIZE);
-//     bigQ = new BigQ(*inPipe, *outPipe, *sortInfo->myOrder, sortInfo->runLength);
-// }
-
-// void SortedFile::DeleteBigQ() {
-//     delete inPipe; delete outPipe; delete bigQ;
-//   	inPipe = outPipe = NULL; bigQ = NULL;
-// }
-
-// void SortedFile::SwitchToWriteMode(){
-// 	if(fileMode == WRITE){ // if file mode is already write
-// 		return;
-// 	}
-// 	fileMode = WRITE; // change fileMode to write
-// 	CreateBigQ();
-// }
-
-// void SortedFile::SwitchToReadMode(){
-// 	if(fileMode==READ){ // if file mode is already read
-// 		return;
-// 	}
-// 	fileMode = READ; // change fileMode to read
-// 	MergeFromOutpipe();
-// }
-
-
-// SortedFile::~SortedFile() {
-// 	// delete ptrCurrentRecord;
-// }

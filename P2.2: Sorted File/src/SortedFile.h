@@ -19,8 +19,8 @@ private:
 	int currentPageNumber;
 	int isThisEndOfFile;
 
-	int mergePageNumber;
-	Page mergePage;
+	int runPageNumber;
+	Page runPage;
 
 	fMode fileMode;
 
@@ -47,9 +47,6 @@ private:
 	}threadParams;
 
 	typedef struct bigQThreadParams bigQThreadParams; 
-
-	int end;
-	Record *currentRecord;
 
 public:
 	SortedFile (); 
