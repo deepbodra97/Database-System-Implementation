@@ -12,24 +12,23 @@
 #include <unistd.h>
 
 SortedFile::SortedFile () {
-	inPipe = new Pipe(100);	
-	outPipe = new Pipe(100);
+	inPipe = NULL;
+	outPipe = NULL;
 	bigQ = NULL;
 
 	sortInfo = NULL;
-	OrderMaker *queryOrder = NULL;
+	queryOrder = NULL;
+	didCNFChange = true;
 
 	ptrCurrentRecord = new Record();
 
 	currentPageNumber = 0;
 	mergePageNumber = 0;
 	isPipeDirty=0;
-	fileMode = READ;
-	
-	bool queryChange = true;
+	fileMode = READ;	
 }
 
-void* SortedFile::triggerBigQThread(void* arg){
+void* SortedFile::TriggerBigQThread(void* arg){
 	bigQThreadParams *params;
 	params = (bigQThreadParams *) arg;
 	params->bigQ = new BigQ(*(params->inPipe),*(params->outPipe),*((params->sortInfo).myOrder),(params->sortInfo).runLength);
@@ -45,7 +44,6 @@ int SortedFile::Create (char *f_path, fType f_type, void *startup) {	// done
 	// use startup to get runlength and ordermaker
 	sortInfo = (SortInfo *) startup;
 	currentPageNumber=0;
-	recordIndex = 0;
 	isThisEndOfFile=1;
 	return 1;
 }
@@ -88,7 +86,6 @@ int SortedFile::Open (char *f_path) {
 	fileMode = READ;
 	file.Open(1, f_path);
 	currentPageNumber = 0;
-	recordIndex = 0;
 	isThisEndOfFile = 0;
 }
 
@@ -96,26 +93,14 @@ void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 
 	isPipeDirty=0;	
 	currentPageNumber = 0;
-	recordIndex = 0;
 
 	if(fileMode==READ){
 		// In read mode, so direct movefirst is possortInfoble
-
-	
 		if(file.GetLength()!=0){
 			file.GetPage(&page,currentPageNumber); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
 	
 			int result = page.GetFirst(ptrCurrentRecord);
-			//cout<<result<<endl;
-			
-		//	currentPageNumber = 0;
-			
 		}
-		else{
-		//	currentPageNumber = 0;
-
-		}
-
 	}
 	else{
 		// change mode to read
@@ -124,13 +109,11 @@ void SortedFile::MoveFirst () {			// requires MergeFromOuputPipe()
 		MergeFromOutpipe();
 		file.GetPage(&page,currentPageNumber); //TODO: check off_t type,  void GetPage (Page *putItHere, off_t whichPage)
 		page.GetFirst(ptrCurrentRecord);
-
-		
 		// bring the first page into page
 		// Set curr Record to first record
 		// 
 	}
-	queryChange = true;
+	didCNFChange = true;
 }
 
 int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
@@ -147,8 +130,8 @@ int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 	sprintf(fName,"%s.meta",fileName);
 
 	ofstream out(fName);
-    	out <<"sorted"<<endl;
-    	out.close();
+	out <<"sorted"<<endl;
+	out.close();
 
 
 	ofstream ofs(fName,ios::binary|ios::app);
@@ -173,11 +156,11 @@ void SortedFile::Add (Record &rec) {	// requires BigQ instance		done
 			threadParams.sortInfo.myOrder = sortInfo->myOrder;
 			threadParams.sortInfo.runLength =  sortInfo->runLength;
 			threadParams.bigQ = bigQ;
-			pthread_create(&bigQ_t, NULL, &SortedFile::triggerBigQThread , (void *)&threadParams);		
+			pthread_create(&bigQThread, NULL, &SortedFile::TriggerBigQThread , (void *)&threadParams);		
 		}
 	}
 	inPipe->Insert(&rec);
-	queryChange = true;
+	didCNFChange = true;
 }
 
 int SortedFile::GetNext (Record &fetchme) {		// requires MergeFromOuputPipe()		done
@@ -245,7 +228,7 @@ int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requi
 		MoveFirst();
 	}
 
-	if(queryChange){
+	if(didCNFChange){
 		queryOrder = cnf.CreateQueryMaker(*(sortInfo->myOrder));				
 	}
 	
@@ -286,68 +269,12 @@ int SortedFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {		// requi
 }
 
 
-OrderMaker *SortedFile::checkIfMatches(CNF &cnf, OrderMaker &sortOrder) {
-	
-
-	OrderMaker *matchOrder= new OrderMaker;	// create new order make
-	
-	for(int i = 0; i<sortOrder.numAtts; i++) {	// over every attribute of sortorder
-
-		bool match = false;
-		
-		for(int j = 0; j<cnf.numAnds; j++) {			// 
-
-			if(!match) {
-				
-				for(int k=0; k<cnf.orLens[j]; k++) {	//
-					
-					if(cnf.orList[j][k].op == Equals) {
-		
-						if(cnf.orList[j][k].operand1 == Literal) {
-	
-							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt1)
-									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
-								
-								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
-								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
-								match = true;
-								break;
-							}
-	
-						} else if(cnf.orList[j][k].operand2 == Literal) {
-						
-							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt2)
-									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
-						
-								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
-								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
-								match = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-		if(!match) break;
-	}
-	if(matchOrder->numAtts == 0)
-	{
-		cout <<"No query OrderMaker can be constructed!"<<endl;
-		delete matchOrder;
-		return NULL;
-	}
-	return matchOrder;
-}
-
-
-
 Record* SortedFile::GetMatchPage(Record &literal) {			//returns the first record which equals to literal based on queryorder;
 	
-	if(queryChange) {
+	if(didCNFChange) {
 		int low = currentPageNumber;
 		int high = file.GetLength()-2;
-		int matchPage = binarySearch(low, high, queryOrder, literal);
+		int matchPage = BinarySearch(low, high, queryOrder, literal);
 		if(matchPage == -1) {
 			//not found
 			return NULL;
@@ -357,7 +284,7 @@ Record* SortedFile::GetMatchPage(Record &literal) {			//returns the first record
 			file.GetPage(&page, matchPage);
 			currentPageNumber = matchPage+1;
 		}
-		queryChange = false;
+		didCNFChange = false;
 	}
 
 	//find the potential page, make reader buffer pointer to the first record
@@ -388,10 +315,10 @@ Record* SortedFile::GetMatchPage(Record &literal) {			//returns the first record
 
 }
 
-int SortedFile::binarySearch(int low, int high, OrderMaker *queryOM, Record &literal) {
+int SortedFile::BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Record &literal) {
 	
 	cout<<"serach OM "<<endl;
-	queryOM->Print();
+	queryOrderMaker->Print();
 	cout<<endl<<"file om"<<endl;
 	sortInfo->myOrder->Print();
 
@@ -412,20 +339,20 @@ int SortedFile::binarySearch(int low, int high, OrderMaker *queryOM, Record &lit
 	tmpPage->GetFirst(tmpRcd);
 
 	tmpRcd->Print(&nu);
-	res = comp->Compare(tmpRcd,sortInfo->myOrder, &literal,queryOM );
+	res = comp->Compare(tmpRcd,sortInfo->myOrder, &literal,queryOrderMaker );
 	delete tmpPage;
 	delete tmpRcd;
 
 	if( res == -1) {
 		if(low==mid)
 			return mid;
-		return binarySearch(low, mid-1, queryOM, literal);
+		return BinarySearch(low, mid-1, queryOrderMaker, literal);
 	}
 	else if(res == 0) {
-		return mid;//binarySearch(low, mid-1, queryOM, literal);
+		return mid;//BinarySearch(low, mid-1, queryOrderMaker, literal);
 	}
 	else
-		return binarySearch(mid+1, high,queryOM, literal);
+		return BinarySearch(mid+1, high,queryOrderMaker, literal);
 }
 
 void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
@@ -553,7 +480,59 @@ SortedFile::~SortedFile() {
 	delete outPipe;
 }
 
+/*OrderMaker *SortedFile::CheckIfMatches(CNF &cnf, OrderMaker &sortOrder) {
+	
 
+	OrderMaker *matchOrder= new OrderMaker;	// create new order make
+	
+	for(int i = 0; i<sortOrder.numAtts; i++) {	// over every attribute of sortorder
+
+		bool match = false;
+		
+		for(int j = 0; j<cnf.numAnds; j++) {			// 
+
+			if(!match) {
+				
+				for(int k=0; k<cnf.orLens[j]; k++) {	//
+					
+					if(cnf.orList[j][k].op == Equals) {
+		
+						if(cnf.orList[j][k].operand1 == Literal) {
+	
+							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt1)
+									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
+								
+								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
+								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
+								match = true;
+								break;
+							}
+	
+						} else if(cnf.orList[j][k].operand2 == Literal) {
+						
+							if((sortOrder.whichAtts[i] == cnf.orList[j][k].whichAtt2)
+									&& (sortOrder.whichTypes[i] == cnf.orList[j][k].attType)){
+						
+								matchOrder->whichAtts[matchOrder->numAtts] = sortOrder.whichAtts[i];
+								matchOrder->whichTypes[matchOrder->numAtts++] = sortOrder.whichTypes[i];
+								match = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		if(!match) break;
+	}
+	if(matchOrder->numAtts == 0)
+	{
+		cout <<"No query OrderMaker can be constructed!"<<endl;
+		delete matchOrder;
+		return NULL;
+	}
+	return matchOrder;
+}*/
 
 // void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
 // 	file.Open(1, this->fileName);

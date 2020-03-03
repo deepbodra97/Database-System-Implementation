@@ -13,6 +13,7 @@ struct SortInfo {
 class SortedFile: public GenericDBFile{
 
 private:
+	Record* ptrCurrentRecord;
 	File file;
 	Page page;
 	int currentPageNumber;
@@ -24,28 +25,19 @@ private:
 	fMode fileMode;
 
 	SortInfo *sortInfo;
+	OrderMaker *queryOrder;
+	bool didCNFChange;
 
 	char *fileName;
 
 	int isPipeDirty;
-	// change
-
-	
 	Pipe *inPipe;
 	Pipe *outPipe;
 	BigQ *bigQ;
+	// change
 	
 	
-	
-	
-	
-	
-	Record* ptrCurrentRecord;
-		
-	int recordIndex;
-	bool queryChange;
-	OrderMaker *queryOrder;
-	pthread_t bigQ_t;
+	pthread_t bigQThread;
 
 
 	struct bigQThreadParams{
@@ -77,11 +69,11 @@ public:
 	void MergeFromOutpipe();
 	int GetNew(Record *r1);	
 
-	int binarySearch(int low, int high, OrderMaker *queryOM, Record &literal);
+	int BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Record &literal);
 	Record* GetMatchPage(Record &literal);
-	OrderMaker* checkIfMatches(CNF &c, OrderMaker &o);
+	// OrderMaker* CheckIfMatches(CNF &cnf, OrderMaker &o);
 
-	static void *triggerBigQThread(void*);
+	static void *TriggerBigQThread(void*);
 
 	~SortedFile();
 };
