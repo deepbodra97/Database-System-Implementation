@@ -1,3 +1,4 @@
-3
-8
-(l_partkey>10)
+2
+1
+16
+(n_regionkey)

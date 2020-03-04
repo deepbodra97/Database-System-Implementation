@@ -10,7 +10,7 @@ TEST(CreateTest, ReturnValueTest){
 	ASSERT_EQ(1, dbfile.Create((char *)"./sortedfile.bin", sorted, NULL)); // check if the return value of Create() is 1 or not
 }
 
-TEST(MoveFirstTest, CompareRecord){
+TEST(MoveFirstTest, RecordEqualityTest){
 	setup ();
 
 	relation *rel_ptr[] = {n, r, c, p, ps, s, o, li};
@@ -56,23 +56,25 @@ TEST(MoveFirstTest, CompareRecord){
 	dbfile.Open (rel->path ());
 	Record temp;
 
-	Record firstRecordInserted; // 1st record that was inserted in the file
-	Record firstRecordFetched; // 1st record after MoveFirst
+	Record firstRecordOne; // 1st record after MoveFirst and before closing
+	Record firstRecordTwo; // 1st record after closing after MoveFirst
 
 	int counter=0;
 	while (temp.SuckNextRecord (rel->schema (), tblfile)) {
-		if(counter == 0){ // if counter=0 then temp is the 1st record that is going into the file
-			firstRecordInserted.Copy(&temp); // Copy this record
-		}
 		dbfile.Add (temp);
 		counter++;
 	}
 	cout << "\n create finished.. " << counter << " recs inserted\n";
 	dbfile.MoveFirst(); // move first
-	dbfile.GetNext(firstRecordFetched); // copy the record from ptrCurrentRecord into firstRecordFetched
+	dbfile.GetNext(firstRecordOne); // copy the record from ptrCurrentRecord into firstRecordFetched
+	dbfile.Close();
+
+	dbfile.Open(rel->path());
+	dbfile.MoveFirst(); // move first
+	dbfile.GetNext(firstRecordTwo); // copy the record from ptrCurrentRecord into firstRecordFetched
 
 	ComparisonEngine comparisonEngine;
-	int comparisonResult = comparisonEngine.Compare(&firstRecordInserted, &firstRecordFetched, &o); // compare the 2 records
+	int comparisonResult = comparisonEngine.Compare(&firstRecordOne, &firstRecordTwo, &o); // compare the 2 records
 
 	ASSERT_EQ(0, comparisonResult); // the result should be '0' as the records are both the same
 
@@ -165,7 +167,6 @@ TEST(BigQTest, NumberOfRecordsTest){
 // out of order is 0 or not
 TEST(BigQTest, SortOrderTest){
 	setup ();
-
 	relation *rel_ptr[] = {n, r, c, p, ps, o, li};
 
 	int findx = 0;
