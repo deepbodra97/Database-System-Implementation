@@ -213,27 +213,23 @@ OrderMaker* CNF :: CreateQueryMaker(OrderMaker& order){
 
 
 int CNF :: GetOrder (OrderMaker &left, OrderMaker &right) {
-    
-    // initialize the size of the OrderMakers
+	// init number of attributes to 0
     left.numAtts = 0;
     right.numAtts = 0;
     
-    // loop through all of the disjunctions in the CNF and find those
-    // that are acceptable for use in a sort ordering
-    for (int i = 0; i < numAnds; i++)
-    {
-        // if we don't have a disjunction of length one, then it
-        // can't be acceptable for use with a sort ordering
+    // find the OR's that are useful
+    for (int i = 0; i < numAnds; i++){
+    	// if length not 1
         if (orLens[i] != 1) {
             continue;
         }
         
-        // First verify that it is an equality check
+        // if equality
         if (orList[i][0].op != Equals) {
             continue;
         }
         
-        // check if operand1 is Left and operand2 is Literal
+        // if operand1 is Left and operand2 is Literal
         if (orList[i][0].operand1 == Left && orList[i][0].operand2 == Literal)
         {
             // get type and column-position-in-file for column
@@ -244,7 +240,7 @@ int CNF :: GetOrder (OrderMaker &left, OrderMaker &right) {
             right.whichTypes[right.numAtts] = orList[i][0].attType;
         }
         
-        // check if operand1 is Literal and operand2 is Right
+        // if operand1 is Literal and operand2 is Right
         else if (orList[i][0].operand1 == Literal && orList[i][0].operand2 == Right)
         {
             // get type and column-position-in-file for column
@@ -260,9 +256,7 @@ int CNF :: GetOrder (OrderMaker &left, OrderMaker &right) {
         left.numAtts++;
         right.numAtts++;
     }
-    
     return left.numAtts;
-    
 }
 
 

@@ -13,40 +13,39 @@ struct SortInfo {
 class SortedFile: public GenericDBFile{
 
 private:
-	Record* ptrCurrentRecord;
-	File file;
-	Page page;
-	int currentPageNumber;
-	int isThisEndOfFile;
+	Record* ptrCurrentRecord; // current record
+	File file; // current file
+	Page page; // current page
+	int currentPageNumber; // current page number
+	int isThisEndOfFile; // indicates if all the records are read from the file
 
-	int runPageNumber;
-	Page runPage;
+	int runPageNumber; // run page number
+	Page runPage; // for merging pipe and sorted file, the page will be fetched from 'file' into this pages 
 
-	fMode fileMode;
+	fMode fileMode; // to track current file mode
 
-	SortInfo *sortInfo;
-	OrderMaker *queryOrder;
-	bool didCNFChange;
+	ComparisonEngine comparisonEngine; // for comparison
+	SortInfo *sortInfo; // sort info from startup
+	OrderMaker *queryOrder; // store order maker
+	bool didCNFChange; // to track if CNF/OrderMaker changed
 
-	char *fileName;
+	char *fileName; // store file name
 
-	int isPipeDirty;
-	Pipe *inPipe;
-	Pipe *outPipe;
-	BigQ *bigQ;
+	int isPipeDirty; // track if the pipe has records or not
+	Pipe *inPipe; // input pipe
+	Pipe *outPipe; // output pipe
+	BigQ *bigQ; // bigQ
 	
-	pthread_t bigQThread;
+	pthread_t bigQThread; // bigQ thread
 
 	struct bigQThreadParams{
-	
 		Pipe *inPipe;
 		Pipe *outPipe;
-		SortInfo sortInfo;
-		BigQ *bigQ; 
-
+		SortInfo sortInfo; // sort info from startups
+		BigQ *bigQ;
 	}threadParams;
 
-	typedef struct bigQThreadParams bigQThreadParams; 
+	typedef struct bigQThreadParams bigQThreadParams;
 
 public:
 	SortedFile (); 
@@ -64,7 +63,7 @@ public:
 
 	// Utils
 	void MergeFromOutpipe();
-	int GetNew(Record *r1);	
+	int GetNextRecordFromRunPage(Record *fetchMe);	
 
 	int BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Record &literal);
 	Record* LoadProspectivePage(Record &literal);

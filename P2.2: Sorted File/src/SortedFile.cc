@@ -151,7 +151,6 @@ int SortedFile::Close () {			// requires MergeFromOuputPipe()	done
 
 
 	ofstream ofs(fName,ios::binary|ios::app);
-
 	ofs.write((char*)sortInfo->myOrder,sizeof(*(sortInfo->myOrder)));	
 	ofs.write((char*)&(sortInfo->runLength),sizeof(sortInfo->runLength));
 
@@ -203,8 +202,7 @@ int SortedFile::GetNext (Record &fetchme, CNF &applyMe, Record &literal) {
 		queryOrder = applyMe.CreateQueryMaker(*(sortInfo->myOrder)); // generate new order maker				
 	}
 	
-	ComparisonEngine comparisonEngine;
-		
+
 	if(queryOrder==NULL) { // if the order maker is not compatible the get the first record that matchses the literal
 		while(GetNext(fetchme)){ // sequential scan from ptrCurrentRecord
 			if(comparisonEngine.Compare(&fetchme, &literal, &applyMe)) { // if required record found
@@ -260,7 +258,7 @@ Record* SortedFile::LoadProspectivePage(Record &literal) {			//returns the first
 	//find the potential page, make reader buffer pointer to the first record
 	// that equal to query order
 	Record *resultRecord = new Record();
-	ComparisonEngine comparisonEngine;
+
 	while(page.GetFirst(resultRecord)) { // sequentially search the page until we find a matching record
 		if(comparisonEngine.Compare(resultRecord, &literal, queryOrder) == 0) { // record found
 			return resultRecord;
@@ -295,7 +293,6 @@ int SortedFile::BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Rec
 	tempPage.GetFirst(&tempRecord); // get 1st record from the page
 
 	int compareStatus;
-	ComparisonEngine comparisonEngine;
 	compareStatus = comparisonEngine.Compare(&tempRecord, sortInfo->myOrder, &literal, queryOrderMaker);
 
 	if(compareStatus == -1){
@@ -311,102 +308,73 @@ int SortedFile::BinarySearch(int low, int high, OrderMaker *queryOrderMaker, Rec
 }
 
 
-void SortedFile:: MergeFromOutpipe(){		// requires both read and write modes
+void SortedFile:: MergeFromOutpipe(){
+	inPipe->ShutDown(); // shut down input pipe to get sorted records from output pipe
 
-	inPipe->ShutDown();
-	// get sorted records from output pipe
-	ComparisonEngine *ce;
+	Record *recordFromFile = new Record();
+	Record *recordFromPipe = new Record();
 
-	// following four lines get the first record from those already present (not done)
-	Record *rFromFile = new Record();
+	Page mergePage;	// this page would be used to store records while merging records from runPage and pipe
+	File mergeFile;	// this file will store a bunch of mergePages
+	mergeFile.Open(0, "mergedFile.bin"); // open merge file
 
-	Record *rtemp = new Record();		
-	Page *ptowrite = new Page();			// new page that would be added
-	File *newFile = new File();				// new file after merging
-	newFile->Open(0,"mergedFile");				
-
-	bool nomore = false;
-    int fileNotEmpty = GetNew(rFromFile);
-    // int fileNotEmpty = !file.IsEmpty();
-
-	int currentPageNumber = 0;
-
-	int counter = 0;
-	if(fileNotEmpty){
-		/*counter++;
-		while(GetNew(rFromFile) != 0){
-			counter++;
-		}*/
-		// runPageNumber = 0; // duplicates
-		// file.GetPage(&runPage, runPageNumber);
-		// fileNotEmpty = GetNew(rFromFile);
-	}
-	cout<<"nRecordsInFile: "<<counter<<endl;
-
-
-	int pipeNotEmpty = outPipe->Remove(rtemp);	
-
-	while (fileNotEmpty || pipeNotEmpty){
-	    if (!fileNotEmpty || (pipeNotEmpty && ce->Compare(rFromFile, rtemp, sortInfo->myOrder) > 0)) {
-      		
-	    	if(ptowrite->Append(rtemp)!=1){				// copy record from pipe
-				// write this page to file
-				newFile->AddPage(ptowrite,currentPageNumber++);
-				// empty this out
-				ptowrite->EmptyItOut();
-				// append the ptrCurrentRecord record ?
-				ptowrite->Append(rtemp);		// does this consume the record ?
+	int mergePageNumber = 0;
+	int fileNotEmpty = GetNextRecordFromRunPage(recordFromFile);
+	int pipeNotEmpty = outPipe->Remove(recordFromPipe);	
+	while (fileNotEmpty || pipeNotEmpty){ // while there are records in pipe or file
+	    if (!fileNotEmpty || (pipeNotEmpty && comparisonEngine.Compare(recordFromFile, recordFromPipe, sortInfo->myOrder) > 0)) { // if recordFromPipe is smaller
+	    	// add recordFromPipe to mergePage
+	    	if(mergePage.Append(recordFromPipe)!=1){ // if mergePage is full
+				mergeFile.AddPage(&mergePage,mergePageNumber++); // add mergePage to mergeFile
+				mergePage.EmptyItOut(); // empty mergePage
+				mergePage.Append(recordFromPipe); // add recordFromPipe
 			}
-
-      		// fromPipe.Print(&mySchema);
-      		pipeNotEmpty = outPipe->Remove(rtemp);
-    	} else if (!pipeNotEmpty || (fileNotEmpty && ce->Compare(rFromFile, rtemp, sortInfo->myOrder) <= 0)) {
-    		if(ptowrite->Append(rFromFile)!=1){				// copy record from pipe
-				// write this page to file
-				newFile->AddPage(ptowrite,currentPageNumber++);
-				// empty this out
-				ptowrite->EmptyItOut();
+      		pipeNotEmpty = outPipe->Remove(recordFromPipe); // get next record from pipe
+    	} else if (!pipeNotEmpty || (fileNotEmpty && comparisonEngine.Compare(recordFromFile, recordFromPipe, sortInfo->myOrder) <= 0)) { // if recordFromFile is smaller
+    		// add recordFromFile to mergePage
+    		if(mergePage.Append(recordFromFile)!=1){ // if mergePage is full
+				mergeFile.AddPage(&mergePage,mergePageNumber++); // add mergePage to mergeFile
+				mergePage.EmptyItOut(); // empty mergePage
 				// append the ptrCurrentRecord record ?
-				ptowrite->Append(rFromFile);		// does this consume the record ?
+				mergePage.Append(recordFromFile); // add recordFromFile
 			}
-      		// fromPipe.Print(&mySchema);
-      		fileNotEmpty = GetNew(rFromFile);
+      		fileNotEmpty = GetNextRecordFromRunPage(recordFromFile); // get next record from run page
     	}
     }
-    if(!ptowrite->IsEmpty()){
-		newFile->AddPage(ptowrite,currentPageNumber++);
+    if(!mergePage.IsEmpty()){ // if mergePage is not empty
+		mergeFile.AddPage(&mergePage,mergePageNumber++); // add mergePage to mergeFile
 	}	
-
-	Schema nu("catalog","nation");
 	
-	newFile->Close();
-	file.Close();
+	mergeFile.Close(); // close mergeFile
+	file.Close(); // close file
 
-	// delete resources that are not required
-	if(rename(fileName,"mergefile.tmp")!=0) {				// making merged file the new file
-		cerr <<"rename file error!"<<endl;
+	if(rename(fileName, "oldFile.tmp")!=0) { // rename the old file
+		cout<<"FileError: Cannot rename old SortedFile"<<endl;
 		return;
 	}
-	
-	remove("mergefile.tmp");
+	remove("oldFile.tmp"); // delete old file
 
-	if(rename("mergedFile",fileName)!=0) {				// making merged file the new file
-		cerr <<"rename file error!"<<endl;
+	if(rename("mergedFile.bin", fileName)!=0) {	// set mergeFile as out current file
+		cout<<"FileError: Cannot rename new SortedFile"<<endl;
 		return;
 	}
 
-	page.EmptyItOut();
-	file.Open(1, this->fileName);
-	file.GetPage(&page, 0);
+	page.EmptyItOut(); // empty page
+	file.Open(1, this->fileName); // open this new merged file
+	file.GetPage(&page, 0); // load 1st page of this file
+
+	// free memory
+	delete recordFromFile;
+	delete recordFromPipe;
 }
 
 
-int SortedFile:: GetNew(Record *r1){
-	while(!this->runPage.GetFirst(r1)) {
-		if(runPageNumber >= file.GetLength()-1)
+int SortedFile:: GetNextRecordFromRunPage(Record *fetchMe){
+	while(!this->runPage.GetFirst(fetchMe)) {
+		if(runPageNumber >= file.GetLength()-1) // if no more pages
 			return 0;
 		else {
-			file.GetPage(&runPage, runPageNumber);
+			file.GetPage(&runPage, runPageNumber); // get next page
 			runPageNumber++;
 		}
 	}

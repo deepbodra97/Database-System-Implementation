@@ -7,6 +7,9 @@ ifdef linux
 tag = -n
 endif
 
+gtest_sortedfile.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o gtest_sortedfile.o
+	$(CC) -o gtest_sortedfile.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o gtest_sortedfile.o -lfl -lpthread -lgtest
+
 main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o main.o
 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o main.o -lfl -lpthread
 
@@ -18,6 +21,9 @@ a2test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFi
 	
 a1test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o
 	$(CC) -o a1test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o -lfl
+
+gtest_sortedfile.o: gtest_sortedfile.cc
+	$(CC) -g -c gtest_sortedfile.cc
 
 main.o: main.cc
 	$(CC) -g -c main.cc

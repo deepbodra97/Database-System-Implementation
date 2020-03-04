@@ -5,11 +5,86 @@
 #include <gtest/gtest.h>
 
 
+TEST(CreateTest, ReturnValueTest){
+	DBFile dbfile;
+	ASSERT_EQ(1, dbfile.Create((char *)"./sortedfile.bin", sorted, NULL)); // check if the return value of Create() is 1 or not
+}
+
+TEST(MoveFirstTest, CompareRecord){
+	setup ();
+
+	relation *rel_ptr[] = {n, r, c, p, ps, s, o, li};
+
+	int tindx = 1;
+	int findx = 0;
+	while (findx < 1 || findx > 8) {
+		cout << "\n select table: \n";
+		cout << "\t 1. nation \n";
+		cout << "\t 2. region \n";
+		cout << "\t 3. customer \n";
+		cout << "\t 4. part \n";
+		cout << "\t 5. partsupp \n";
+		cout << "\t 6. supplier \n";
+		cout << "\t 7. orders \n";
+		cout << "\t 8. lineitem \n \t ";
+		cin >> findx;
+	}
+	rel = rel_ptr [findx - 1];
+
+	OrderMaker o;
+	rel->get_sort_order (o);
+
+	int runlen = 0;
+	while (runlen < 1) {
+		cout << "\t\n specify runlength:\n\t ";
+		cin >> runlen;
+	}
+	struct {OrderMaker *o; int l;} startup = {&o, runlen};
+
+	DBFile dbfile;
+	cout << "\n output to dbfile : " << rel->path () << endl;
+	dbfile.Create (rel->path(), sorted, &startup);
+	dbfile.Close ();
+
+	char tbl_path[100];
+	sprintf (tbl_path, "%s%s.tbl", tpch_dir, rel->name()); 
+	cout << " input from file : " << tbl_path << endl;
+
+    FILE *tblfile = fopen (tbl_path, "r");
+
+
+	dbfile.Open (rel->path ());
+	Record temp;
+
+	Record firstRecordInserted; // 1st record that was inserted in the file
+	Record firstRecordFetched; // 1st record after MoveFirst
+
+	int counter=0;
+	while (temp.SuckNextRecord (rel->schema (), tblfile)) {
+		if(counter == 0){ // if counter=0 then temp is the 1st record that is going into the file
+			firstRecordInserted.Copy(&temp); // Copy this record
+		}
+		dbfile.Add (temp);
+		counter++;
+	}
+	cout << "\n create finished.. " << counter << " recs inserted\n";
+	dbfile.MoveFirst(); // move first
+	dbfile.GetNext(firstRecordFetched); // copy the record from ptrCurrentRecord into firstRecordFetched
+
+	ComparisonEngine comparisonEngine;
+	int comparisonResult = comparisonEngine.Compare(&firstRecordInserted, &firstRecordFetched, &o); // compare the 2 records
+
+	ASSERT_EQ(0, comparisonResult); // the result should be '0' as the records are both the same
+
+	dbfile.Close ();
+	fclose (tblfile);
+}
+
+
 // After the *.bin.bigq file has been generated, this function checks if the intermediate run file was generated or not
 // The run file has the name "yolo.runfile"
 TEST(BigQTest, RunFileExistenceTest){		
 	ifstream runFile("./yolo.runfile");
-
 	ASSERT_TRUE(runFile.good())<<"The intermediate runfile wasn't created"; // assert: does the intermediate run file exist?
 	cleanup ();
 }
@@ -71,8 +146,9 @@ TEST(BigQTest, NumberOfRecordsTest){
 		nBinFile++;
 	}
 	dbfile.Close();
+
 	char bigQFileName[100];
-	sprintf (bigQFileName, "%s.bigq", rel->path ());
+	sprintf (bigQFileName, "%s", rel->path ());
 	dbfile.Open(bigQFileName);
 	dbfile.MoveFirst();
 	int nBigQFile = 0;
@@ -111,7 +187,7 @@ TEST(BigQTest, SortOrderTest){
 
 	DBFile dbfile;
 	char bigFileName[100];
-	sprintf (bigFileName, "%s.bigq", rel->path ());
+	sprintf (bigFileName, "%s", rel->path ());
 	dbfile.Open(bigFileName);
 
 	ComparisonEngine comparisonEngine;

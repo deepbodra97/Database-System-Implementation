@@ -244,7 +244,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	runRecordMetaData.clear(); // free the space occupied by the vector
 
 	runFile.Close(); // close runFile
-	remove("./runFile.bin"); // remove runFile
+	// remove("./runFile.bin"); // remove runFile
 
 	// finally shut down the out pipe
 	bigQMemberHolder->out->ShutDown();
@@ -260,81 +260,3 @@ BigQ :: BigQ (Pipe &in, Pipe &out, OrderMaker &sortorder, int runVectorlen) {
 
 BigQ::~BigQ () {
 }
-
-//Phase 1: test start
-	// int nRuns = 0;
-	// while(bigQMemberHolder->in->Remove(&recordFromPipe)){ // while there are records in the pipe
-	// 	Record *copyOfRecordFromPipe = new Record(); // to store copy of the record
-	// 	copyOfRecordFromPipe->Copy(&recordFromPipe); // copy the record from pipe
-
-	// 	if(tempPage.Append(&recordFromPipe) == 1){ // record fits in the temp page
-	// 		runVector.push_back(copyOfRecordFromPipe); // add the record in the vector for the current run
-	// 	} else{ // record does not fit in the page
-	// 		nPagesFilledForARun++; // increase page number
-	// 		tempPage.EmptyItOut(); // empty the temp page
-	// 		if(nPagesFilledForARun == bigQMemberHolder->runVectorlen){ // if runVectorlen pages of records processed
-
-	// 			stable_sort(runVector.begin(), runVector.end(), recordComparator); // sort the records
-	// 			for(std::vector<Record*>::iterator it=runVector.begin(); it!=runVector.end(); ++it){ // commit the sorted records to the file
-	// 				bigQMemberHolder->out->Insert(*it);
-	// 			}
-	// 			cout<<"-----End of Run-----"<<endl;
-	// 			nPagesFilledForARun = 0; // set the number of pages filled to 0 for the next run
-	// 			runVector.clear(); // clear vector
-	// 		}
-	// 		tempPage.Append(&recordFromPipe);
-	// 		runVector.push_back(copyOfRecordFromPipe); // add the record that did not fit earlier as a part of the next run
-	// 	}
-	// }
-
-
-/*// test start
-		// print heads of runs
-		cout<<"Heads"<<endl;
-		Schema mySchema("catalog", "orders");
-		Page printPage;
-		int printPageNumber=0;
-		Record printRecord;
-		for(int i=0; i<nRuns; i++){
-			runFile.GetPage(&printPage, printPageNumber);
-			if(printPage.GetFirst(&printRecord) == 1){
-				printRecord.Print(&mySchema);
-			}
-			while(printPage.GetFirst(&printRecord) == 1){
-					
-			}
-			printPageNumber+=1;
-		}
-
-		// test end*/
-
-		// test start
-		// print entire runFile
-		/*cout<<"Entire runFile"<<endl;
-		Schema mySchema("catalog", "orders");
-		Page printPage;
-		int printPageNumber=0;
-		Record printRecord;
-		runFile.GetPage(&printPage, printPageNumber);
-		while(true){
-			
-			if(printPage.GetFirst(&printRecord) == 1){
-				printRecord.Print(&mySchema);
-			}else{
-				printPageNumber+=1;
-				if(printPageNumber<=nPages){
-					runFile.GetPage(&printPage, printPageNumber);
-				}
-			}
-		}*/ 
-
-		// test end
-
-// test start
-		/*cout<<"Popped"<<endl;
-		for(int i=0; i<nRuns; i++){
-			priorityQueue.top()->record.Print(&mySchema);
-			priorityQueue.pop();
-		}*/
-		// Schema mySchema("catalog", "orders");
-		// test end

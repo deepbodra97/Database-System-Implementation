@@ -6,9 +6,6 @@
 #include "ComparisonEngine.h"
 #include "Defs.h"
 #include "HeapFile.h"
-// stub file .. replace it with your own Heap.cc
-
-//TODO:optimise for branch misses
 
 HeapFile::HeapFile () {
 	ptrCurrentRecord = new Record();
@@ -22,9 +19,6 @@ HeapFile::HeapFile () {
 }
 
 HeapFile::~HeapFile(){
-	// delete file;
-	// delete readPage;
-	// delete writePage;
 	delete ptrCurrentRecord;
 }
 
@@ -49,14 +43,6 @@ void HeapFile::Load (Schema &f_schema, char *loadpath) {
 }
 
 int HeapFile::Open (char *f_path) {
-	//TODO:metadata
-	// currentPageNumber = 0;
-	// readPageNumber = 0;
-	// readPageRecordNumber = 0;
-	// fileMode = WRITE;
-	// isThisEndOfFile = false;
-	// file.GetPage(&page, currentPageNumber);
-
 	filePath = f_path;
 	file.Open(1, (char *)filePath); // first parameter <1> (any non zero value) will open an existing file
 	MoveFirst();
@@ -74,19 +60,6 @@ void HeapFile::MoveFirst () {
 }
 
 int HeapFile::Close () {
-	
-	//metadata
-	// char meta_path[20];
-
-	// sprintf(meta_path,"%s.meta", filePath);
-
-	// FILE *meta =  fopen(meta_path,"w");
-
-	// fprintf(meta,"%s","heap");
-	//metadata
-	// fclose(meta);
-
-	// SwitchToReadMode();
 	MoveFirst();
 	if(fileMode == WRITE && !page.IsEmpty()){
 		file.AddPage(&page, currentPageNumber); // add the dirty page to the file
@@ -103,8 +76,6 @@ int HeapFile::Close () {
 }
 
 void HeapFile::Add (Record &rec) {
-	// Schema mySchema ("catalog", "nation");
-	// rec.Print(&mySchema);
 	SwitchToWriteMode(); // switch to write mode
 	int addStatus = page.Append(&rec);
 	if(addStatus == 0){ // is page full?
@@ -173,13 +144,9 @@ void HeapFile::SwitchToReadMode(){
 	}
 	fileMode = READ; // change fileMode to read
 	if(page.GetNumRecs() != 0){ // if the current page has records
-		// cout<<file.GetLength()<<endl;
 		file.AddPage(&page, currentPageNumber); // add the dirty page to the file
 		page.EmptyItOut();
-		// cout<<"Adding last page:"<<page.GetNumRecs()<<endl;
-		// cout<<file.GetLength()<<endl;
 	}
-	// cout<<"readPageNumber:"<<readPageNumber<<" readPageRecordNumber: "<<readPageRecordNumber<<endl;
 	file.GetPage(&page, readPageNumber); // get the page that was being read earlier(before the write started)
 	Record temp;
 	for(int i=0; i<readPageRecordNumber; i++){ // move to the record that was being pointed to earlier (before the write started)
