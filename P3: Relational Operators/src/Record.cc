@@ -2,8 +2,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
-#include<stdlib.h>
+
 
 Record :: Record () {
 	bits = NULL;
@@ -17,6 +18,112 @@ Record :: ~Record () {
 
 }
 
+
+int Record :: ComposeRecord (Schema *mySchema, const char *src) {
+
+	// this is temporary storage
+	char *space = new (std::nothrow) char[PAGE_SIZE];
+	if (space == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	char *recSpace = new (std::nothrow) char[PAGE_SIZE];
+	if (recSpace == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	// clear out the present record
+	if (bits != NULL) 
+		delete [] bits;
+	bits = NULL;
+
+	int n = mySchema->GetNumAtts();
+	Attribute *atts = mySchema->GetAtts();
+
+	// this is the current position (int bytes) in the binary
+	// representation of the record that we are dealing with
+	int currentPosInRec = sizeof (int) * (n + 1);
+
+	// loop through all of the attributes
+	int cursor = 0;
+	for (int i = 0; i < n; i++) {
+		
+		// first we suck in the next attribute value
+		int len = 0;
+		while (1) {
+			int nextChar = src[cursor++];
+			if (nextChar == '|')
+				break;
+			else if (nextChar == '\0') {
+				delete [] space;
+				delete [] recSpace;
+				return 0;
+			}
+
+			space[len] = nextChar;
+			len++;
+		}
+
+		// set up the pointer to the current attribute in the record
+		((int *) recSpace)[i + 1] = currentPosInRec;
+
+		// null terminate the string
+		space[len] = 0;
+		len++;
+
+		// then we convert the data to the correct binary representation
+		if (atts[i].myType == Int) {
+			*((int *) &(recSpace[currentPosInRec])) = atoi (space);	
+			currentPosInRec += sizeof (int);
+
+		} else if (atts[i].myType == Double) {
+
+			// make sure that we are starting at a double-aligned position;
+			// if not, then we put some extra space in there
+			while (currentPosInRec % sizeof(double) != 0) {
+				currentPosInRec += sizeof (int);
+				((int *) recSpace)[i + 1] = currentPosInRec;
+			}
+
+			*((double *) &(recSpace[currentPosInRec])) = atof (space);
+			currentPosInRec += sizeof (double);
+
+		} else if (atts[i].myType == String) {
+
+			// align things to the size of an integer if needed
+			if (len % sizeof (int) != 0) {
+				len += sizeof (int) - (len % sizeof (int));
+			}
+
+			strcpy (&(recSpace[currentPosInRec]), space); 
+			currentPosInRec += len;
+
+		} 
+		
+	}
+
+	// the last thing is to set up the pointer to just past the end of the reocrd
+	((int *) recSpace)[0] = currentPosInRec;
+
+	// and copy over the bits
+	bits = new (std::nothrow) char[currentPosInRec];
+	if (bits == NULL)
+	{
+		cout << "ERROR : Not enough memory. EXIT !!!\n";
+		exit(1);
+	}
+
+	memcpy (bits, recSpace, currentPosInRec);	
+
+	delete [] space;
+	delete [] recSpace;
+
+	return 1;
+}
 
 int Record :: SuckNextRecord (Schema *mySchema, FILE *textFile) {
 
