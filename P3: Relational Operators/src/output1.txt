@@ -1,0 +1,10 @@
+	 3. customer 
+	 4. part 
+	 5. partsupp 
+	 6. supplier 
+	 7. orders 
+	 8. lineitem 
+ 	 
+ specify sort ordering (when done press ctrl-D):
+	 3: syntax error at 8
+ Error: can't parse your CNF.
