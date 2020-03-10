@@ -6,7 +6,7 @@
 #define MAX_ORS 20
 
 #define PAGE_SIZE 131072
-#define PIPE_SIZE 128
+#define PIPE_SIZE 100
 
 
 enum Target {Left, Right, Literal};

@@ -6,36 +6,63 @@
 #include "Record.h"
 #include "Function.h"
 
+class OperatorThreadMemberHolder{
+public:
+	Schema *mySchema;
+	Pipe *inPipe;
+	Pipe *outPipe;
+	CNF *selOp;
+	DBFile *inFile;
+	Record *literal;
+	int numAttsInput;
+	int numAttsOutput;
+	int *keepMe;
+	int runLength;
+
+	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength){
+		this->mySchema = mySchema;
+		this->inPipe = inPipe;
+		this->inFile = inFile;
+		this->outPipe = outPipe;
+		this->selOp = selOp;
+		this->literal = literal;
+		this->numAttsInput = numAttsInput;
+		this->numAttsOutput = numAttsOutput;
+		this->keepMe = keepMe;
+		this->runLength = runLength;
+	}
+};
+
 class RelationalOp {
-	public:
+
+public:
 	// blocks the caller until the particular relational operator 
 	// has run to completion
 	virtual void WaitUntilDone () = 0;
 
 	// tell us how much internal memory the operation can use
 	virtual void Use_n_Pages (int n) = 0;
+
+protected:
+	pthread_t operatorThread;
 };
 
 class SelectFile : public RelationalOp { 
-
-	private:
-	// pthread_t thread;
-	// Record *buffer;
-
-	public:
-
+public:
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
 	void WaitUntilDone ();
 	void Use_n_Pages (int n);
-
+	static void* operate(void* arg);
 };
 
 class SelectPipe : public RelationalOp {
 	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);
 };
+
 class Project : public RelationalOp { 
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) { }
@@ -48,12 +75,17 @@ class Join : public RelationalOp {
 	void WaitUntilDone () { }
 	void Use_n_Pages (int n) { }
 };
+
 class DuplicateRemoval : public RelationalOp {
-	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+private:
+	int runLength;
+public:
+	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);	
 };
+
 class Sum : public RelationalOp {
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) { }
