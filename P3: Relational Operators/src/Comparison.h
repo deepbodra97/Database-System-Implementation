@@ -62,6 +62,9 @@ public:
 
 	// print to the screen
 	void Print ();
+
+	int GetNumAtts() const;
+    int* GetAtts() ;
 };
 
 class Record;

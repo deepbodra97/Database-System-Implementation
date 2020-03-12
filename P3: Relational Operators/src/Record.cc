@@ -468,5 +468,39 @@ void Record :: Print (Schema *mySchema) {
 	cout << "\n";
 }
 
+int Record::GetNumAtts(){
+    return ((int*)bits)[1]/sizeof(int)-1;
+}
 
+int Record::GetLength() const{
+	return ((int*)bits)[0];
+}
 
+void Record::alloc(size_t len){
+	if (bits != NULL){
+		// delete[] bits;
+	}
+	bits = new char[len];
+	setLength(len);
+}
+
+void Record::setLength(int len) {
+	((int*)bits)[0] = len;
+}
+
+int Record::getPointer(size_t n) const {
+	return ((int*)bits)[n+1];
+}
+
+void Record::setPointer(size_t n, int offset){
+	((int*)bits)[n+1] = offset;
+}
+
+void Record::CrossProduct(Record* left, Record* right) {
+  int nLeft = left->GetNumAtts(), nRight = right->GetNumAtts();
+  int* attsToKeep = new int[nLeft+nRight];
+  for(int i=0; i<nLeft; ++i) attsToKeep[i] = i;
+  for(int i=0; i<nRight; ++i) attsToKeep[i+nLeft] = i;
+  MergeRecords (left, right, nLeft, nRight, attsToKeep, nLeft+nRight, nLeft);
+  delete[] attsToKeep;
+}

@@ -117,6 +117,10 @@ void OrderMaker :: Print () {
 	}
 }
 
+int OrderMaker::GetNumAtts() const { return numAtts; }
+
+int* OrderMaker::GetAtts() { return whichAtts; }
+
 
 
 int CNF :: GetSortOrders (OrderMaker &left, OrderMaker &right) {

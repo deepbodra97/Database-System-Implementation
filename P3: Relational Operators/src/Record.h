@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstring>
 
 #include "Defs.h"
 #include "ParseTree.h"
@@ -68,6 +69,48 @@ public:
 	// prints the contents of the record; this requires
 	// that the schema also be given so that the record can be interpreted
 	void Print (Schema *mySchema);
+
+	int GetNumAtts();
+
+	int GetLength() const;
+	void alloc(size_t len);
+	void setLength(int len);
+    int getPointer(size_t n) const;
+    void setPointer(size_t n, int offset);
+    // template <class T> void setValue(size_t n, const T& value);
+	template <class T> void setValue(size_t n, const T& value){
+		size_t offset = getPointer(n);  *(T*)(bits+offset) = value;
+	}
+
+	// template <class T> Record(const T& value);
+    template <class T>    // T should be int or double
+	Record(const T& value) {
+	  	size_t totSpace = 2*sizeof(int) + sizeof(T);   // one for length, one for pointer, one for value
+	  	alloc(totSpace);
+	  	setPointer(0, 2*sizeof(int));
+	  	setValue(0, value);
+	}
+
+	template <class T>     // T should be int or double
+	void prepend(const T& value) {
+  		size_t growth = sizeof(int) + sizeof(T);     // size of new stuff prepended
+  		size_t totSpace = GetLength() + growth;
+  		int numA = GetNumAtts();
+  		Record newRec;
+  		newRec.alloc(totSpace);
+  		newRec.setPointer(0, sizeof(int)*(numA+2));   // set the new pointer & value
+  		newRec.setValue(0, value);
+  		for (int i=0; i<numA; ++i)        // move old pointers
+    		newRec.setPointer(i+1, getPointer(i)+growth);  // this has problems????
+		memcpy((void*)(newRec.bits+(getPointer(0)+growth)),    // move old values
+ 		(void*)(bits+getPointer(0)),
+     	GetLength()-getPointer(0));
+		Consume(&newRec);
+	}
+  
+        // similar to MergeRecords...
+        // use ALL attributes from left and right
+    void CrossProduct (Record* left, Record* right);
 };
 
 #endif

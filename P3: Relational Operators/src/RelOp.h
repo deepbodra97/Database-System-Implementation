@@ -18,8 +18,11 @@ public:
 	int numAttsOutput;
 	int *keepMe;
 	int runLength;
+	Function *function;
+	OrderMaker *groupAtts;
+	Pipe *inPipeR;
 
-	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength){
+	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
 		this->mySchema = mySchema;
 		this->inPipe = inPipe;
 		this->inFile = inFile;
@@ -30,6 +33,9 @@ public:
 		this->numAttsOutput = numAttsOutput;
 		this->keepMe = keepMe;
 		this->runLength = runLength;
+		this->function = function;
+		this->groupAtts = groupAtts;
+		this->inPipeR = inPipeR;
 	}
 };
 
@@ -64,17 +70,44 @@ class SelectPipe : public RelationalOp {
 };
 
 class Project : public RelationalOp { 
-	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+public:
+	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);
 };
+
+
+class JoinBuffer;
 class Join : public RelationalOp { 
-	public:
-	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+public:
+	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+private:
+	int runLength;
+	
+	static void* operate(void* param);
+	static void sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout,
+                             CNF* sel, Record* literal, size_t runLen);
+	static void nestedLoopJoin(Pipe* pleft, Pipe* pright, Pipe* pout, CNF* sel, Record* literal, size_t runLen);
+	static void joinBuf(JoinBuffer& buffer, DBFile& file, Pipe& out, Record& literal, CNF& sleOp);
+	static void dumpFile(Pipe& in, DBFile& out);
 };
+
+class JoinBuffer {
+	friend class Join;
+	JoinBuffer(size_t npages);
+	~JoinBuffer();
+ 
+	bool add (Record& addme);
+  	void clear () { size=nrecords=0; }
+
+  	size_t size, capacity;   // in bytes
+  	size_t nrecords;
+  	Record* buffer;
+};
+
 
 class DuplicateRemoval : public RelationalOp {
 private:
@@ -87,17 +120,35 @@ public:
 };
 
 class Sum : public RelationalOp {
-	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+public:
+	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);
+	template <class T> static void calculateSum(Pipe* in, Pipe* out, Function* function);
 };
+
 class GroupBy : public RelationalOp {
-	public:
-	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+private:
+	int runLength;
+
+public:
+	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
+	void WaitUntilDone ();
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);
+
+	template <class T>
+	static void doGroup(Pipe* in, Pipe* out, OrderMaker* order, Function* func, size_t runLen);
+
+	template <class T>
+  	static void putGroup(Record& cur, const T& sum, Pipe* out, OrderMaker* order) {
+	    cur.Project(order->GetAtts(), order->GetNumAtts(), cur.GetNumAtts());
+	    cur.prepend(sum);
+	    out->Insert(&cur);
+  	}
 };
+
 class WriteOut : public RelationalOp {
 	public:
 	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) { }

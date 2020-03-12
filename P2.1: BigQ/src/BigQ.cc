@@ -70,7 +70,6 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	/* PHASE 1: Split phase
 	 * read data from in pipe sort them into runVectorlen pages
 	 */
-
 	BigQMemberHolder *bigQMemberHolder;
 	bigQMemberHolder = (BigQMemberHolder*)arg;
 
