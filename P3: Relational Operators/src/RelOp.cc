@@ -72,13 +72,16 @@ void Project::Use_n_Pages (int runlen) {
 }
 
 void* Project::operate (void *arg) {
+	cout<<"operate:start\n";
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	Record currentRecord;
 	while(params->inPipe->Remove(&currentRecord)){
+		cout<<"operate:loop\n";
 		currentRecord.Project(params->keepMe, params->numAttsOutput, params->numAttsInput);
 		params->outPipe->Insert(&currentRecord);
 	}
 	params->outPipe->ShutDown();
+	cout<<"operate:end\n";
 }
 
 /**************************************************************************************************

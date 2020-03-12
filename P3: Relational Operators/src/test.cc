@@ -38,12 +38,12 @@ int clear_pipe (Pipe &in_pipe, Schema *schema, Function &func, bool print) {
 int pipesz = 100; // buffer sz allowed for each pipe
 int buffsz = 100; // pages of memory allowed for operations
 
-SelectFile SF_ps, SF_p, SF_s, SF_o, SF_li, SF_c;
-DBFile dbf_ps, dbf_p, dbf_s, dbf_o, dbf_li, dbf_c;
-Pipe _ps (pipesz), _p (pipesz), _s (pipesz), _o (pipesz), _li (pipesz), _c (pipesz);
-CNF cnf_ps, cnf_p, cnf_s, cnf_o, cnf_li, cnf_c;
-Record lit_ps, lit_p, lit_s, lit_o, lit_li, lit_c;
-Function func_ps, func_p, func_s, func_o, func_li, func_c;
+SelectFile SF_ps, SF_p, SF_s, SF_o, SF_li, SF_c, SF_n;
+DBFile dbf_ps, dbf_p, dbf_s, dbf_o, dbf_li, dbf_c, dbf_n;
+Pipe _ps (pipesz), _p (pipesz), _s (pipesz), _o (pipesz), _li (pipesz), _c (pipesz), _n(pipesz);
+CNF cnf_ps, cnf_p, cnf_s, cnf_o, cnf_li, cnf_c, cnf_n;
+Record lit_ps, lit_p, lit_s, lit_o, lit_li, lit_c, lit_n;
+Function func_ps, func_p, func_s, func_o, func_li, func_c, func_n;
 
 int pAtts = 9;
 int psAtts = 5;
@@ -53,6 +53,12 @@ int sAtts = 7;
 int cAtts = 8;
 int nAtts = 4;
 int rAtts = 3;
+
+void init_SF_n (char *pred_str, int numpgs) {
+	dbf_n.Open (n->path());
+	get_cnf (pred_str, n->schema (), cnf_n, lit_n);
+	SF_n.Use_n_Pages (numpgs);
+}
 
 void init_SF_ps (char *pred_str, int numpgs) {
 	dbf_ps.Open (ps->path());
@@ -106,6 +112,20 @@ void q1 () {
 	dbf_ps.Close ();
 }
 
+void q1_n () {
+
+	char *pred_n = "(n_nationkey > 5)";
+	init_SF_n (pred_n, 100);
+
+	SF_n.Run (dbf_n, _n, cnf_n, lit_n);
+	SF_n.WaitUntilDone ();
+
+	int cnt = clear_pipe (_n, n->schema (), true);
+	cout << "\n\n query1 returned " << cnt << " records \n";
+
+	dbf_n.Close ();
+}
+
 
 // select p_partkey(0), p_name(1), p_retailprice(7) from part where (p_retailprice > 931.01) AND (p_retailprice < 931.3);
 // expected output: 22 records
@@ -134,6 +154,33 @@ void q2 () {
 	cout << "\n\n query2 returned " << cnt << " records \n";
 
 	dbf_p.Close ();
+}
+
+void q2_n () {
+
+	char *pred_n = "(n_nationkey > 5)";
+	init_SF_n (pred_n, 100);
+
+	Project P_n;
+		Pipe _out (pipesz);
+		int keepMe[] = {0,1};
+		int numAttsIn = nAtts;
+		int numAttsOut = 2;
+	P_n.Use_n_Pages (buffsz);
+
+	SF_n.Run (dbf_n, _n, cnf_n, lit_n);
+	P_n.Run (_n, _out, keepMe, numAttsIn, numAttsOut);
+
+	SF_n.WaitUntilDone ();
+	P_n.WaitUntilDone ();
+
+	Attribute att3[] = {IA, SA};
+	Schema out_sch ("out_sch", numAttsOut, att3);
+	int cnt = clear_pipe (_n, n->schema (), true);
+
+	cout << "\n\n query2 returned " << cnt << " records \n";
+
+	dbf_n.Close ();
 }
 
 // select sum (s_acctbal + (s_acctbal * 1.05)) from supplier;
