@@ -550,3 +550,49 @@ void Record::Write(FILE* file, Schema* mySchema) {
 
   fprintf(file, "\n");
 }
+
+void Record :: Print (Schema *mySchema, ostream & os) {
+
+  int n = mySchema->GetNumAtts();
+  Attribute *atts = mySchema->GetAtts();
+
+  // loop through all of the attributes
+  for (int i = 0; i < n; i++) {
+
+    // print the attribute name
+    os << atts[i].name << ": ";
+
+    // use the i^th slot at the head of the record to get the
+    // offset to the correct attribute in the record
+    int pointer = ((int *) bits)[i + 1];
+
+    // here we determine the type, which given in the schema;
+    // depending on the type we then print out the contents
+    os << "[";
+
+    // first is integer
+    if (atts[i].myType == Int) {
+      int *myInt = (int *) &(bits[pointer]);
+      os << *myInt;
+
+      // then is a double
+    } else if (atts[i].myType == Double) {
+      double *myDouble = (double *) &(bits[pointer]);
+      os << *myDouble;
+
+      // then is a character string
+    } else if (atts[i].myType == String) {
+      char *myString = (char *) &(bits[pointer]);
+      os << myString;
+    }
+
+    os << "]";
+
+    // print out a comma as needed to make things pretty
+    if (i != n - 1) {
+      os << ", ";
+    }
+  }
+
+  os << "\n";
+}

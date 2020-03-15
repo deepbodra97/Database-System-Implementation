@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
+#include <fstream>
 
 #include "Defs.h"
 #include "ParseTree.h"
@@ -113,6 +114,19 @@ public:
     void CrossProduct (Record* left, Record* right);
 
 	void Write (FILE* file, Schema* mySchema);
+
+	bool isNull (){
+		if (NULL == bits)
+    		return true;
+  		return false;
+	}
+
+	void SetNull (){
+  		bits = NULL;
+  		return;
+	}
+
+	void Print (Schema *mySchema, std::ostream & os);
 };
 
 #endif
