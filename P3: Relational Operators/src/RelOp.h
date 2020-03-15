@@ -21,12 +21,14 @@ public:
 	Function *function;
 	OrderMaker *groupAtts;
 	Pipe *inPipeR;
+	FILE *outFile;
 
-	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
+	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, FILE *outFile, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
 		this->mySchema = mySchema;
 		this->inPipe = inPipe;
 		this->inFile = inFile;
 		this->outPipe = outPipe;
+		this->outFile = outFile;
 		this->selOp = selOp;
 		this->literal = literal;
 		this->numAttsInput = numAttsInput;
@@ -44,19 +46,20 @@ class RelationalOp {
 public:
 	// blocks the caller until the particular relational operator 
 	// has run to completion
-	virtual void WaitUntilDone () = 0;
+	virtual void WaitUntilDone ();
 
 	// tell us how much internal memory the operation can use
 	virtual void Use_n_Pages (int n) = 0;
 
 protected:
 	pthread_t operatorThread;
+	static int create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg);
 };
 
 class SelectFile : public RelationalOp { 
 public:
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
@@ -64,7 +67,7 @@ public:
 class SelectPipe : public RelationalOp {
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
@@ -72,7 +75,7 @@ class SelectPipe : public RelationalOp {
 class Project : public RelationalOp { 
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
@@ -82,7 +85,7 @@ class JoinBuffer;
 class Join : public RelationalOp { 
 public:
 	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 private:
 	int runLength;
@@ -114,7 +117,7 @@ private:
 	int runLength;
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);	
 };
@@ -122,7 +125,7 @@ public:
 class Sum : public RelationalOp {
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);
 	template <class T> static void calculateSum(Pipe* in, Pipe* out, Function* function);
@@ -134,7 +137,7 @@ private:
 
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
-	void WaitUntilDone ();
+	// void WaitUntilDone ();
 	void Use_n_Pages (int n);
 	static void* operate(void* arg);
 
@@ -151,8 +154,9 @@ public:
 
 class WriteOut : public RelationalOp {
 	public:
-	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) { }
-	void WaitUntilDone () { }
-	void Use_n_Pages (int n) { }
+	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
+	// void WaitUntilDone () { }
+	void Use_n_Pages (int n);
+	static void* operate(void* arg);
 };
 #endif

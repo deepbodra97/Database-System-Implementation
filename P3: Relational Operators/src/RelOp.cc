@@ -1,16 +1,31 @@
 #include "RelOp.h"
+
+void RelationalOp::WaitUntilDone() {
+	pthread_join (operatorThread, NULL); 
+}
+
+int RelationalOp::create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg) {
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	int rc = pthread_create(thread, &attr, start_routine, arg);
+	pthread_attr_destroy(&attr);
+	return rc;
+}
+
 /**************************************************************************************************
 SELECT PIPE
 **************************************************************************************************/
 
 void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void SelectPipe::WaitUntilDone () {
+/*void SelectPipe::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void SelectPipe::Use_n_Pages (int runlen) {
 	return;	
@@ -33,13 +48,14 @@ void* SelectPipe::operate (void *arg) {
 SELECT FILE
 **************************************************************************************************/
 void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, NULL, &inFile, &outPipe, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, NULL, &inFile, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void SelectFile::WaitUntilDone () {
+/*void SelectFile::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void SelectFile::Use_n_Pages (int runlen) {
 	return;
@@ -59,13 +75,14 @@ void* SelectFile::operate (void *arg) {
 PROJECT
 **************************************************************************************************/
 void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, numAttsInput, numAttsOutput, keepMe, 0, NULL, NULL, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, 0, NULL, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void Project::WaitUntilDone () {
+/*void Project::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void Project::Use_n_Pages (int runlen) {
 	return;
@@ -88,13 +105,14 @@ void* Project::operate (void *arg) {
 JOIN
 **************************************************************************************************/
 void Join::Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, &inPipeR);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, &inPipeR);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void Join::WaitUntilDone () {
+/*void Join::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void Join::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
@@ -104,11 +122,11 @@ void Join::Use_n_Pages (int runlen) {
 void* Join::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	OrderMaker orderLeft, orderRight;
-	if (params->selOp->GetSortOrders(orderLeft, orderRight)){
-		sortMergeJoin(params->inPipe, &orderLeft, params->inPipeR, &orderRight, params->outPipe, params->selOp, params->literal, params->runLength);
-	} else{
+	// if (params->selOp->GetSortOrders(orderLeft, orderRight)){
+		// sortMergeJoin(params->inPipe, &orderLeft, params->inPipeR, &orderRight, params->outPipe, params->selOp, params->literal, params->runLength);
+	// } else{
 		nestedLoopJoin(params->inPipe, params->inPipeR, params->outPipe, params->selOp, params->literal, params->runLength);
-	}
+	// }
 	params->outPipe->ShutDown();
 }
 
@@ -170,7 +188,7 @@ void Join::joinBuf(JoinBuffer& buffer, DBFile& file, Pipe& out, Record& literal,
 	Record merged;
 
 	Record fromFile, fromBuffer;
-
+	file.MoveFirst();
 	while(file.GetNext(fromFile)){
 		FOREACH(fromBuffer, buffer.buffer, buffer.nrecords)
 		if (cmp.Compare(&fromBuffer, &fromFile, &literal, &selOp)) {   // actural join
@@ -207,7 +225,7 @@ void Join::dumpFile(Pipe& in, DBFile& out) {
 }
 
 JoinBuffer::JoinBuffer(size_t npages): size(0), capacity(PAGE_SIZE*npages), nrecords(0) {
-  buffer = new Record[PAGE_SIZE*npages/sizeof(Record*)];
+	buffer = new Record[PAGE_SIZE*npages/sizeof(Record*)];
 }
 
 JoinBuffer::~JoinBuffer() { delete[] buffer; }
@@ -222,13 +240,14 @@ bool JoinBuffer::add (Record& addme) {
 DUPLICATE REMOVAL
 **************************************************************************************************/
 void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, &outPipe, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void DuplicateRemoval::WaitUntilDone () {
+/*void DuplicateRemoval::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void DuplicateRemoval::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
@@ -260,15 +279,16 @@ void* DuplicateRemoval::operate (void *arg) {
 SUM
 **************************************************************************************************/
 void Sum::Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, 0, 0, NULL, 0, &computeMe, NULL, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, 0, &computeMe, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 	// cout<<"Run:end\n";
 }
 
-void Sum::WaitUntilDone () {
+/*void Sum::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
 	// cout<<"WaitUntilDone:end\n";
-}
+}*/
 
 void Sum::Use_n_Pages (int runlen) {
 	// cout<<"Use_n_Pages:end\n";
@@ -301,13 +321,14 @@ void Sum::calculateSum(Pipe* inPipe, Pipe* outPipe, Function* function) {
 GROUPBY
 **************************************************************************************************/
 void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, 0, 0, NULL, 0, &computeMe, &groupAtts, NULL);
-	pthread_create(&operatorThread, NULL, operate, (void*) params);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, 0, &computeMe, &groupAtts, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
 }
 
-void GroupBy::WaitUntilDone () {
+/*void GroupBy::WaitUntilDone () {
 	pthread_join (operatorThread, NULL);
-}
+}*/
 
 void GroupBy::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
@@ -338,4 +359,26 @@ void GroupBy::doGroup(Pipe* in, Pipe* out, OrderMaker* order, Function* func, si
 	  } else sum += func->Apply<T>(next);
 	putGroup(cur, sum, out, order);    // put the last group into the output pipeline
   }
+}
+
+/**************************************************************************************************
+WRITEOUT
+**************************************************************************************************/
+void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, NULL, outFile, NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL);
+	// pthread_create(&operatorThread, NULL, operate, (void*) params);
+	create_joinable_thread(&operatorThread, operate, params);
+}
+
+/*void GroupBy::WaitUntilDone () {
+	pthread_join (operatorThread, NULL);
+}*/
+
+void WriteOut::Use_n_Pages (int runlen) {
+	// this->runLength = runlen;
+	return;
+}
+
+void* WriteOut::operate (void *arg) {
+	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 }

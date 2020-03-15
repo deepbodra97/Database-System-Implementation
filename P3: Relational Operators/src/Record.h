@@ -111,6 +111,8 @@ public:
         // similar to MergeRecords...
         // use ALL attributes from left and right
     void CrossProduct (Record* left, Record* right);
+
+	void Write (FILE* file, Schema* mySchema);
 };
 
 #endif
