@@ -676,7 +676,7 @@ void q4 () {
   CNF cnf_p_ps;
   Record lit_p_ps;
   get_cnf ("(s_suppkey = ps_suppkey)", s->schema(), ps->schema(), cnf_p_ps, lit_p_ps);
-  clog << "join default runlength is " << J.runLength << endl;
+  clog << "join default runlength is " << J.GetRunLength() << endl;
   J.Use_n_Pages(pipesz);
 
   int outAtts = sAtts + psAtts;
