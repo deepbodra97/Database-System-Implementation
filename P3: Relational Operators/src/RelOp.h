@@ -90,7 +90,7 @@ public:
 	void Use_n_Pages (int n);
 	int GetRunLength (void) {return runLength;}
 private:
-	int runLength;
+	int runLength=100;
 	
 	static void* operate(void* param);
 	static void sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout,

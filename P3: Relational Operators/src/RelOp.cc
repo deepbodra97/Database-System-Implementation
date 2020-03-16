@@ -105,7 +105,7 @@ void* Project::operate (void *arg) {
 JOIN
 **************************************************************************************************/
 void Join::Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, &inPipeR);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, &inPipeR);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -123,10 +123,13 @@ void* Join::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	OrderMaker orderLeft, orderRight;
 	if (params->selOp->GetSortOrders(orderLeft, orderRight)){
+		cout<<"sortMergeJoin\n";
 		sortMergeJoin(params->inPipe, &orderLeft, params->inPipeR, &orderRight, params->outPipe, params->selOp, params->literal, params->runLength);
 	} else{
+		cout<<"nestedLoopJoin\n";
 		nestedLoopJoin(params->inPipe, params->inPipeR, params->outPipe, params->selOp, params->literal, params->runLength);
 	}
+	cout<<"outPipe ShutDown\n";
 	params->outPipe->ShutDown();
 }
 
@@ -141,6 +144,7 @@ void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, Order
 
 // two-way merge join
 	for (bool moreLeft = sortedLeft.Remove(&fromLeft), moreRight = sortedRight.Remove(&fromRight); moreLeft && moreRight; ) {
+		cout<<"sortMergeJoin:inloop\n";
 		int result = cmp.Compare(&fromLeft, orderLeft, &fromRight, orderRight);
 		if (result<0) moreLeft = sortedLeft.Remove(&fromLeft);
 		else if (result>0) moreRight = sortedRight.Remove(&fromRight);
@@ -163,11 +167,13 @@ void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, Order
 	  		} while ((moreRight=sortedRight.Remove(&fromRight)) && cmp.Compare(buffer.buffer, orderLeft, &fromRight, orderRight)==0);    // read all records from right pipe with equal value
 		}
 	}
+	cout<<"sortMergeJoin:end\n";
 }
 
 void Join::nestedLoopJoin(Pipe* pleft, Pipe* pright, Pipe* pout, CNF* sel, Record* literal, size_t runLen) {
 	DBFile rightFile;
 	dumpFile(*pright, rightFile);
+	cout<<"rightFile dumped\n";
 	JoinBuffer leftBuffer(runLen);
 
 	// nested loops join
@@ -296,12 +302,12 @@ void Sum::Use_n_Pages (int runlen) {
 }
 
 void* Sum::operate (void *arg) {
-	// cout<<"operate:start\n";
+	cout<<"Sum:operate:start\n";
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	if (params->function->GetReturnsIntType() == Int) calculateSum<int>(params->inPipe, params->outPipe, params->function);
 	else calculateSum<double>(params->inPipe, params->outPipe, params->function);
 	params->outPipe->ShutDown();
-	// cout<<"operate:end\n";
+	cout<<"Sum:operate:end\n";
 }
 
 template <class T>
