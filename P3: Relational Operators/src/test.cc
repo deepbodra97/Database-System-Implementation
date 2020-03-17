@@ -700,7 +700,7 @@ void q4 () {
   SF_ps.WaitUntilDone ();
   J.WaitUntilDone ();
   T.WaitUntilDone ();
-
+  cout<<"calling clear_pipe\n";
   Schema sum_sch ("sum_sch", 1, &DA);
   int cnt = clear_pipe (_out, &sum_sch, true);
   cout << " query4 returned " << cnt << " recs \n";

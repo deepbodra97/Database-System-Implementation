@@ -49,11 +49,15 @@ public:
 	virtual void WaitUntilDone ();
 
 	// tell us how much internal memory the operation can use
-	virtual void Use_n_Pages (int n) = 0;
+	virtual void Use_n_Pages (int n);
+	int runLength = 100;
+	int GetRunLength (void) {return runLength;}
 
 protected:
 	pthread_t operatorThread;
 	static int create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg);
+
+	
 
 };
 
@@ -61,7 +65,7 @@ class SelectFile : public RelationalOp {
 public:
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
 
@@ -69,7 +73,7 @@ class SelectPipe : public RelationalOp {
 	public:
 	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
 
@@ -77,7 +81,7 @@ class Project : public RelationalOp {
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
 
@@ -87,10 +91,10 @@ class Join : public RelationalOp {
 public:
 	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
-	int GetRunLength (void) {return runLength;}
+	// void Use_n_Pages (int n);
+	// int GetRunLength (void) {return runLength;}
 private:
-	int runLength=100;
+	// int runLength=100;
 	
 	static void* operate(void* param);
 	static void sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout,
@@ -116,31 +120,37 @@ class JoinBuffer {
 
 class DuplicateRemoval : public RelationalOp {
 private:
-	int runLength;
+	// int runLength;
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);	
 };
 
 class Sum : public RelationalOp {
 public:
+
 	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 	template <class T> static void calculateSum(Pipe* in, Pipe* out, Function* function);
+	// int GetRunLength (void) {return runLength;}
+
+private:
+	// int runLength=100;
+
 };
 
 class GroupBy : public RelationalOp {
 private:
-	int runLength;
+	// int runLength;
 
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
 	// void WaitUntilDone ();
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 
 	template <class T>
@@ -158,7 +168,7 @@ class WriteOut : public RelationalOp {
 	public:
 	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
 	// void WaitUntilDone () { }
-	void Use_n_Pages (int n);
+	// void Use_n_Pages (int n);
 	static void* operate(void* arg);
 };
 #endif

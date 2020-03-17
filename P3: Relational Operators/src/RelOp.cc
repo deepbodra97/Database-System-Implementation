@@ -1,7 +1,13 @@
 #include "RelOp.h"
 
 void RelationalOp::WaitUntilDone() {
+	cout<<"Wait\n";
 	pthread_join (operatorThread, NULL); 
+}
+
+void RelationalOp::Use_n_Pages (int runlen) {
+	this->runLength = runlen;
+	return;
 }
 
 int RelationalOp::create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg) {
@@ -18,7 +24,7 @@ SELECT PIPE
 **************************************************************************************************/
 
 void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -27,9 +33,9 @@ void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) 
 	pthread_join (operatorThread, NULL);
 }*/
 
-void SelectPipe::Use_n_Pages (int runlen) {
+/*void SelectPipe::Use_n_Pages (int runlen) {
 	return;	
-}
+}*/
 
 void* SelectPipe::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
@@ -48,7 +54,7 @@ void* SelectPipe::operate (void *arg) {
 SELECT FILE
 **************************************************************************************************/
 void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, NULL, &inFile, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, 0, NULL, NULL, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, NULL, &inFile, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -57,10 +63,10 @@ void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal
 	pthread_join (operatorThread, NULL);
 }*/
 
-void SelectFile::Use_n_Pages (int runlen) {
+/*void SelectFile::Use_n_Pages (int runlen) {
 	return;
 }
-
+*/
 void* SelectFile::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	Record currentRecord;
@@ -75,7 +81,7 @@ void* SelectFile::operate (void *arg) {
 PROJECT
 **************************************************************************************************/
 void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, 0, NULL, NULL, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, this->runLength, NULL, NULL, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -84,9 +90,9 @@ void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, i
 	pthread_join (operatorThread, NULL);
 }*/
 
-void Project::Use_n_Pages (int runlen) {
+/*void Project::Use_n_Pages (int runlen) {
 	return;
-}
+}*/
 
 void* Project::operate (void *arg) {
 	cout<<"operate:start\n";
@@ -114,10 +120,10 @@ void Join::Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record 
 	pthread_join (operatorThread, NULL);
 }*/
 
-void Join::Use_n_Pages (int runlen) {
+/*void Join::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
 	return;
-}
+}*/
 
 void* Join::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
@@ -129,12 +135,12 @@ void* Join::operate (void *arg) {
 		cout<<"nestedLoopJoin\n";
 		nestedLoopJoin(params->inPipe, params->inPipeR, params->outPipe, params->selOp, params->literal, params->runLength);
 	}
+
 	cout<<"outPipe ShutDown\n";
 	params->outPipe->ShutDown();
 }
 
-void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout,
-	CNF* sel, Record* literal, size_t runLen) {
+void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout, CNF* sel, Record* literal, size_t runLen) {
 
 	ComparisonEngine cmp;
 	Pipe sortedLeft(PIPE_SIZE), sortedRight(PIPE_SIZE);
@@ -144,7 +150,7 @@ void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, Order
 
 // two-way merge join
 	for (bool moreLeft = sortedLeft.Remove(&fromLeft), moreRight = sortedRight.Remove(&fromRight); moreLeft && moreRight; ) {
-		cout<<"sortMergeJoin:inloop\n";
+		// cout<<"sortMergeJoin:inloop\n";
 		int result = cmp.Compare(&fromLeft, orderLeft, &fromRight, orderRight);
 		if (result<0) moreLeft = sortedLeft.Remove(&fromLeft);
 		else if (result>0) moreRight = sortedRight.Remove(&fromRight);
@@ -197,7 +203,7 @@ void Join::joinBuf(JoinBuffer& buffer, DBFile& file, Pipe& out, Record& literal,
 	file.MoveFirst();
 	while(file.GetNext(fromFile)){
 		FOREACH(fromBuffer, buffer.buffer, buffer.nrecords)
-		if (cmp.Compare(&fromBuffer, &fromFile, &literal, &selOp)) {   // actural join
+		if (cmp.Compare(&fromBuffer, &fromFile, &literal, &selOp)) {   // actual join
 			merged.CrossProduct(&fromBuffer, &fromFile);
 			out.Insert(&merged);
 		}
@@ -255,11 +261,11 @@ void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
 	pthread_join (operatorThread, NULL);
 }*/
 
-void DuplicateRemoval::Use_n_Pages (int runlen) {
+/*void DuplicateRemoval::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
 	return;
 }
-
+*/
 void* DuplicateRemoval::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 
@@ -285,10 +291,10 @@ void* DuplicateRemoval::operate (void *arg) {
 SUM
 **************************************************************************************************/
 void Sum::Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, 0, &computeMe, NULL, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, NULL, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
-	// cout<<"Run:end\n";
+	cout<<"Sum:Run:end\n";
 }
 
 /*void Sum::WaitUntilDone () {
@@ -296,10 +302,11 @@ void Sum::Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) {
 	// cout<<"WaitUntilDone:end\n";
 }*/
 
-void Sum::Use_n_Pages (int runlen) {
+/*void Sum::Use_n_Pages (int runlen) {
 	// cout<<"Use_n_Pages:end\n";
+	this->runLength = runlen;
 	return;
-}
+}*/
 
 void* Sum::operate (void *arg) {
 	cout<<"Sum:operate:start\n";
@@ -312,22 +319,24 @@ void* Sum::operate (void *arg) {
 
 template <class T>
 void Sum::calculateSum(Pipe* inPipe, Pipe* outPipe, Function* function) {
-	// cout<<"calculateSum:start\n";
+	cout<<"calculateSum:start\n";
 	T sum=0;
 	Record rec;
 	while (inPipe->Remove(&rec)){
 		sum += function->Apply<T>(rec);
+		cout<<"calculateSum:inloop:"<<sum<<endl;
 	}
+	cout<<"calculateSum:loop over:"<<sum<<"\n";
 	Record result(sum);
 	outPipe->Insert(&result);
-	// cout<<"calculateSum:end\n";
+	cout<<"calculateSum:end\n";
 }
 
 /**************************************************************************************************
 GROUPBY
 **************************************************************************************************/
 void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, 0, &computeMe, &groupAtts, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, &groupAtts, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -336,15 +345,16 @@ void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function 
 	pthread_join (operatorThread, NULL);
 }*/
 
-void GroupBy::Use_n_Pages (int runlen) {
+/*void GroupBy::Use_n_Pages (int runlen) {
 	this->runLength = runlen;
 	return;
-}
+}*/
 
 void* GroupBy::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
 	if (params->function->GetReturnsIntType() == Int) doGroup<int>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
 	else doGroup<double>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
+	params->outPipe->ShutDown();
 }
 
 template <class T>   // similar to duplicate elimination
@@ -371,7 +381,7 @@ void GroupBy::doGroup(Pipe* in, Pipe* out, OrderMaker* order, Function* func, si
 WRITEOUT
 **************************************************************************************************/
 void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, NULL, outFile, NULL, NULL, 0, 0, NULL, 0, NULL, NULL, NULL);
+	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, NULL, outFile, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
 	// pthread_create(&operatorThread, NULL, operate, (void*) params);
 	create_joinable_thread(&operatorThread, operate, params);
 }
@@ -380,10 +390,10 @@ void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
 	pthread_join (operatorThread, NULL);
 }*/
 
-void WriteOut::Use_n_Pages (int runlen) {
+/*void WriteOut::Use_n_Pages (int runlen) {
 	// this->runLength = runlen;
 	return;
-}
+}*/
 
 void* WriteOut::operate (void *arg) {
 	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
