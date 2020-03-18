@@ -84,7 +84,12 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	
 	RecordComparator recordComparator = RecordComparator(*bigQMemberHolder->sortorder); // comparator
 
-	runFile.Open(0, "./runFile.bin"); // open run file
+
+	int num=rand()%10000;
+
+	char fileName[10];
+	sprintf(fileName,"%d",num);
+	runFile.Open(0, fileName); // open run file
 
 	int nPagesFilledForARun = 0; // number of pages filled for the current run
 
@@ -201,7 +206,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	/* PHASE 2: Merge sorted Runs
 	 * construct priority queue over sorted runVectors and dump sorted data into the out pipe
 	 */
-	runFile.Open(1, "./runFile.bin");
+	runFile.Open(1, fileName);
 	int nPages = runFile.GetLength()-1;
 	priority_queue<RunRecord*, vector<RunRecord*>, RunRecordComparator> priorityQueue(*bigQMemberHolder->sortorder); // priority queue to merge the records
 
@@ -244,7 +249,7 @@ void *TwoPassMultiwayMergeSort (void *arg) {
 	runRecordMetaData.clear(); // free the space occupied by the vector
 
 	runFile.Close(); // close runFile
-	// remove("./runFile.bin"); // remove runFile
+	remove(fileName); // remove runFile
 
 	// finally shut down the out pipe
 	bigQMemberHolder->out->ShutDown();
