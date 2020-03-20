@@ -51,7 +51,7 @@ public:
 
 	// tell us how much internal memory the operation can use
 	virtual void Use_n_Pages (int n);
-	int runLength = 100;
+	int runLength = 100; //default runlength
 	int GetRunLength (void) {return runLength;}
 
 protected:
