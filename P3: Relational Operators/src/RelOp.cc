@@ -1,7 +1,6 @@
 #include "RelOp.h"
 
 void RelationalOp::WaitUntilDone() {
-	cout<<"Wait\n";
 	pthread_join (operatorThread, NULL); 
 }
 
@@ -10,43 +9,25 @@ void RelationalOp::Use_n_Pages (int runlen) {
 	return;
 }
 
-int RelationalOp::create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg) {
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-	int rc = pthread_create(thread, &attr, start_routine, arg);
-	pthread_attr_destroy(&attr);
-	return rc;
-}
-
 /**************************************************************************************************
 SELECT PIPE
 **************************************************************************************************/
 
 void SelectPipe::Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL); // init thread params
+	pthread_create(&operatorThread, NULL, Operate, (void*) params); // create thread
 }
 
-/*void SelectPipe::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void SelectPipe::Use_n_Pages (int runlen) {
-	return;	
-}*/
-
-void* SelectPipe::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
+void* SelectPipe::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg; // parse thread params
 	Record currentRecord;
 	ComparisonEngine comparisonEngine;
-	while(params->inPipe->Remove(&currentRecord)){
-		if(comparisonEngine.Compare(&currentRecord, params->literal, params->selOp)){
-			params->outPipe->Insert(&currentRecord);			
+	while(params->inPipe->Remove(&currentRecord)){ // fetch the next record from the pipe
+		if(comparisonEngine.Compare(&currentRecord, params->literal, params->selOp)){ // does the current record match literal and cnf
+			params->outPipe->Insert(&currentRecord); // if yes add the record to the output pipe			
 		}
 	}
-	params->outPipe->ShutDown();
+	params->outPipe->ShutDown(); // shutdown output pipe
 }
 
 
@@ -54,26 +35,17 @@ void* SelectPipe::operate (void *arg) {
 SELECT FILE
 **************************************************************************************************/
 void SelectFile::Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, NULL, &inFile, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, NULL, &inFile, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, NULL); // init thread params
+	pthread_create(&operatorThread, NULL, Operate, (void*) params); // create thread
 }
 
-/*void SelectFile::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void SelectFile::Use_n_Pages (int runlen) {
-	return;
-}
-*/
-void* SelectFile::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
+void* SelectFile::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg; // parse thread params
 	Record currentRecord;
-	while(params->inFile->GetNext(currentRecord, *params->selOp, *params->literal)){
-		params->outPipe->Insert(&currentRecord);
+	while(params->inFile->GetNext(currentRecord, *params->selOp, *params->literal)){ // fetch the next record from the pipe that matches the literal and cnf
+		params->outPipe->Insert(&currentRecord); // add the record to the output pipe
 	}
-	params->outPipe->ShutDown();
+	params->outPipe->ShutDown(); // shutdown output pipe
 }
 
 
@@ -81,193 +53,169 @@ void* SelectFile::operate (void *arg) {
 PROJECT
 **************************************************************************************************/
 void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, this->runLength, NULL, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, this->runLength, NULL, NULL, NULL); // init thread params
+	pthread_create(&operatorThread, NULL, Operate, (void*) params); // create thread
 }
 
-/*void Project::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void Project::Use_n_Pages (int runlen) {
-	return;
-}*/
-
-void* Project::operate (void *arg) {
-	cout<<"operate:start\n";
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
+void* Project::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg; // parse thread params
 	Record currentRecord;
 	while(params->inPipe->Remove(&currentRecord)){
-		cout<<"operate:loop\n";
 		currentRecord.Project(params->keepMe, params->numAttsOutput, params->numAttsInput);
 		params->outPipe->Insert(&currentRecord);
 	}
-	params->outPipe->ShutDown();
-	cout<<"operate:end\n";
+	params->outPipe->ShutDown(); // shutdown output pipe
 }
 
 /**************************************************************************************************
 JOIN
 **************************************************************************************************/
-void Join::Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, &inPipeR);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
-}
-
-/*void Join::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void Join::Use_n_Pages (int runlen) {
-	this->runLength = runlen;
-	return;
-}*/
-
-void* Join::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
-	OrderMaker orderLeft, orderRight;
-	if (params->selOp->GetSortOrders(orderLeft, orderRight)){
-		cout<<"sortMergeJoin\n";
-		sortMergeJoin(params->inPipe, &orderLeft, params->inPipeR, &orderRight, params->outPipe, params->selOp, params->literal, params->runLength);
-	} else{
-		cout<<"nestedLoopJoin\n";
-		nestedLoopJoin(params->inPipe, params->inPipeR, params->outPipe, params->selOp, params->literal, params->runLength);
-	}
-
-	cout<<"outPipe ShutDown\n";
-	params->outPipe->ShutDown();
-}
-
-void Join::sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout, CNF* sel, Record* literal, size_t runLen) {
-
-	ComparisonEngine cmp;
-	Pipe sortedLeft(PIPE_SIZE), sortedRight(PIPE_SIZE);
-	BigQ qLeft(*pleft, sortedLeft, *orderLeft, runLen), qRight(*pright, sortedRight, *orderRight, runLen);
-	Record fromLeft, fromRight, merged, previous;
-	JoinBuffer buffer(runLen);
-
-// two-way merge join
-	for (bool moreLeft = sortedLeft.Remove(&fromLeft), moreRight = sortedRight.Remove(&fromRight); moreLeft && moreRight; ) {
-		// cout<<"sortMergeJoin:inloop\n";
-		int result = cmp.Compare(&fromLeft, orderLeft, &fromRight, orderRight);
-		if (result<0) moreLeft = sortedLeft.Remove(&fromLeft);
-		else if (result>0) moreRight = sortedRight.Remove(&fromRight);
-		else {       // equal attributes: fromLeft == fromRight ==> do joining
-			buffer.clear();
-			for(previous.Consume(&fromLeft); (moreLeft=sortedLeft.Remove(&fromLeft)) && cmp.Compare(&previous, &fromLeft, orderLeft)==0; previous.Consume(&fromLeft)){
-				// FATALIF(!buffer.add(previous), "Join buffer exhausted.");   // gather records of the same value
-	  			buffer.add(previous);
-	  		}
-	  		// FATALIF(!buffer.add(previous), "Join buffer exhausted.");     // remember the last one
-	  		buffer.add(previous);
-			do {       // Join records from right pipe
-				Record rec;
-	  			FOREACH(rec, buffer.buffer, buffer.nrecords)
-		  		if (cmp.Compare(&rec, &fromRight, literal, sel)) {   // actural join
-		  			merged.CrossProduct(&rec, &fromRight);
-		  			pout->Insert(&merged);
-		  		}
-		  		END_FOREACH
-	  		} while ((moreRight=sortedRight.Remove(&fromRight)) && cmp.Compare(buffer.buffer, orderLeft, &fromRight, orderRight)==0);    // read all records from right pipe with equal value
-		}
-	}
-	cout<<"sortMergeJoin:end\n";
-}
-
-void Join::nestedLoopJoin(Pipe* pleft, Pipe* pright, Pipe* pout, CNF* sel, Record* literal, size_t runLen) {
-	DBFile rightFile;
-	dumpFile(*pright, rightFile);
-	cout<<"rightFile dumped\n";
-	JoinBuffer leftBuffer(runLen);
-
-	// nested loops join
-	Record rec;
-	while(pleft->Remove(&rec)){
-		if (!leftBuffer.add(rec)) {  // buffer full ==> do join
-			joinBuf(leftBuffer, rightFile, *pout, *literal, *sel);
-			leftBuffer.clear();       // start next chunk of LEFT
-			leftBuffer.add(rec);
-		}
-	}
-	joinBuf(leftBuffer, rightFile, *pout, *literal, *sel);   // join the last buffer
-	rightFile.Close();
-}
-
-void Join::joinBuf(JoinBuffer& buffer, DBFile& file, Pipe& out, Record& literal, CNF& selOp) {
-	ComparisonEngine cmp;
-	Record merged;
-
-	Record fromFile, fromBuffer;
-	file.MoveFirst();
-	while(file.GetNext(fromFile)){
-		FOREACH(fromBuffer, buffer.buffer, buffer.nrecords)
-		if (cmp.Compare(&fromBuffer, &fromFile, &literal, &selOp)) {   // actual join
-			merged.CrossProduct(&fromBuffer, &fromFile);
-			out.Insert(&merged);
-		}
-		END_FOREACH
-	}
-}
-
-void gen_random(char *s, const int len) {
-    static const char alphanum[] =
+void generateRandomString(char *s, int len) {
+    static const char alphaNum[] =
         "0123456789"
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz";
 
     for (int i = 0; i < len; ++i) {
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+        s[i] = alphaNum[rand() % (sizeof(alphaNum) - 1)];
     }
-
     s[len] = 0;
 }
 
-void Join::dumpFile(Pipe& in, DBFile& out) {
-	const int RLEN = 10;
-	char rstr[RLEN];
-	// Rstring::gen(rstr, RLEN);  // need a random name otherwise two or more joins would crash
-	gen_random(rstr, RLEN);
-	std::string tmpName("join");
-	tmpName = tmpName + rstr + ".tmp";
-	out.Create((char*)tmpName.c_str(), heap, NULL);
-	Record rec;
-	while (in.Remove(&rec)) out.Add(rec);
+void Join::Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal) {
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipeL, NULL, &outPipe, NULL, &selOp, &literal, 0, 0, NULL, this->runLength, NULL, NULL, &inPipeR); // init thread params
+	pthread_create(&operatorThread, NULL, Operate, (void*) params); // create thread
 }
 
-JoinBuffer::JoinBuffer(size_t npages): size(0), capacity(PAGE_SIZE*npages), nrecords(0) {
-	buffer = new Record[PAGE_SIZE*npages/sizeof(Record*)];
+void* Join::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg; // parse thread params
+	OrderMaker leftOrderMaker, rightOrderMaker; // left and right ordermaker
+	if (params->selOp->GetSortOrders(leftOrderMaker, rightOrderMaker)){ // if an acceptable ordering exists
+		SortMergeJoin(params->inPipe, &leftOrderMaker, params->inPipeR, &rightOrderMaker, params->outPipe, params->selOp, params->literal, params->runLength); // the perform sort merge join
+	} else{
+		NestedLoopJoin(params->inPipe, params->inPipeR, params->outPipe, params->selOp, params->literal, params->runLength); // else perform nested loop join
+	}
+	params->outPipe->ShutDown(); // shutdown output pipe
 }
 
-JoinBuffer::~JoinBuffer() { delete[] buffer; }
+void Join::SortMergeJoin(Pipe* leftPipe, OrderMaker* leftOrderMaker, Pipe* rightPipe, OrderMaker* rightOrderMaker, Pipe* outPipe, CNF* selOp, Record* literal, int runLength) {
 
-bool JoinBuffer::add (Record& addme) {
-  if((size+=addme.GetLength())>capacity) return 0;
-  buffer[nrecords++].Consume(&addme);
-  return 1;
+	ComparisonEngine comparisonEngine;
+	Pipe leftSortedPipe(PIPE_SIZE), rightSortedPipe(PIPE_SIZE);
+	BigQ leftBigQ(*leftPipe, leftSortedPipe, *leftOrderMaker, runLength), rightBigQ(*rightPipe, rightSortedPipe, *rightOrderMaker, runLength); // start BigQ to get the records in sorted order
+	Record recordFromLeft, recordFromRight, mergedRecord, previousRecord;
+	FixedSizeRecordBuffer recordBuffer(runLength);
+	bool leftNotEmpty = leftSortedPipe.Remove(&recordFromLeft), rightNotEmpty = rightSortedPipe.Remove(&recordFromRight);
+
+	while(leftNotEmpty && rightNotEmpty) { // while there are records in both the sorted pipes
+		int comparisonStatusForPipes = comparisonEngine.Compare(&recordFromLeft, leftOrderMaker, &recordFromRight, rightOrderMaker); // compare records based on respective ordermakers
+		
+		if (comparisonStatusForPipes<0){  // if left is smaller than right
+			leftNotEmpty = leftSortedPipe.Remove(&recordFromLeft); // then advance left
+		} else if (comparisonStatusForPipes>0){ // if right is smaller than left
+			rightNotEmpty = rightSortedPipe.Remove(&recordFromRight); // advance right
+		} else { // if left and right are equal
+			recordBuffer.Clear(); // clear buffer
+			for(previousRecord.Consume(&recordFromLeft); (leftNotEmpty=leftSortedPipe.Remove(&recordFromLeft)) && comparisonEngine.Compare(&previousRecord, &recordFromLeft, leftOrderMaker)==0; previousRecord.Consume(&recordFromLeft)){
+	  			recordBuffer.Add(previousRecord); // accumulate records of the same value
+	  		}
+	  		recordBuffer.Add(previousRecord); // add the last record
+	  		int comparisonStatusForBufferAndPipe;
+			do { // Join records from the buffer one by one with the head of the pipe until the records from the buffer match with the head of the pipe
+			  	for (Record *recordFromBuffer=recordBuffer.buffer; recordFromBuffer!=recordBuffer.buffer+(recordBuffer.numRecords); recordFromBuffer++) {
+			  		if (comparisonEngine.Compare(recordFromBuffer, &recordFromRight, literal, selOp)) {   // if they match
+			  			mergedRecord.MergeTheRecords(recordFromBuffer, &recordFromRight); // concatenates left and right by setting up attsToKeep
+			  			outPipe->Insert(&mergedRecord);
+			  		}
+			  	}
+			  	rightNotEmpty = rightSortedPipe.Remove(&recordFromRight);
+			  	comparisonStatusForBufferAndPipe = comparisonEngine.Compare(recordBuffer.buffer, leftOrderMaker, &recordFromRight, rightOrderMaker);
+	  		} while (rightNotEmpty && comparisonStatusForBufferAndPipe==0);    // read all records from right pipe with equal value
+		}
+	}
+}
+
+void Join::NestedLoopJoin(Pipe* leftPipe, Pipe* rightPipe, Pipe* outPipe, CNF* selOp, Record* literal, int runLength) {
+	DBFile rightFile;
+	PipeToFile(*rightPipe, rightFile);
+	FixedSizeRecordBuffer leftBuffer(runLength);
+
+	Record recordFromLeft;
+	while(leftPipe->Remove(&recordFromLeft)){
+		if (!leftBuffer.Add(recordFromLeft)) {  // if buffer is full
+			JoinBufferWithFile(leftBuffer, rightFile, *outPipe, *literal, *selOp); // join records from buffer and right file
+			leftBuffer.Clear(); // clear buffer
+			leftBuffer.Add(recordFromLeft); // add this record now
+		}
+	}
+	JoinBufferWithFile(leftBuffer, rightFile, *outPipe, *literal, *selOp); // join records from buffer and right file
+	rightFile.Close(); // close rightFile
+}
+
+void Join::JoinBufferWithFile(FixedSizeRecordBuffer& recordBuffer, DBFile& file, Pipe& out, Record& literal, CNF& selOp) {
+	ComparisonEngine cmp;
+	Record merged;
+
+	Record recordFromFile;
+	file.MoveFirst();
+	while(file.GetNext(recordFromFile)){
+		for (Record *recordFromBuffer=recordBuffer.buffer; recordFromBuffer!=recordBuffer.buffer+(recordBuffer.numRecords); recordFromBuffer++) {
+			if (cmp.Compare(recordFromBuffer, &recordFromFile, &literal, &selOp)) {
+				merged.MergeTheRecords(recordFromBuffer, &recordFromFile); // concatenates left and right by setting up attsToKeep
+				out.Insert(&merged);
+			}
+		}
+	}
+}
+
+void Join::PipeToFile(Pipe& inPipe, DBFile& outFile) {
+	int randomStringLen = 8;
+	char randomString[randomStringLen];
+	generateRandomString(randomString, randomStringLen); // generate a randomString of length=randomStringLens
+
+	std::string fileName("join");
+	fileName = fileName + randomString + ".bin"; // filename
+	outFile.Create((char*)fileName.c_str(), heap, NULL);
+	Record currentRecord;
+	while (inPipe.Remove(&currentRecord)){
+		outFile.Add(currentRecord); // add the record to the file
+	}
+}
+
+bool FixedSizeRecordBuffer::Add (Record& addme) {
+	if((size+=addme.GetLength())>capacity){ // if addMe cannot fit in the buffer
+		return 0; // dont add to the buffer
+  	}
+	buffer[numRecords++].Consume(&addme); // else add to the buffer
+	return 1;
+}
+
+void FixedSizeRecordBuffer::Clear () {
+	size = 0;
+	numRecords = 0;
+}
+
+FixedSizeRecordBuffer::FixedSizeRecordBuffer(int runLength) {
+	numRecords = 0;
+	size = 0;
+	capacity = PAGE_SIZE*runLength; // capacty = page size * runLength
+	buffer = new Record[PAGE_SIZE*runLength/sizeof(Record*)]; // allocate [(page size * runLength) / size of the record pointer ] bytes for the buffer
+}
+
+FixedSizeRecordBuffer::~FixedSizeRecordBuffer() {
+	delete[] buffer; // free the buffer
 }
 
 /**************************************************************************************************
 DUPLICATE REMOVAL
 **************************************************************************************************/
 void DuplicateRemoval::Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(&mySchema, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
+	pthread_create(&operatorThread, NULL, Operate, (void*) params);
 }
 
-/*void DuplicateRemoval::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void DuplicateRemoval::Use_n_Pages (int runlen) {
-	this->runLength = runlen;
-	return;
-}
-*/
-void* DuplicateRemoval::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
+void* DuplicateRemoval::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg;
 
 	OrderMaker sortOrder(params->mySchema);
 	Pipe sortedPipe(PIPE_SIZE);
@@ -286,117 +234,119 @@ void* DuplicateRemoval::operate (void *arg) {
 	params->outPipe->ShutDown();
 }
 
-
 /**************************************************************************************************
 SUM
 **************************************************************************************************/
 void Sum::Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
-	cout<<"Sum:Run:end\n";
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, NULL, NULL);
+	pthread_create(&operatorThread, NULL, Operate, (void*) params);
 }
 
-/*void Sum::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-	// cout<<"WaitUntilDone:end\n";
-}*/
-
-/*void Sum::Use_n_Pages (int runlen) {
-	// cout<<"Use_n_Pages:end\n";
-	this->runLength = runlen;
-	return;
-}*/
-
-void* Sum::operate (void *arg) {
-	cout<<"Sum:operate:start\n";
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
-	if (params->function->GetReturnsIntType() == Int) calculateSum<int>(params->inPipe, params->outPipe, params->function);
-	else calculateSum<double>(params->inPipe, params->outPipe, params->function);
+void* Sum::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg;
+	if (params->function->GetReturnsIntType() == Int) CalculateSum<int>(params->inPipe, params->outPipe, params->function); // if int
+	else CalculateSum<double>(params->inPipe, params->outPipe, params->function); // if double
 	params->outPipe->ShutDown();
-	cout<<"Sum:operate:end\n";
 }
 
 template <class T>
-void Sum::calculateSum(Pipe* inPipe, Pipe* outPipe, Function* function) {
-	cout<<"calculateSum:start\n";
-	T sum=0;
-	Record rec;
-	while (inPipe->Remove(&rec)){
-		sum += function->Apply<T>(rec);
-		cout<<"calculateSum:inloop:"<<sum<<endl;
+void Sum::CalculateSum(Pipe* inPipe, Pipe* outPipe, Function* function) {
+	std::stringstream recordString;
+	Record result;
+
+	T sum = 0;
+	Record currentRecord;
+	while (inPipe->Remove(&currentRecord)){
+		sum += function->Apply<T>(currentRecord);
 	}
-	cout<<"calculateSum:loop over:"<<sum<<"\n";
-	Record result(sum);
+	
+	Attribute attr;
+	attr.name = "SUM";
+	if(function->GetReturnsIntType() == Int){
+		recordString << sum << "|";
+		attr.myType = Int;
+	} else{
+		recordString <<sum << "|";
+		attr.myType = Double;
+	}
+	
+	Schema sumSchema("sum_schema", 1, &attr);
+	result.ComposeRecord(&sumSchema, recordString.str().c_str());
 	outPipe->Insert(&result);
-	cout<<"calculateSum:end\n";
 }
 
 /**************************************************************************************************
 GROUPBY
 **************************************************************************************************/
 void GroupBy::Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, &groupAtts, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, 0, 0, NULL, this->runLength, &computeMe, &groupAtts, NULL);
+	pthread_create(&operatorThread, NULL, Operate, (void*) params);
 }
 
-/*void GroupBy::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void GroupBy::Use_n_Pages (int runlen) {
-	this->runLength = runlen;
-	return;
-}*/
-
-void* GroupBy::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
-	if (params->function->GetReturnsIntType() == Int) doGroup<int>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
-	else doGroup<double>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
+void* GroupBy::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg;
+	if (params->function->GetReturnsIntType() == Int) MakeGroups<int>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
+	else MakeGroups<double>(params->inPipe, params->outPipe, params->groupAtts, params->function, params->runLength);
 	params->outPipe->ShutDown();
 }
 
-template <class T>   // similar to duplicate elimination
-void GroupBy::doGroup(Pipe* in, Pipe* out, OrderMaker* order, Function* func, size_t runLen) {
-  Pipe sorted(PIPE_SIZE);
-  BigQ biq(*in, sorted, *order, (int)runLen);
-  Record cur, next;
-  ComparisonEngine cmp;
+template <class T>
+void GroupBy::MakeGroups(Pipe* inPipe, Pipe* outPipe, OrderMaker* orderMaker, Function* function, int runLength) {
+	Pipe sortedPipe(PIPE_SIZE);
+	BigQ bigQ(*inPipe, sortedPipe, *orderMaker, (int)runLength);
+	Record currentRecord, nextRecord;
+  	ComparisonEngine comparisonEngine;
 
-  // TODO: why not shutting down the input pipe here??
-  if(sorted.Remove(&cur)) {  // cur holds the current group
-	T sum = func->Apply<T>(cur);   // holds the sum for the current group
-	while(sorted.Remove(&next))
-	  if(cmp.Compare(&cur, &next, order)) {
-		putGroup(cur, sum, out, order);
-		cur.Consume(&next);
-		sum = func->Apply<T>(cur);
-	  } else sum += func->Apply<T>(next);
-	putGroup(cur, sum, out, order);    // put the last group into the output pipeline
-  }
+	if(sortedPipe.Remove(&currentRecord)){  // currentRecord holds the  group
+		T sum = function->Apply<T>(currentRecord);   // sum for current group
+		while(sortedPipe.Remove(&nextRecord)){
+			if(comparisonEngine.Compare(&currentRecord, &nextRecord, orderMaker)) {
+				AddGroup(currentRecord, sum, outPipe, orderMaker, function);
+				currentRecord.Consume(&nextRecord);
+				sum = function->Apply<T>(currentRecord);
+			} else{ 
+				sum += function->Apply<T>(nextRecord);
+			}
+		}
+		AddGroup(currentRecord, sum, outPipe, orderMaker, function);    // add last group in output pipe
+	}
+}
+
+template <class T>
+void GroupBy::AddGroup(Record& record, const T& sum, Pipe* outPipe, OrderMaker* orderMaker, Function* function) {
+	record.Project(orderMaker->GetAtts(), orderMaker->GetNumAtts(), record.GetNumAtts());
+
+	std::stringstream sumRecordStringStream;
+	Record sumRecord;
+	sumRecordStringStream<< sum << "|";
+
+	Attribute attr;
+	attr.name = "SUM";
+
+	if(function->GetReturnsIntType() == Int){
+		attr.myType = Int;
+	}else {
+		attr.myType = Double;
+	}
+
+	Schema sumSchema("sum_schema", 1, &attr);
+	sumRecord.ComposeRecord(&sumSchema, sumRecordStringStream.str().c_str()); // create sum record
+
+	Record mergedRecord;
+	mergedRecord.MergeTheRecords(&sumRecord, &record); // merge sumrecord with record
+	outPipe->Insert(&mergedRecord);
 }
 
 /**************************************************************************************************
 WRITEOUT
 **************************************************************************************************/
 void WriteOut::Run (Pipe &inPipe, FILE *outFile, Schema &mySchema) {
-	OperatorThreadMemberHolder *params = new OperatorThreadMemberHolder(&mySchema, &inPipe, NULL, NULL, outFile, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
-	// pthread_create(&operatorThread, NULL, operate, (void*) params);
-	create_joinable_thread(&operatorThread, operate, params);
+	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(&mySchema, &inPipe, NULL, NULL, outFile, NULL, NULL, 0, 0, NULL, this->runLength, NULL, NULL, NULL);
+	pthread_create(&operatorThread, NULL, Operate, (void*) params);
 }
 
-/*void GroupBy::WaitUntilDone () {
-	pthread_join (operatorThread, NULL);
-}*/
-
-/*void WriteOut::Use_n_Pages (int runlen) {
-	// this->runLength = runlen;
-	return;
-}*/
-
-void* WriteOut::operate (void *arg) {
-	OperatorThreadMemberHolder *params = (OperatorThreadMemberHolder*) arg;
+void* WriteOut::Operate (void *arg) {
+	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg;
 	Record currentRecord;
 	while(params->inPipe->Remove(&currentRecord)){
 		currentRecord.Write(params->outFile, params->mySchema);

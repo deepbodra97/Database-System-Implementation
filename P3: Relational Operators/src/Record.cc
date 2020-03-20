@@ -476,33 +476,19 @@ int Record::GetLength() const{
 	return ((int*)bits)[0];
 }
 
-void Record::alloc(size_t len){
-	if (bits != NULL){
-		// delete[] bits;
-	}
-	bits = new char[len];
-	setLength(len);
-}
+void Record::MergeTheRecords(Record* left, Record* right) {
+	int numAttsLeft = left->GetNumAtts();
+  	int numAttsRight = right->GetNumAtts();
+  	int* attsToKeep = new int[numAttsLeft+numAttsRight];
+  	for(int i=0; i<numAttsLeft; ++i){
+  		attsToKeep[i] = i;
+  	}
 
-void Record::setLength(int len) {
-	((int*)bits)[0] = len;
-}
-
-int Record::getPointer(size_t n) const {
-	return ((int*)bits)[n+1];
-}
-
-void Record::setPointer(size_t n, int offset){
-	((int*)bits)[n+1] = offset;
-}
-
-void Record::CrossProduct(Record* left, Record* right) {
-  int nLeft = left->GetNumAtts(), nRight = right->GetNumAtts();
-  int* attsToKeep = new int[nLeft+nRight];
-  for(int i=0; i<nLeft; ++i) attsToKeep[i] = i;
-  for(int i=0; i<nRight; ++i) attsToKeep[i+nLeft] = i;
-  MergeRecords (left, right, nLeft, nRight, attsToKeep, nLeft+nRight, nLeft);
-  delete[] attsToKeep;
+  	for(int i=0; i<numAttsRight; ++i){
+  		attsToKeep[numAttsLeft+i] = i;
+  	}
+	MergeRecords (left, right, numAttsLeft, numAttsRight, attsToKeep, numAttsLeft+numAttsRight, numAttsLeft); // merge the left and the right record
+  	delete[] attsToKeep; // free attsToKeep
 }
 
 void Record::Write(FILE* file, Schema* mySchema) {
@@ -510,12 +496,8 @@ void Record::Write(FILE* file, Schema* mySchema) {
   int n = mySchema->GetNumAtts();
   Attribute *atts = mySchema->GetAtts();
 
-  // loop through all of the attributes
+  // loop through all the attributes
   for (int i = 0; i < n; i++) {
-
-    // print the attribute name
-    //fprintf(file, "%s: ", atts[i].name);
-
     // use the i^th slot at the head of the record to get the
     // offset to the correct attribute in the record
     int pointer = ((int *) bits)[i + 1];

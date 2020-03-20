@@ -5,8 +5,9 @@
 #include "DBFile.h"
 #include "Record.h"
 #include "Function.h"
+#include <sstream>
 
-class OperatorThreadMemberHolder{
+class RelationalOpThreadMemberHolder{
 public:
 	Schema *mySchema;
 	Pipe *inPipe;
@@ -23,7 +24,7 @@ public:
 	Pipe *inPipeR;
 	FILE *outFile;
 
-	OperatorThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, FILE *outFile, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
+	RelationalOpThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, FILE *outFile, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
 		this->mySchema = mySchema;
 		this->inPipe = inPipe;
 		this->inFile = inFile;
@@ -55,120 +56,109 @@ public:
 
 protected:
 	pthread_t operatorThread;
-	static int create_joinable_thread(pthread_t *thread, void *(*start_routine) (void *), void *arg);
-
-	
-
 };
 
+/**************************************************************************************************
+SELECT FILE
+**************************************************************************************************/
 class SelectFile : public RelationalOp { 
 public:
 	void Run (DBFile &inFile, Pipe &outPipe, CNF &selOp, Record &literal);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
+	static void* Operate(void* arg);
 };
 
+/**************************************************************************************************
+SELECT PIPE
+**************************************************************************************************/
 class SelectPipe : public RelationalOp {
-	public:
+public:
 	void Run (Pipe &inPipe, Pipe &outPipe, CNF &selOp, Record &literal);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
+	static void* Operate(void* arg);
 };
 
+/**************************************************************************************************
+PROJECT
+**************************************************************************************************/
 class Project : public RelationalOp { 
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
+	static void* Operate(void* arg);
 };
 
 
-class JoinBuffer;
+/**************************************************************************************************
+JOIN
+**************************************************************************************************/
+class FixedSizeRecordBuffer;
 class Join : public RelationalOp { 
 public:
 	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	// int GetRunLength (void) {return runLength;}
 private:
-	// int runLength=100;
-	
-	static void* operate(void* param);
-	static void sortMergeJoin(Pipe* pleft, OrderMaker* orderLeft, Pipe* pright, OrderMaker* orderRight, Pipe* pout,
-                             CNF* sel, Record* literal, size_t runLen);
-	static void nestedLoopJoin(Pipe* pleft, Pipe* pright, Pipe* pout, CNF* sel, Record* literal, size_t runLen);
-	static void joinBuf(JoinBuffer& buffer, DBFile& file, Pipe& out, Record& literal, CNF& sleOp);
-	static void dumpFile(Pipe& in, DBFile& out);
+	static void* Operate(void* param);
+	static void SortMergeJoin(Pipe* leftPipe, OrderMaker* leftOrderMaker, Pipe* rightPipe, OrderMaker* rightOrderMaker, Pipe* pout, CNF* selOp, Record* literal, int runLength);
+	static void NestedLoopJoin(Pipe* leftPipe, Pipe* rightPipe, Pipe* pout, CNF* selOp, Record* literal, int runLength);
+	static void JoinBufferWithFile(FixedSizeRecordBuffer& buffer, DBFile& file, Pipe& out, Record& literal, CNF& selOp);
+	static void PipeToFile(Pipe& inPipe, DBFile& outFile);
 
 };
 
-class JoinBuffer {
-	friend class Join;
-	JoinBuffer(size_t npages);
-	~JoinBuffer();
- 
-	bool add (Record& addme);
-  	void clear () { size=nrecords=0; }
-
-  	size_t size, capacity;   // in bytes
-  	size_t nrecords;
+class FixedSizeRecordBuffer {
+friend class Join;
+public:	
+	FixedSizeRecordBuffer(int runLength);
+	~FixedSizeRecordBuffer();
+private:
   	Record* buffer;
+  	int numRecords;
+  	int size;
+  	int capacity;
+
+	bool Add (Record& addme);
+  	void Clear ();
 };
 
+/**************************************************************************************************
+DUPLICATE REMOVAL
+**************************************************************************************************/
 class DuplicateRemoval : public RelationalOp {
-private:
-	// int runLength;
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, Schema &mySchema);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);	
+	static void* Operate(void* arg);	
 };
 
+/**************************************************************************************************
+SUM
+**************************************************************************************************/
 class Sum : public RelationalOp {
 public:
-
 	void Run (Pipe &inPipe, Pipe &outPipe, Function &computeMe);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
-	template <class T> static void calculateSum(Pipe* in, Pipe* out, Function* function);
-	// int GetRunLength (void) {return runLength;}
-
-private:
-	// int runLength=100;
-
+	static void* Operate(void* arg);
+	template <class T> static void CalculateSum(Pipe* in, Pipe* out, Function* function);
 };
 
+/**************************************************************************************************
+GROUPBY
+**************************************************************************************************/
 class GroupBy : public RelationalOp {
 private:
-	// int runLength;
 
 public:
 	void Run (Pipe &inPipe, Pipe &outPipe, OrderMaker &groupAtts, Function &computeMe);
-	// void WaitUntilDone ();
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
+	static void* Operate(void* arg);
 
 	template <class T>
-	static void doGroup(Pipe* in, Pipe* out, OrderMaker* order, Function* func, size_t runLen);
+	static void MakeGroups(Pipe* inPipe, Pipe* outPipe, OrderMaker* orderMaker, Function* function, int runLength);
 
-	template <class T>
-  	static void putGroup(Record& cur, const T& sum, Pipe* out, OrderMaker* order) {
-	    cur.Project(order->GetAtts(), order->GetNumAtts(), cur.GetNumAtts());
-	    cur.prepend(sum);
-	    out->Insert(&cur);
-  	}
+  	template <class T>
+  	static void AddGroup(Record& record, const T& sum, Pipe* outPipe, OrderMaker* orderMaker, Function* function);
 };
 
+/**************************************************************************************************
+WRITEOUT
+**************************************************************************************************/
 class WriteOut : public RelationalOp {
-	public:
+public:
 	void Run (Pipe &inPipe, FILE *outFile, Schema &mySchema);
-	// void WaitUntilDone () { }
-	// void Use_n_Pages (int n);
-	static void* operate(void* arg);
+	static void* Operate(void* arg);
 };
 #endif

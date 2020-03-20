@@ -47,7 +47,6 @@ public:
 
 	Type GetReturnsIntType() const;
 
-	// template <class T>T Apply (Record& toMe);
 	template <class T>
     T Apply (Record& toMe) {
 		int intResult; double doubleResult;

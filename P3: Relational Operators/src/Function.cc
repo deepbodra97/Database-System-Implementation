@@ -359,10 +359,3 @@ Type Function :: Apply (Record &toMe, int &intResult, double &doubleResult) {
 Type Function::GetReturnsIntType() const{
 	return returnsInt ? Int : Double;
 }
-
-/*template <class T>
-T Function::Apply (Record& toMe) {
-    int intResult; double doubleResult;
-	Apply (toMe, intResult, doubleResult);
-	return returnsInt ? intResult : doubleResult;
-}*/
