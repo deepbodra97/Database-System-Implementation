@@ -1,0 +1,133 @@
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+ps_partkey: [6333], ps_suppkey: [6334], ps_availqty: [3711], ps_supplycost: [1.01], ps_comment: [s use slyly. fluffily express requests wake carefully ironic packages]
+ps_partkey: [9097], ps_suppkey: [4098], ps_availqty: [3012], ps_supplycost: [1.01], ps_comment: [s the bold pinto beans cajole carefully after the slyly unusual instructions. slyly special packages above the unusual, bold packages cajole blithely even Tiresias. theodolites among the foxes are]
+ps_partkey: [20468], ps_suppkey: [469], ps_availqty: [6884], ps_supplycost: [1], ps_comment: [furiously among the slyly ironic instructions. final, unusual packages wake slyly. final accounts cajole. deposits above the i]
+ps_partkey: [27115], ps_suppkey: [9618], ps_availqty: [7966], ps_supplycost: [1.02], ps_comment: [e regular, ironic dugouts. slyly special requests cajole quickly across the blithely express requests. deposits unwind carefully pending theodolites. pinto beans about the even, regular theodolite]
+ps_partkey: [34494], ps_suppkey: [9501], ps_availqty: [7438], ps_supplycost: [1.02], ps_comment: [egular excuses. final, regular deposits wake. pinto beans according to th]
+ps_partkey: [43172], ps_suppkey: [685], ps_availqty: [6600], ps_supplycost: [1.01], ps_comment: [ites integrate blithely above the slyly regular instructions. asymptotes besides the regular, even accounts haggle carefully slyly bold requests. even pinto beans ]
+ps_partkey: [43764], ps_suppkey: [1277], ps_availqty: [2344], ps_supplycost: [1.02], ps_comment: [; furious, ironic requests nag furiously against the silent packages-- furiously pending pinto beans use blithely careful]
+ps_partkey: [51671], ps_suppkey: [4177], ps_availqty: [3399], ps_supplycost: [1.02], ps_comment: [iously. blithely bold requests haggle furiously. slyly final requests sleep. final, final theodolites cajole. accounts play about the slyly unusual requests. bold courts haggle. bol]
+ps_partkey: [60953], ps_suppkey: [954], ps_availqty: [8611], ps_supplycost: [1.01], ps_comment: [ully even dolphins wake carefully about the slyly final pinto beans]
+ps_partkey: [61707], ps_suppkey: [1708], ps_availqty: [3178], ps_supplycost: [1.02], ps_comment: [ide of the unusual, regular excuses. unusual, special packages are carefully across the even theodolites: furi]
+ps_partkey: [71984], ps_suppkey: [6999], ps_availqty: [6016], ps_supplycost: [1.01], ps_comment: [eodolites are blithely across the special requests. quickly regular excuses are furiously against the slyly final accou]
+ps_partkey: [74375], ps_suppkey: [6883], ps_availqty: [864], ps_supplycost: [1.02], ps_comment: [lithely express asymptotes nag regular packages. special, ruthless instructions against the furiously ruthless packages boost around the packages. slyly bold accounts use. furiously ironic pa]
+ps_partkey: [76994], ps_suppkey: [9502], ps_availqty: [9712], ps_supplycost: [1], ps_comment: [. carefully ironic platelets cajole furiously among the furiously regular asymptotes. furiously express asymptotes wake caref]
+ps_partkey: [93653], ps_suppkey: [3654], ps_availqty: [4473], ps_supplycost: [1.02], ps_comment: [ of the carefully final requests. bold deposits are slyly. instructions nod furiously instructions. careful]
+ps_partkey: [102497], ps_suppkey: [2498], ps_availqty: [6491], ps_supplycost: [1], ps_comment: [fully final accounts. even accounts after the carefully final accounts haggle according to the blithely special requests. carefully unusual]
+ps_partkey: [122543], ps_suppkey: [5056], ps_availqty: [5753], ps_supplycost: [1], ps_comment: [e the quickly ironic dependencies. slyly ironic accounts]
+ps_partkey: [139711], ps_suppkey: [9712], ps_availqty: [4286], ps_supplycost: [1.01], ps_comment: [ully unusual escapades sleep along the special instructions. final, bold ideas across the slyly ironic ideas sleep dependenc]
+ps_partkey: [155112], ps_suppkey: [5113], ps_availqty: [7635], ps_supplycost: [1], ps_comment: [refully bold packages. special somas cajole according to the foxes. furiously even accou]
+ps_partkey: [158093], ps_suppkey: [5639], ps_availqty: [3751], ps_supplycost: [1], ps_comment: [iously unusual gifts maintain quickly according to the slyly pending deposits. quickly ]
+ps_partkey: [193659], ps_suppkey: [6179], ps_availqty: [6606], ps_supplycost: [1.01], ps_comment: [can haggle. quickly express packages are blithely. even requests against the silent accounts sleep special packages. ironic ideas according to the furiously regular dolphins use quickly plate]
+ps_partkey: [193981], ps_suppkey: [3982], ps_availqty: [619], ps_supplycost: [1.01], ps_comment: [ic accounts after the unusual, regular instructions grow carefully around the blithely unusual dependencies. pending accounts along the bl]
+
+
+ query1 returned 21 records 
+./partsupp.bin
+
+*************************************************************************************************************************************************************************
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+int: [31], string: [slate seashell steel medium moccasin], double: [931.03]
+int: [1030], string: [orange floral olive ivory lace], double: [931.03]
+int: [2029], string: [midnight brown dim violet almond], double: [931.02]
+int: [3028], string: [puff slate tomato moccasin azure], double: [931.02]
+int: [4027], string: [white ivory moccasin coral puff], double: [931.02]
+int: [5026], string: [blanched blush pink light wheat], double: [931.02]
+int: [6025], string: [purple medium light aquamarine dark], double: [931.02]
+int: [7024], string: [forest rosy peach antique midnight], double: [931.02]
+int: [8023], string: [mint salmon moccasin blanched beige], double: [931.02]
+int: [9022], string: [peru misty sandy dark drab], double: [931.02]
+int: [10021], string: [blush steel green sienna snow], double: [931.02]
+int: [11020], string: [plum khaki powder beige peru], double: [931.02]
+
+
+ query2 returned 12 records 
+./part.bin
+
+*************************************************************************************************************************************************************************
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+double: [9.24623e+07]
+
+
+ query3 returned 1 records 
+./supplier.bin
+
+*************************************************************************************************************************************************************************
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+ query4 
+double: [4.00421e+08]
+ query4 returned 1 recs 
+
+
+*************************************************************************************************************************************************************************
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+ query5 finished..output written to file ps.w.tmp
+
+
+*************************************************************************************************************************************************************************
+ 
+** IMPORTANT: MAKE SURE THE INFORMATION BELOW IS CORRECT **
+ catalog location: 	catalog
+ tpch files dir: 	../../data/tpch-10mb/
+ heap files dir: 	./
+ 
+
+ query6 
+double: [1.68363e+07]
+double: [1.65363e+07]
+double: [1.59263e+07]
+double: [1.6502e+07]
+double: [1.65789e+07]
+double: [1.52194e+07]
+double: [1.61179e+07]
+double: [1.57786e+07]
+double: [1.65973e+07]
+double: [1.62349e+07]
+double: [1.56964e+07]
+double: [1.75655e+07]
+double: [1.51408e+07]
+double: [1.45051e+07]
+double: [1.50595e+07]
+double: [1.4906e+07]
+double: [1.62842e+07]
+double: [1.68236e+07]
+double: [1.63006e+07]
+double: [1.59569e+07]
+double: [1.64843e+07]
+double: [1.59514e+07]
+double: [1.60954e+07]
+double: [1.55616e+07]
+double: [1.57613e+07]
+ query6 returned sum for 25 groups (expected 25 groups)
+
+
