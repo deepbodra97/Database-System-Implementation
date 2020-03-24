@@ -1,3 +1,0 @@
-3
-3
-(c_phone>'34-999-195-7029') AND (c_mktsegment='FURNITURE')
