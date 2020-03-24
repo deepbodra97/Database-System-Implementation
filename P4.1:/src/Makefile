@@ -13,8 +13,11 @@ gtest_relop.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o
 main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o main.o
 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o y.tab.o lex.yy.o main.o -lfl -lpthread
 
-test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o test.o
-	$(CC) -o test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o test.o -lfl -lpthread
+a4-1.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Statistics.o y.tab.o lex.yy.o test.o
+	$(CC) -o a4-1.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Statistics.o y.tab.o lex.yy.o test.o -lfl
+
+# a3test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o test.o
+# 	$(CC) -o a3test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o a3test.o -lfl -lpthread
 	
 a2test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o a2test.o
 	$(CC) -o a2test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o a2test.o -lfl -lpthread	
@@ -31,11 +34,17 @@ main.o: main.cc
 test.o: test.cc
 	$(CC) -g -c test.cc
 
+# a3test.o: a3test.cc
+# 	$(CC) -g -c a3test.cc
+
 a2test.o: a2test.cc
 	$(CC) -g -c a2test.cc
 
 a1-test.o: a1-test.cc
 	$(CC) -g -c a1-test.cc
+
+Statistics.o: Statistics.cc
+	$(CC) -g -c Statistics.cc
 
 Comparison.o: Comparison.cc
 	$(CC) -g -c Comparison.cc
@@ -69,7 +78,7 @@ Schema.o: Schema.cc
 	
 y.tab.o: Parser.y
 	yacc -d Parser.y
-# 	sed $(tag) y.tab.c -e "s/  __attribute__ ((__unused__))$$/# ifndef __cplusplus\n  __attribute__ ((__unused__));\n# endif/" 
+	sed $(tag) y.tab.c -e "s/  __attribute__ ((__unused__))$$/# ifndef __cplusplus\n  __attribute__ ((__unused__));\n# endif/" 
 	g++ -c y.tab.c
 
 yyfunc.tab.o: ParserFunc.y
