@@ -35,47 +35,47 @@ void yyerror(char*s);
 
 %%
 
-"("     return('(');
+"("			return('(');
 
-")"               return(')');
+")"    	        	return(')');
 
-"<"               return('<');
+"<"    		      	return('<');
 
-">"         return('>');
+">"    		 	return('>');
 
-"="       return('=');
+"=" 			return('=');
 
--?[0-9]+         {yylval.actualChars = strdup(yytext);
-        return(Int); 
-            }
+-?[0-9]+ 	       {yylval.actualChars = strdup(yytext);
+  			return(Int); 
+		        }
 
 -?[0-9]+\.[0-9]*       {yylval.actualChars = strdup(yytext); 
-        return(Float);
-      }
+  			return(Float);
+			}
 
-"OR"          return(OR);
+"OR"      		return(OR);
 
-"AND"     return(AND);
+"AND"			return(AND);
 
-\'[^'\n]*\'          {/* take care of ' in a string */
-      if (yytext[yyleng - 2] == '\\') {
-            yymore();
-        } else {
-        yylval.actualChars = strdup(yytext + 1);  
-        yylval.actualChars[strlen(yylval.actualChars) - 1] = 0;
-            return(String);
-        }
-      }
+\'[^'\n]*\' 	       {/* take care of ' in a string */
+	 		if (yytext[yyleng - 2] == '\\') {
+     				yymore();
+   			} else {
+				yylval.actualChars = strdup(yytext + 1);	
+				yylval.actualChars[strlen(yylval.actualChars) - 1] = 0;
+     				return(String);
+   			}
+			}
 
 [A-Za-z][\.A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
-        return(Name);
-      }     
+  			return(Name);
+			}     
 
-\n                  lineno++;
+\n                	lineno++;
 
-[ \t]               ;
+[ \t]             	;
 
-.                   yyerror("LEX_ERROR: invalid character");
+.                 	yyerror("LEX_ERROR: invalid character");
 
 %%
 
