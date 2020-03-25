@@ -3,6 +3,7 @@
 Statistics::Statistics()
 {
 }
+
 Statistics::Statistics(Statistics &copyMe)
 {
 }
