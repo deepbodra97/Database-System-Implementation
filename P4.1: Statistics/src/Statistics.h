@@ -2,9 +2,26 @@
 #define STATISTICS_
 #include "ParseTree.h"
 
+#include <iostream>
+#include <map>
+#include <string>
 
-class Statistics
-{
+using namespace std;
+
+class RelationInfo{
+public:
+	map<string, int> attributes;
+	int numTuples;
+	int numRelations;
+
+	RelationInfo(int numTuples, int numRelations);
+};
+
+
+class Statistics{
+private:
+	map<string, RelationInfo*> infoMap;
+
 public:
 	Statistics();
 	Statistics(Statistics &copyMe);	 // Performs deep copy
@@ -21,6 +38,7 @@ public:
 	void  Apply(struct AndList *parseTree, char *relNames[], int numToJoin);
 	double Estimate(struct AndList *parseTree, char **relNames, int numToJoin);
 
+	void Print();
 };
 
 #endif
