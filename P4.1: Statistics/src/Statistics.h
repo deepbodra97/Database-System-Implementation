@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -20,7 +21,7 @@ public:
 
 class Statistics{
 private:
-	map<string, RelationInfo*> infoMap;
+	map<string, RelationInfo*> statMap;
 
 public:
 	Statistics();

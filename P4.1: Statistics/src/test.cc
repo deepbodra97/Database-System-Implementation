@@ -185,11 +185,7 @@ void q2 (){
 	if(fabs(result-1500000)>0.1)
 		cout<<"error in estimating Q2\n";
 	s.Apply(final, relName, 3);
-	s.Print(); // comment
-	s.Write(fileName);
-
-	
-	
+	s.Write(fileName);	
 }
 
 // Note there is a self join
