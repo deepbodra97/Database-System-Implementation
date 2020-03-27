@@ -22,10 +22,11 @@ void Statistics::AddRel(char *relName, int numTuples){
 }
 
 void Statistics::AddAtt(char *relName, char *attName, int numDistincts){
+	map<string, RelationInfo*>::iterator it = infoMap.find(string(relName));
 	if (numDistincts == -1){
-		numDistincts = infoMap[string(relName)]->numTuples;
+		numDistincts = it->second->numTuples;
 	}
-	infoMap[string(relName)]->attributes[string(attName)] = numDistincts;
+	it->second->attributes[string(attName)] = numDistincts;
 }
 
 void Statistics::CopyRel(char *oldName, char *newName)
