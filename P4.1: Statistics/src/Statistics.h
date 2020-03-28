@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <sstream>
+#include <fstream>
 
 using namespace std;
 
@@ -22,6 +23,7 @@ public:
 class Statistics{
 private:
 	map<string, RelationInfo*> statMap;
+	double tempResult;
 
 public:
 	Statistics();

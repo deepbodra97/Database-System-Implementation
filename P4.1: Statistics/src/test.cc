@@ -147,6 +147,7 @@ void q1 (){
 	s.Apply(final, relName, 1);
 
 	// test write and read
+	s.Print(); //comment
 	s.Write(fileName);
 	
 	
