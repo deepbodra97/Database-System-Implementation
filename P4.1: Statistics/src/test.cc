@@ -103,7 +103,7 @@ void q0 (){
 	yy_scan_string(cnf);
 	yyparse();
 	double result = s.Estimate(final, relName, 2);
-	if(result!=800000)
+	if(round(result)!=800000)
 		cout<<"error in estimating Q1 before apply \n ";
 	s.Apply(final, relName, 2);
 
@@ -147,7 +147,7 @@ void q1 (){
 	s.Apply(final, relName, 1);
 
 	// test write and read
-	s.Print(); //comment
+	// s.Print(); //comment
 	s.Write(fileName);
 	
 	
@@ -198,7 +198,7 @@ void q3 (){
 	// s.Read(fileName);
 	
 	s.AddRel(relName[0],10000);
-	s.AddAtt(relName[0], "s_nationey",25);
+	s.AddAtt(relName[0], "s_nationkey",25);
 
 	s.AddRel(relName[1],150000);
 	s.AddAtt(relName[1], "c_custkey",150000);
@@ -315,6 +315,7 @@ void q5 (){
 	s.AddRel(relName[1],1500000);
 	s.AddAtt(relName[1], "o_orderkey",1500000);
 	s.AddAtt(relName[1], "o_custkey",150000);
+	// s.AddAtt(relName[1], "o_orderdate",150000);
 	
 	s.AddRel(relName[2],6001215);
 	s.AddAtt(relName[2], "l_orderkey",1500000);
@@ -487,7 +488,7 @@ void q9(){
 void q10 (){
 
 	Statistics s;
-        char *relName[] = { "customer", "orders", "lineitem","nation"};
+        char *relName[] = { "customer", "orders", "lineitem", "nation"};
 
 	// s.Read(fileName);
 	
@@ -539,7 +540,7 @@ void q11 (){
 	
 	s.AddRel(relName[0],200000);
 	s.AddAtt(relName[0], "p_partkey",200000);
-	s.AddAtt(relName[0], "p_conatiner",40);
+	s.AddAtt(relName[0], "p_container",40);
 
 	s.AddRel(relName[1],6001215);
 	s.AddAtt(relName[1], "l_partkey",200000);
@@ -552,7 +553,7 @@ void q11 (){
 	yyparse();
 	
 	double result = s.Estimate(final, relName,2);
-
+	cout<<"result="<<result<<endl;
 	if(fabs(result-21432.9)>0.5)
 		cout<<"error in estimating Q11\n";
 	s.Apply(final, relName,2);

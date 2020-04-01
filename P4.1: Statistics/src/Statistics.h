@@ -7,6 +7,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <set>
+#include <math.h>
 
 using namespace std;
 
@@ -16,6 +18,7 @@ public:
 	int numTuples;
 	int numRelations;
 
+	RelationInfo();
 	RelationInfo(int numTuples, int numRelations);
 };
 
@@ -23,7 +26,10 @@ public:
 class Statistics{
 private:
 	map<string, RelationInfo*> statMap;
-	double tempResult;
+	// double tempResult;
+
+	bool isCalledFrmApply;
+	bool isApply;
 
 public:
 	Statistics();
@@ -40,6 +46,7 @@ public:
 
 	void  Apply(struct AndList *parseTree, char *relNames[], int numToJoin);
 	double Estimate(struct AndList *parseTree, char **relNames, int numToJoin);
+	double ApplyEstimate(struct AndList *parseTree, char **relNames, int numToJoin);
 
 	void Print();
 };
