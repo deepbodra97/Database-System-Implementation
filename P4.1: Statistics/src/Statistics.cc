@@ -5,15 +5,21 @@ RelationInfo::RelationInfo(int numTuples, int numRelations){
 	this->numRelations = numRelations;
 }
 
-Statistics::Statistics()
-{
+Statistics::Statistics(){
 }
 
-Statistics::Statistics(Statistics &copyMe)
-{
+Statistics::Statistics(Statistics &copyMe){
+	for (map<string, RelationInfo*>::iterator it1 = copyMe.statMap.begin(); it1!=copyMe.statMap.end(); it1++){
+		RelationInfo *relationInfo = new RelationInfo(it1->second->numTuples, it1->second->numRelations);		
+
+		for (map<string, int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){
+			relationInfo->attributes.insert(pair<string, int>(it2->first, it2->second));
+		}
+		statMap[it1->first] = relationInfo;
+	}
 }
-Statistics::~Statistics()
-{
+
+Statistics::~Statistics(){
 }
 
 void Statistics::AddRel(char *relName, int numTuples){
