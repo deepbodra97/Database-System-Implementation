@@ -1,6 +1,6 @@
 relation
-lineitem_part
-21433
+lineitem_part_lineitem_part
+8
 attributes
 l_partkey
 200000

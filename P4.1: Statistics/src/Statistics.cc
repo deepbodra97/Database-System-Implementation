@@ -1,40 +1,34 @@
 #include "Statistics.h"
 
-#define _DEP
-
-
 RelationInfo::RelationInfo(){
 };
 
-RelationInfo::RelationInfo(int numTuples, int numRelations){
+RelationInfo::RelationInfo(int numTuples){
 	this->numTuples = numTuples;
-	this->numRelations = numRelations;
 }
 
 Statistics::Statistics(){
-	isCalledFrmApply = false;
-    isApply = false;
 }
 
 Statistics::Statistics(Statistics &copyMe){
 	for (map<string, RelationInfo*>::iterator it1 = copyMe.statMap.begin(); it1!=copyMe.statMap.end(); it1++){
-		RelationInfo *relationInfo = new RelationInfo(it1->second->numTuples, it1->second->numRelations);		
+		RelationInfo *relationInfo = new RelationInfo(it1->second->numTuples); // create new RelationInfo instance
 
-		for (map<string, int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){
+		for (map<string, int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){ // copy all the attributes
 			relationInfo->attributes[it2->first] = it2->second;
 		}
-		statMap[it1->first] = relationInfo;
+		statMap[it1->first] = relationInfo; // set the <key, value> pair
 	}
 }
 
 Statistics::~Statistics(){
-	for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){
-		delete it1->second;
-		statMap.erase(it1->first);
+	for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // loop through all the relations
+		delete it1->second; // delete RelationInfo instance
+		statMap.erase(it1->first); // remove the key
 	}
 }
 
-void Statistics::Print(){
+void Statistics::Print(){ // Prints the statMap on the cmd line
 	for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
 		string relationName = it1->first; 
 		RelationInfo *relationInfo = it1->second;
@@ -48,12 +42,12 @@ void Statistics::Print(){
 }
 
 void Statistics::AddRel(char *relName, int numTuples){
-	RelationInfo *relationInfo = new RelationInfo(numTuples, 1);
+	RelationInfo *relationInfo = new RelationInfo(numTuples);
 	statMap[string(relName)] = relationInfo;
 }
 
 void Statistics::AddAtt(char *relName, char *attName, int numDistincts){
-	map<string, RelationInfo*>::iterator it = statMap.find(string(relName));
+	map<string, RelationInfo*>::iterator it = statMap.find(string(relName)); // find the relation by the name relName
 	if (numDistincts == -1){
 		numDistincts = it->second->numTuples;
 	}
@@ -61,11 +55,11 @@ void Statistics::AddAtt(char *relName, char *attName, int numDistincts){
 }
 
 void Statistics::CopyRel(char *oldName, char *newName){
-	map<string,RelationInfo*>::iterator it1 = statMap.find(string(oldName));
-	RelationInfo *newRelationInfo = new RelationInfo(it1->second->numTuples, it1->second->numRelations);
-	for (map<string,int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){
+	map<string,RelationInfo*>::iterator it1 = statMap.find(string(oldName)); // get old relation
+	RelationInfo *newRelationInfo = new RelationInfo(it1->second->numTuples); // create RelationInfo for new relation
+	for (map<string,int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){ // copy the attributes
 		ostringstream attributeName;
-		attributeName << newName << "." << it2->first;
+		attributeName << newName << "." << it2->first; // new attribute name = newRelationName.oldAttributeName
 		newRelationInfo->attributes[attributeName.str()] = it2->second;
 	}
 	statMap[newName] = newRelationInfo;
@@ -73,436 +67,246 @@ void Statistics::CopyRel(char *oldName, char *newName){
 	
 void Statistics::Read(char *fromWhere){
 	statMap.clear();
-	// tempResult = 0.0;
 
 	ifstream statFile;
-    statFile.open(fromWhere);
-    if(!statFile){
-    	cout<<"Statistics.txt is empty"<<endl;
-    	statFile.close();
-    	ofstream newStatFile;
-    	newStatFile.open(fromWhere);
-    	newStatFile<<"EOF";
-    	newStatFile.close();
-        return;
-    }
+	statFile.open(fromWhere);
+	if(!statFile){ // if statFile not found then create new file and write "EOF" to it
+		cout<<"Statistics.txt is empty"<<endl;
+		statFile.close();
+		ofstream newStatFile;
+		newStatFile.open(fromWhere);
+		newStatFile<<"EOF";
+		newStatFile.close();
+		return;
+	}
 
-    string line;
-    statFile >> line;
-    while(line.compare("EOF") != 0){
-    	// cout<<"*"<<line<<endl;
-    	if(line.compare("relation") == 0){
-    		statFile >> line;
-    		string relationName(line);
-    		statFile >> line;
-    		RelationInfo *relationInfo = new RelationInfo(stoi(line), 1);
-    		statFile >> line; 
-    		// statFile >> line;
-    		while(statFile>>line && line.compare("relation") != 0 && line.compare("EOF") != 0){
-    			string attributeName(line);
-    			statFile >> line;
-    			relationInfo->attributes[attributeName] = stoi(line);
-       			// statFile >> line;
-       		}
-       		statMap[relationName] = relationInfo;
-    	}
-    }
-    statFile.close();
+	string line;
+	statFile >> line;
+	while(line.compare("EOF") != 0){
+		if(line.compare("relation") == 0){ // if start of new relation
+			statFile >> line;
+			string relationName(line);
+			statFile >> line;
+			RelationInfo *relationInfo = new RelationInfo(stoi(line));
+			statFile >> line; 
+			while(statFile>>line && line.compare("relation") != 0 && line.compare("EOF") != 0){ // while relation or EOF is not encountered
+				string attributeName(line);
+				statFile >> line;
+				relationInfo->attributes[attributeName] = stoi(line); // read the line as an attribute for the current relation
+			}
+			statMap[relationName] = relationInfo; // create entry for the new relation in the statMap
+		}
+	}
+	statFile.close();
 }
 
 void Statistics::Write(char *fromWhere){
 	ofstream statFile;
-    statFile.open(fromWhere);
-    if(!statFile) {
-    	cout<<"FileError: Cannot open the statfile file"<<endl;
-        return;
-    }
+	statFile.open(fromWhere);
+	if(!statFile) {
+		cout<<"FileError: Cannot open the statfile file"<<endl;
+		return;
+	}
 
-    for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){
-        statFile << "relation" << endl << it1->first << endl << it1->second->numTuples <<endl;
-        statFile << "attributes" << endl;
-        for (map<string,int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){
+	for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // for all relations
+		statFile << "relation" << endl << it1->first << endl << it1->second->numTuples <<endl;
+		statFile << "attributes" << endl;
+		for (map<string,int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){ // for all the attributes
 			statFile << it2->first << endl << it2->second << endl;
 		}
-    }
-    statFile << "EOF";
-    statFile.close();
-}
-/*
-double Statistics::ApplyEstimate(struct AndList *parseTree, char **relNames, int numToJoin) { // apply and return
-	double estimate = Estimate(parseTree, relNames, numToJoin);
-	Apply(parseTree, relNames, numToJoin);
-	return estimate;
+	}
+	statFile << "EOF";
+	statFile.close();
 }
 
 void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoin){
-	struct AndList * andlist = parseTree;
-	struct OrList * orlist;
-	while (andlist != NULL){
-		if (andlist->left != NULL){
-			orlist = andlist->left;
-			while(orlist != NULL){
-				if (orlist->left->left->code == 3 && orlist->left->right->code == 3){//
-					map<string, int>::iterator itAtt[2];
-					map<string, RelationInfo*>::iterator itRel[2];
-					string joinAtt1(orlist->left->left->value);
-					string joinAtt2(orlist->left->right->value);
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt[0] = iit->second->attributes.find(joinAtt1);
-						if(itAtt[0] != iit->second->attributes.end()){
-							itRel[0] = iit;
-							break;
-						}
-					}
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt[1] = iit->second->attributes.find(joinAtt2);
-						if(itAtt[1] != iit->second->attributes.end()){
-							itRel[1] = iit;
-							break;
-						}
-					}
-					RelationInfo joinedRel;
-					char * joinName = new char[200];
-					sprintf(joinName, "%s|%s", itRel[0]->first.c_str(), itRel[1]->first.c_str());
-					string joinNamestr(joinName);
-					joinedRel.numTuples = tempResult;
-					joinedRel.numRelations = numToJoin;
-					for(int i = 0; i < 2; i++){
-						for (map<string, int>::iterator iit = itRel[i]->second->attributes.begin(); iit!=itRel[i]->second->attributes.end(); ++iit){
-							joinedRel.attributes.insert(*iit);
-						}
-						statMap.erase(itRel[i]);
-					}
-					statMap.insert(pair<string, RelationInfo*>(joinNamestr, &joinedRel));
-				}
-				else{
-					string seleAtt(orlist->left->left->value);
-					map<string, int>::iterator itAtt;
-					map<string, RelationInfo*>::iterator itRel;
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt = iit->second->attributes.find(seleAtt);
-						if(itAtt != iit->second->attributes.end()){
-							itRel = iit;
-							break;
-						}
-					}
-					itRel->second->numTuples = tempResult;
-					
-				}
-				orlist = orlist->rightOr;
-			}
-		}
-		andlist = andlist->rightAnd;
-	}
+	shouldApply = true;
+	Estimate(parseTree, relNames, numToJoin);
+	shouldApply = false;
 }
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
-	struct AndList * andlist = parseTree;
-	struct OrList * orlist;
-	double result = 0.0, fraction = 1.0;
-	int state = 0;
-    if (andlist == NULL) {
-		if (numToJoin>1) return -1;
-		if(statMap.find(relNames[0]) == statMap.end()){
-			string("Error: Relation ")+relNames[0]+" does not exist";
-			// exit(EXIT_FAILURE);
-		}
-      	return statMap[relNames[0]]->numTuples;
-    }
-	while (andlist != NULL){
-		if (andlist->left != NULL){
-			orlist = andlist->left;
-			double fractionOr = 0.0;
-			map<string, int>::iterator lastAtt;
-			while(orlist != NULL){
-				if (orlist->left->left->code == 3 && orlist->left->right->code == 3){
-					map<string, int>::iterator itAtt[2];
-					map<string, RelationInfo*>::iterator itRel[2];
-					string joinAtt1(orlist->left->left->value);
-					string joinAtt2(orlist->left->right->value);
+	// TODO: error handling
+	double cost = 0.0;
+	struct AndList *ptrAND = parseTree;
+	struct OrList *ptrOR;
 
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt[0] = iit->second->attributes.find(joinAtt1);
-						if(itAtt[0] != iit->second->attributes.end()){
-							itRel[0] = iit;
-							break;
-						}
-					}
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt[1] = iit->second->attributes.find(joinAtt2);
-						if(itAtt[1] != iit->second->attributes.end()){
-							itRel[1] = iit;
-							break;
-						}
-					}
-					
-					double max;
-					if (itAtt[0]->second >= itAtt[1]->second)		max = (double)itAtt[0]->second;
-					else		max = (double)itAtt[1]->second;
-					if (state == 0)
-						result = (double)itRel[0]->second->numTuples*(double)itRel[1]->second->numTuples/max;
-					else
-						result = result*(double)itRel[1]->second->numTuples/max;
-					
-					//cout << "max " << max << endl;
-					//cout << "join result: " << result << endl;
-					state = 1;
+	string leftAttribute, leftRelation, leftJoinRelation;
+	string rightAttribute, rightRelation, rightJoinRelation;
+
+	bool isJoin = false, isJoinPerformed = false;
+
+	bool isDependentOnPreviousAttribute = false;
+	string previousAttribute;
+
+	bool isDependencyHandled = false;
+
+	double ANDMultiplier = 1.0, ORMultiplier = 1.0;
+
+	map<string, int> attributeToComparisonTypeMap;
+
+	while (ptrAND != NULL) { // traversing the parseTree wrt AND
+		ptrOR = ptrAND->left;
+		ORMultiplier = 1.0;
+
+		while (ptrOR != NULL) { // traversing the left child of ptrAND i.e. [OR child]
+			isJoin = false;
+			ComparisonOp *ptrComparisonOp = ptrOR->left;
+
+			if (ptrComparisonOp->left->code != NAME) { // left child must be of type NAME
+				cout<<"Error: left child is not of type NAME"<<endl;
+				exit(EXIT_FAILURE);
+				return -1;
+			} else {
+				leftAttribute = ptrComparisonOp->left->value;
+				if(leftAttribute.compare(previousAttribute) == 0){ // leftAttribute is same as previous attribute
+					isDependentOnPreviousAttribute=true; // i.e. leftAttribute is dependent on previous attribute
 				}
-				else{
-					string seleAtt(orlist->left->left->value);
-					map<string, int>::iterator itAtt;
-					map<string, RelationInfo*>::iterator itRel;
-					for (map<string, RelationInfo*>::iterator iit = statMap.begin(); iit!=statMap.end(); ++iit){
-						itAtt = iit->second->attributes.find(seleAtt);
-						if(itAtt != iit->second->attributes.end()){
-							itRel = iit;
-							break;
-						}
-					}
-					if (result == 0.0)
-						result = ((double)itRel->second->numTuples);
-					double tempFrac;
-					if(orlist->left->code == 7)
-						tempFrac = 1.0 / itAtt->second;
-					else
-						tempFrac = 1.0 / 3.0;
-					if(lastAtt != itAtt)
-						fractionOr = tempFrac+fractionOr-(tempFrac*fractionOr);
-					else
-						fractionOr += tempFrac;
-					//cout << "fracOr: " << fractionOr << endl;
-					lastAtt = itAtt;//
-				}
-				orlist = orlist->rightOr;
+				previousAttribute = leftAttribute; // cache this attribute to check for dependency with attributes encountered in the next iteration
+				leftRelation = GetRelation(leftAttribute); // find the relation which has the leftAttribute
 			}
-			if (fractionOr != 0.0)
-				fraction = fraction*fractionOr;
-			//cout << "frac: " << fraction << endl;
-		}
-		andlist = andlist->rightAnd;
-	}
-	result = result * fraction;
-	//cout << "result " << result << endl;
-	tempResult = result;
-	return result;
-}*/
 
-void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoin)
-{
+			if (ptrComparisonOp->right->code == NAME) {// if right child is also of type NAME
+				isJoin = true; // then it is a join
+				isJoinPerformed = true; //
+				rightAttribute = ptrComparisonOp->right->value;
+				rightRelation = GetRelation(rightAttribute); // find the relation which has the leftAttribute
+			}
 
-		isCalledFrmApply = true;
-        isApply = true;
-        Estimate(parseTree, relNames, numToJoin);
-        isApply = false;
-        isCalledFrmApply = false;
+			if (isJoin == true) { // if this is a join
+				double leftNumDistinct = statMap[leftRelation]->attributes[leftAttribute]; //get num distinct of left attribute
+				double rightNumDistinct = statMap[rightRelation]->attributes[rightAttribute]; //get num distinct of right attribute
 
-}
-
-double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
-	// cout<<"Estimate: start "<<isCalledFrmApply<<endl;
-    double resultEstimate = 0.0;
-    // TODO error checking
-    struct AndList *currentAnd;
-    struct OrList *currentOr;
-
-    currentAnd = parseTree;
-
-    string leftRelation;
-    string rightRelation;
-
-    string leftAttr;
-    string rightAttr;
-
-    string joinLeftRelation, joinRightRelation;
-
-    bool isJoin = false;
-    bool isJoinPerformed = false;
-
-    bool isdep = false;
-    bool done = false;
-    string prev;
-
-    double resultANDFactor = 1.0;
-    double resultORFactor = 1.0;
-
-    map<string, int> relOpMap;
-
-	//And list is structured as a root, a orlist the left and andlist to the right.
-	//Or list is structured as a root, a comparison the left and orlist to the right.
-	//a comparison is structed as a root and operands to the left and right.
-	//operands consists of a code and value.
-    while (currentAnd != NULL) {
-        currentOr = currentAnd->left;
-        resultORFactor = 1.0;
-
-       	while (currentOr != NULL) {
-	        isJoin = false;
-	        ComparisonOp *currentCompOp = currentOr->left;
-
-
-	        // find relation of left attribute
-			//first attribute has to be a name
-	        if (currentCompOp->left->code != NAME) {
-	                cout << "LEFT should be attribute name" << endl;
-	                return 0;
-	        } else {
-
-				//find the relation where the attribute lies.
-                leftAttr = currentCompOp->left->value;
-				if(strcmp(leftAttr.c_str(),prev.c_str())==0){
-					isdep=true;
+				if (ptrComparisonOp->code == EQUALS) { // if equality
+					ORMultiplier *= (1.0 - (1.0/max(leftNumDistinct, rightNumDistinct)));
 				}
-				prev = leftAttr;
-                for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
-                    map<string, int>::iterator it2 = it1->second->attributes.find(leftAttr);
-					if(it2 != it1->second->attributes.end()){
-						leftRelation = it1->first;
-						break;
-					}
-                }
-            }
-
-            // find relation of right attribute
-            if (currentCompOp->right->code == NAME) {//the right operand is a name too hence it is a join
-                isJoin = true;
-                isJoinPerformed = true;
-                rightAttr = currentCompOp->right->value;
-				//find right relation
-                for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
-                    map<string, int>::iterator it2 = it1->second->attributes.find(rightAttr);
-					if(it2 != it1->second->attributes.end()){
-						rightRelation = it1->first;
-						break;
-					}
-                }
-            }
-
-            if (isJoin == true) {
-				//find distinct counts of both attributes for the relations.
-                double leftDistinctCount = statMap[leftRelation]->attributes[currentCompOp->left->value];
-                double rightDistinctCount = statMap[rightRelation]->attributes[currentCompOp->right->value];
-
-                if (currentCompOp->code == EQUALS) {
-                    resultORFactor *=(1.0 - (1.0 / max(leftDistinctCount, rightDistinctCount)));//ORFACTOR??
-                }
-
-                joinLeftRelation = leftRelation;
-                joinRightRelation = rightRelation;
-            } else {
-				if(isdep){
-					if(!done){
-						resultORFactor =1.0 -resultORFactor;
-						done = true;
+				leftJoinRelation = leftRelation;
+				rightJoinRelation = rightRelation;
+			} else { // if this is not a join
+				if(isDependentOnPreviousAttribute){ // if leftAttribute depends on previous attribute
+					if(!isDependencyHandled){
+						ORMultiplier = 1.0-ORMultiplier;
+						isDependencyHandled = true;
 					}
 
-				    if (currentCompOp->code == GREATER_THAN || currentCompOp->code == LESS_THAN) {
-	                    resultORFactor += (1.0 / 3.0);
-	                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
-	                }
+					if (ptrComparisonOp->code == GREATER_THAN || ptrComparisonOp->code == LESS_THAN) { // if GREATER_THAN or LESS_THAN
+						ORMultiplier += (1.0/3.0);
+						attributeToComparisonTypeMap[leftAttribute] = ptrComparisonOp->code;
+					}
 
-		            if (currentCompOp->code == EQUALS) {
-		                    resultORFactor +=(1.0 / (statMap[leftRelation]->attributes[currentCompOp->left->value]));
-		                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
-		            }
+					if (ptrComparisonOp->code == EQUALS) { // if EQUALS
+							ORMultiplier += (1.0/(statMap[leftRelation]->attributes[leftAttribute]));
+							attributeToComparisonTypeMap[leftAttribute] = ptrComparisonOp->code;
+					}
 				} else{
-                    if (currentCompOp->code == GREATER_THAN || currentCompOp->code == LESS_THAN) {
-	                    resultORFactor *= (2.0 / 3.0);
-	                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
-                    }
-                    if (currentCompOp->code == EQUALS) {
-                        resultORFactor *=(1.0- (1.0 / statMap[leftRelation]->attributes[currentCompOp->left->value]));
-                        relOpMap[currentCompOp->left->value] = currentCompOp->code;
-	                }
+					if (ptrComparisonOp->code == GREATER_THAN || ptrComparisonOp->code == LESS_THAN) { // if GREATER_THAN or LESS_THAN
+						ORMultiplier *= (2.0/3.0);
+						attributeToComparisonTypeMap[leftAttribute] = ptrComparisonOp->code;
+					}
+
+					if (ptrComparisonOp->code == EQUALS) { // if EQUALS
+						ORMultiplier *= (1.0-(1.0 / statMap[leftRelation]->attributes[leftAttribute]));
+						attributeToComparisonTypeMap[leftAttribute] = ptrComparisonOp->code;
+					}
 				}
-            }
-            currentOr = currentOr->rightOr;
-        }
-	    if(!isdep)
-			resultORFactor =1.0 -resultORFactor;	
-	    isdep=false;
-	    done =false;
+			}
+			ptrOR = ptrOR->rightOr; // go to the right OR child
+		}
+		if(!isDependentOnPreviousAttribute){
+			ORMultiplier = 1.0-ORMultiplier;
+		}
+		isDependentOnPreviousAttribute = false;
+		isDependencyHandled = false;
 
-        resultANDFactor *= resultORFactor;
-        currentAnd = currentAnd->rightAnd;
-    }
-    double rightTupleCount;
-    if(statMap.find(rightRelation) != statMap.end()){
-	    rightTupleCount = statMap[rightRelation]->numTuples;
-    }
+		ANDMultiplier *= ORMultiplier;
+		ptrAND = ptrAND->rightAnd; // go to the right AND child
+	}
 
-    if (isJoinPerformed == true) {
-        double leftTupleCount = statMap[joinLeftRelation]->numTuples;
-        resultEstimate = leftTupleCount * rightTupleCount * resultANDFactor;
-    } else {
-        double leftTupleCount = statMap[leftRelation]->numTuples;
-        resultEstimate = leftTupleCount * resultANDFactor;
-    }
-    if (isApply) {
-    	if(isJoinPerformed)
-			statMap[joinLeftRelation + "_" + joinRightRelation] = new RelationInfo();
-	    map<string, int>::iterator relOpMapITR, distinctCountMapITR;
-	    set<string> addedJoinAttrSet;
-	    if (isJoinPerformed){
-            for (relOpMapITR = relOpMap.begin(); relOpMapITR != relOpMap.end(); relOpMapITR++) {
-                
-                for (int i = 0; i < statMap.size()-1; i++) {
-                    if (relNames[i] == NULL){
-                        continue;
-                    }
+	double rightNumTuples;
+	if(statMap.find(rightRelation) != statMap.end()){
+		rightNumTuples = statMap[rightRelation]->numTuples;
+	}
 
-                    int cnt;
-                    if(statMap.find(relNames[i]) != statMap.end()){
-                    	cnt = statMap[relNames[i]]->attributes.count(relOpMapITR->first);
-                    } else{
-                    	cnt = 0;
-                    }
-                    if (cnt == 0){
-                        continue;
-                    }
-                    else if (cnt == 1) {
-                        for (distinctCountMapITR = statMap[relNames[i]]->attributes.begin(); distinctCountMapITR != statMap[relNames[i]]->attributes.end(); distinctCountMapITR++) {
-                            if ((relOpMapITR->second == LESS_THAN) || (relOpMapITR->second == GREATER_THAN)) {
-                            	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[distinctCountMapITR->first] = (int)round((double)(distinctCountMapITR->second) / 3.0);
-                            } else if (relOpMapITR->second == EQUALS) {
-                                if (relOpMapITR->first == distinctCountMapITR->first) { //same attribute on which condition is imposed
-                                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[distinctCountMapITR->first] = 1;
-                                } else{
-                                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[distinctCountMapITR->first] = min((int)round(resultEstimate), distinctCountMapITR->second);
-                                }
-                            }
-                        }
-                        break;
-                    } else if (cnt > 1) {
-	                    for (distinctCountMapITR = statMap[relNames[i]]->attributes.begin(); distinctCountMapITR != statMap[relNames[i]]->attributes.end(); distinctCountMapITR++) {
-                            if (relOpMapITR->second == EQUALS) {
-                                if (relOpMapITR->first == distinctCountMapITR->first) {
-                                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[distinctCountMapITR->first] = cnt;
-                                } else{
-                                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[distinctCountMapITR->first] = min((int) round(resultEstimate), distinctCountMapITR->second);
-                                }
-                            }
-	                    }
-	                    break;
-                    }
-                    addedJoinAttrSet.insert(relNames[i]);
-                }
-	        }
-            if (addedJoinAttrSet.count(joinLeftRelation) == 0) {
-                for (map<string, int>::iterator entry = statMap[joinLeftRelation]->attributes.begin(); entry != statMap[joinLeftRelation]->attributes.end(); entry++) {
-                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[entry->first] = entry->second;
-                }
-            }
-            if (addedJoinAttrSet.count(joinRightRelation) == 0) {
-                for (map<string, int>::iterator entry = statMap[joinRightRelation]->attributes.begin(); entry != statMap[joinRightRelation]->attributes.end(); entry++) {
-                	statMap[joinLeftRelation + "_" + joinRightRelation]->attributes[entry->first] = entry->second;
-                }
-            }
-            statMap[joinLeftRelation + "_" + joinRightRelation]->numTuples = round(resultEstimate);
-            delete statMap[joinLeftRelation];
-            delete statMap[joinRightRelation];
-            statMap.erase(joinLeftRelation);
-            statMap.erase(joinRightRelation);
-        }
-    }
-    return resultEstimate;
+	if (isJoinPerformed == true) {
+		double leftNumTuples = statMap[leftJoinRelation]->numTuples;
+		cost = leftNumTuples*rightNumTuples*ANDMultiplier; // cost for join
+	} else {
+		double leftNumTuples = statMap[leftRelation]->numTuples;
+		cost = leftNumTuples * ANDMultiplier; // cost if not a join
+	}
+	if (shouldApply) { // if the estimation is to be applied
+		if(isJoinPerformed){ // if it is join
+			statMap[leftJoinRelation + "_" + rightJoinRelation] = new RelationInfo(); // add new relation to statMap
+		}
+		map<string, int>::iterator iter_attributeToComparisonTypeMap, iter_NumDistinctAttribute;
+		set<string> joinAttributesProcessedSet;
+		if (isJoinPerformed){
+			for (iter_attributeToComparisonTypeMap = attributeToComparisonTypeMap.begin(); iter_attributeToComparisonTypeMap != attributeToComparisonTypeMap.end(); iter_attributeToComparisonTypeMap++) {
+				for (int i = 0; i < statMap.size()-1; i++) {
+					int attributeCount = 0;
+					if(statMap.find(relNames[i]) != statMap.end()){ // if relNames[i] is in statMap
+						attributeCount = statMap[relNames[i]]->attributes.count(iter_attributeToComparisonTypeMap->first); // find how many attributes have iter_attributeToComparisonTypeMap->first
+					}
+
+					if (attributeCount == 0){ // if none
+						continue; // then skip this relation
+					}
+					else if (attributeCount == 1) { // if 1
+						for (iter_NumDistinctAttribute = statMap[relNames[i]]->attributes.begin(); iter_NumDistinctAttribute != statMap[relNames[i]]->attributes.end(); iter_NumDistinctAttribute++) {
+							if ((iter_attributeToComparisonTypeMap->second == LESS_THAN) || (iter_attributeToComparisonTypeMap->second == GREATER_THAN)) {
+								statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[iter_NumDistinctAttribute->first] = (int)round((double)(iter_NumDistinctAttribute->second) / 3.0);
+							} else if (iter_attributeToComparisonTypeMap->second == EQUALS) { // if equality
+								if (iter_attributeToComparisonTypeMap->first == iter_NumDistinctAttribute->first) { // left and right attributes are same
+									statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[iter_NumDistinctAttribute->first] = 1; // then 1 distinct
+								} else{ // left and right attributes are not same
+									statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[iter_NumDistinctAttribute->first] = min((int)round(cost), iter_NumDistinctAttribute->second); // min of the two
+								}
+							}
+						}
+						break;
+					} else if (attributeCount > 1) {
+						for (iter_NumDistinctAttribute = statMap[relNames[i]]->attributes.begin(); iter_NumDistinctAttribute != statMap[relNames[i]]->attributes.end(); iter_NumDistinctAttribute++) {
+							if (iter_attributeToComparisonTypeMap->second == EQUALS) { // if equality
+								if (iter_attributeToComparisonTypeMap->first == iter_NumDistinctAttribute->first) { // left and right attributes are same
+									statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[iter_NumDistinctAttribute->first] = attributeCount;
+								} else{
+									statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[iter_NumDistinctAttribute->first] = min((int) round(cost), iter_NumDistinctAttribute->second); // then min of the two
+								}
+							}
+						}
+						break;
+					}
+					joinAttributesProcessedSet.insert(relNames[i]); // add the relation to the set of processed relations
+				}
+			}
+			if (joinAttributesProcessedSet.count(leftJoinRelation) == 0) { // if leftJoinRelation is not in processed set
+				for (map<string, int>::iterator entry = statMap[leftJoinRelation]->attributes.begin(); entry != statMap[leftJoinRelation]->attributes.end(); entry++) {
+					statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[entry->first] = entry->second; // then add all attributes from leftJoinRelation into the joined relation
+				}
+			}
+			if (joinAttributesProcessedSet.count(rightJoinRelation) == 0) { // if rightJoinRelation is not in processed set
+				for (map<string, int>::iterator entry = statMap[rightJoinRelation]->attributes.begin(); entry != statMap[rightJoinRelation]->attributes.end(); entry++) {
+					statMap[leftJoinRelation + "_" + rightJoinRelation]->attributes[entry->first] = entry->second; // then add all attributes from rightJoinRelation into the joined relation
+				}
+			}
+			statMap[leftJoinRelation + "_" + rightJoinRelation]->numTuples = round(cost); // set the cost of the joined relation
+			delete statMap[leftJoinRelation]; // free RelationInfo instance of leftJoinRelation
+			delete statMap[rightJoinRelation]; // free RelationInfo instance of rightJoinRelation
+			statMap.erase(leftJoinRelation); // erase entry leftJoinRelation from statMap
+			statMap.erase(rightJoinRelation); // clear entry of rightJoinRelation from statMap
+		}
+	}
+	return cost;
+}
+
+// get the relation from statMap which has a <attribute>
+string Statistics::GetRelation(string attribute){
+	string relation;
+	for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
+		map<string, int>::iterator it2 = it1->second->attributes.find(attribute);
+		if(it2 != it1->second->attributes.end()){
+			relation = it1->first;
+			return relation;
+		}
+	}
 }

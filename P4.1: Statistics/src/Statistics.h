@@ -17,20 +17,16 @@ class RelationInfo{
 public:
 	map<string, int> attributes;
 	int numTuples;
-	int numRelations;
 
 	RelationInfo();
-	RelationInfo(int numTuples, int numRelations);
+	RelationInfo(int numTuples);
 };
 
 
 class Statistics{
 private:
 	map<string, RelationInfo*> statMap;
-	// double tempResult;
-
-	bool isCalledFrmApply;
-	bool isApply;
+	bool shouldApply; // if true then the estimation will be applied
 
 public:
 	Statistics();
@@ -49,6 +45,7 @@ public:
 	double Estimate(struct AndList *parseTree, char **relNames, int numToJoin);
 	double ApplyEstimate(struct AndList *parseTree, char **relNames, int numToJoin);
 
+	string GetRelation(string attribute);
 	void Print();
 };
 
