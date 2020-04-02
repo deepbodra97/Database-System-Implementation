@@ -1,19 +1,14 @@
 #include "Statistics.h"
 
-RelationInfo::RelationInfo(){
-};
+RelationInfo::RelationInfo(){};
 
-RelationInfo::RelationInfo(int numTuples){
-	this->numTuples = numTuples;
-}
+RelationInfo::RelationInfo(int numTuples){this->numTuples = numTuples;}
 
-Statistics::Statistics(){
-}
+Statistics::Statistics(){}
 
 Statistics::Statistics(Statistics &copyMe){
 	for (map<string, RelationInfo*>::iterator it1 = copyMe.statMap.begin(); it1!=copyMe.statMap.end(); it1++){
 		RelationInfo *relationInfo = new RelationInfo(it1->second->numTuples); // create new RelationInfo instance
-
 		for (map<string, int>::iterator it2 = it1->second->attributes.begin(); it2!=it1->second->attributes.end(); it2++){ // copy all the attributes
 			relationInfo->attributes[it2->first] = it2->second;
 		}
@@ -67,7 +62,6 @@ void Statistics::CopyRel(char *oldName, char *newName){
 	
 void Statistics::Read(char *fromWhere){
 	statMap.clear();
-
 	ifstream statFile;
 	statFile.open(fromWhere);
 	if(!statFile){ // if statFile not found then create new file and write "EOF" to it
@@ -79,7 +73,6 @@ void Statistics::Read(char *fromWhere){
 		newStatFile.close();
 		return;
 	}
-
 	string line;
 	statFile >> line;
 	while(line.compare("EOF") != 0){
@@ -107,7 +100,6 @@ void Statistics::Write(char *fromWhere){
 		cout<<"FileError: Cannot open the statfile file"<<endl;
 		return;
 	}
-
 	for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // for all relations
 		statFile << "relation" << endl << it1->first << endl << it1->second->numTuples <<endl;
 		statFile << "attributes" << endl;
@@ -126,8 +118,7 @@ void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJo
 }
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
-	// TODO: error handling
-	double cost = 0.0;
+	double cost = 0.0, ANDMultiplier = 1.0, ORMultiplier = 1.0;
 	struct AndList *ptrAND = parseTree;
 	struct OrList *ptrOR;
 
@@ -140,8 +131,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 	string previousAttribute;
 
 	bool isDependencyHandled = false;
-
-	double ANDMultiplier = 1.0, ORMultiplier = 1.0;
 
 	map<string, int> attributeToComparisonTypeMap;
 
@@ -299,8 +288,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 	return cost;
 }
 
-// get the relation from statMap which has a <attribute>
-string Statistics::GetRelation(string attribute){
+string Statistics::GetRelation(string attribute){ // get the relation from statMap which has a <attribute>
 	string relation;
 	for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
 		map<string, int>::iterator it2 = it1->second->attributes.find(attribute);

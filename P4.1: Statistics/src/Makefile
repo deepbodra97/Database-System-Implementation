@@ -7,6 +7,9 @@ ifdef linux
 tag = -n
 endif
 
+gtest_statistics.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o gtest_statistics.o
+	$(CC) -o gtest_statistics.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o gtest_statistics.o -lfl -lpthread -lgtest
+
 gtest_relop.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o
 	$(CC) -o gtest_relop.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o -lfl -lpthread -lgtest
 

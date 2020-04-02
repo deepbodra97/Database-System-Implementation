@@ -24,11 +24,10 @@ public:
 
 
 class Statistics{
-private:
+public:
 	map<string, RelationInfo*> statMap;
 	bool shouldApply; // if true then the estimation will be applied
 
-public:
 	Statistics();
 	Statistics(Statistics &copyMe);	 // Performs deep copy
 	~Statistics();

@@ -148,10 +148,7 @@ void q1 (){
 	s.Apply(final, relName, 1);
 
 	// test write and read
-	// s.Print(); //comment
 	s.Write(fileName);
-	
-	
 }
 
 
@@ -195,8 +192,6 @@ void q3 (){
 
 	Statistics s;
 	char *relName[] = {"supplier","customer","nation"};
-
-	// s.Read(fileName);
 	
 	s.AddRel(relName[0],10000);
 	s.AddAtt(relName[0], "s_nationkey",25);
@@ -298,10 +293,6 @@ void q4 (){
 	s.Apply(final, relName, 5);	
 	
 	s.Write(fileName);
-	
-
-
-
 }
 
 void q5 (){
@@ -341,8 +332,6 @@ void q5 (){
 	s.Apply(final, relName, 3);
 
 	s.Write(fileName);
-	
-
 }
 
 void q6 (){
