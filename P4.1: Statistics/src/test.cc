@@ -139,8 +139,9 @@ void q1 (){
 
 	yy_scan_string(cnf);
 	yyparse();
-
+	s.Print();
 	double result = s.Estimate(final, relName, 1);
+	// s.Print();
 	cout<<"Your estimation Result  " <<result;
 	cout<<"\n Correct Answer: 8.5732e+5";
 
@@ -270,7 +271,6 @@ void q4 (){
 	s.CopyRel("supplier","s");
 	s.CopyRel("nation","n");
 	s.CopyRel("region","r");
-
 	char *cnf = "(p.p_partkey=ps.ps_partkey) AND (p.p_size = 2)";
 	yy_scan_string(cnf);
 	yyparse();

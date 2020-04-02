@@ -4,8 +4,6 @@ lineitem_part
 attributes
 l_partkey
 200000
-l_returnflag
-0
 l_shipinstruct
 4
 l_shipmode

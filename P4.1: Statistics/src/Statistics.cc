@@ -297,8 +297,7 @@ void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJo
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin)
 {
-
-
+	cout<<"Estimate: start "<<isCalledFrmApply<<endl;
     double resultEstimate = 0.0;
     // TODO error checking
     struct AndList *currentAnd;
@@ -355,8 +354,8 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 				}
 				prev = leftAttr;
 				#endif
+				cout<<"seg"<<endl;
                 for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
-                    cout<<isCalledFrmApply<<":"<<it1->second->attributes["l_returnflag"]<<endl;
                     map<string, int>::iterator it2 = it1->second->attributes.find(leftAttr);
 					if(it2 != it1->second->attributes.end()){
 						leftRelation = it1->first;
@@ -381,6 +380,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
             }
 
             if (isJoin == true) {
+            	cout<<"It is a join"<<endl;
 				//find distinct counts of both attributes for the relations.
                 double leftDistinctCount = statMap[leftRelation]->attributes[currentCompOp->left->value];
                 double rightDistinctCount = statMap[rightRelation]->attributes[currentCompOp->right->value];
@@ -392,7 +392,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
                 joinLeftRelation = leftRelation;
                 joinRightRelation = rightRelation;
             } else {
-		
+				cout<<"Not a join"<<endl;
 				#ifdef _DEP
 				if(isdep){
 					if(!done){
@@ -463,9 +463,10 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
         resultANDFactor *= resultORFactor;
         currentAnd = currentAnd->rightAnd;
     }
-
-
-    double rightTupleCount = statMap[rightRelation]->numTuples;
+    double rightTupleCount;
+    if(statMap.find(rightRelation) != statMap.end()){
+	    rightTupleCount = statMap[rightRelation]->numTuples;
+    }
 
     if (isJoinPerformed == true) {
         double leftTupleCount = statMap[joinLeftRelation]->numTuples;
@@ -486,6 +487,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
                         continue;
                     }
                     int cnt = statMap[relNames[i]]->attributes.count(relOpMapITR->first);
+
                     if (cnt == 0){
                         continue;
                     }
