@@ -9,6 +9,7 @@
 #include <fstream>
 #include <set>
 #include <math.h>
+#include <string.h>
 
 using namespace std;
 

@@ -139,7 +139,7 @@ void q1 (){
 
 	yy_scan_string(cnf);
 	yyparse();
-	s.Print();
+	// s.Print();
 	double result = s.Estimate(final, relName, 1);
 	// s.Print();
 	cout<<"Your estimation Result  " <<result;
@@ -244,7 +244,7 @@ void q3 (){
 void q4 (){
 
 	Statistics s;
-        char *relName[] = { "part", "partsupp", "supplier", "nation", "region"};
+        char *relName[] = { "part", "partsupp", "supplier", "nation", "region", "p", "ps", "s", "n", "r"};
 
 	s.AddRel(relName[0],200000);
 	s.AddAtt(relName[0], "p_partkey",200000);
@@ -291,6 +291,7 @@ void q4 (){
 	yyparse();
 
 	double result = s.Estimate(final, relName, 5);
+	// cout<<"result:"<<result<<endl;
 	if(fabs(result-3200)>0.1)
 		cout<<"error in estimating Q4\n";
 
@@ -438,7 +439,7 @@ void q8 (){
 	
 		
 	double result = s.Estimate(final, relName,2);
-	cout<<"result: "<<result<<endl;
+	// cout<<"result: "<<result<<endl;
 	if(fabs(result-48000)>0.1)
 		cout<<"error in estimating Q8\n";
 
@@ -549,11 +550,12 @@ void q11 (){
 
 	char *cnf = "(l_partkey = p_partkey) AND (l_shipmode = 'AIR' OR l_shipmode = 'AIR REG') AND (p_container ='SM BOX' OR p_container = 'SM PACK')  AND (l_shipinstruct = 'DELIVER IN PERSON')";
 
+
 	yy_scan_string(cnf);
 	yyparse();
 	
 	double result = s.Estimate(final, relName,2);
-	cout<<"result="<<result<<endl;
+	// cout<<"result="<<result<<endl;
 	if(fabs(result-21432.9)>0.5)
 		cout<<"error in estimating Q11\n";
 	s.Apply(final, relName,2);

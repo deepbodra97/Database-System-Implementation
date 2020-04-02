@@ -1,5 +1,8 @@
 #include "Statistics.h"
 
+#define _DEP
+
+
 RelationInfo::RelationInfo(){
 };
 
@@ -296,7 +299,7 @@ void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJo
 }
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
-	cout<<"Estimate: start "<<isCalledFrmApply<<endl;
+	// cout<<"Estimate: start "<<isCalledFrmApply<<endl;
     double resultEstimate = 0.0;
     // TODO error checking
     struct AndList *currentAnd;
@@ -346,14 +349,10 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 
 				//find the relation where the attribute lies.
                 leftAttr = currentCompOp->left->value;
-
-				#ifdef _DEP
 				if(strcmp(leftAttr.c_str(),prev.c_str())==0){
 					isdep=true;
 				}
 				prev = leftAttr;
-				#endif
-				cout<<"seg"<<endl;
                 for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
                     map<string, int>::iterator it2 = it1->second->attributes.find(leftAttr);
 					if(it2 != it1->second->attributes.end()){
@@ -379,20 +378,17 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
             }
 
             if (isJoin == true) {
-            	cout<<"It is a join"<<endl;
 				//find distinct counts of both attributes for the relations.
                 double leftDistinctCount = statMap[leftRelation]->attributes[currentCompOp->left->value];
                 double rightDistinctCount = statMap[rightRelation]->attributes[currentCompOp->right->value];
 
                 if (currentCompOp->code == EQUALS) {
-                        resultORFactor *=(1.0 - (1.0 / max(leftDistinctCount, rightDistinctCount)));//ORFACTOR??
+                    resultORFactor *=(1.0 - (1.0 / max(leftDistinctCount, rightDistinctCount)));//ORFACTOR??
                 }
 
                 joinLeftRelation = leftRelation;
                 joinRightRelation = rightRelation;
             } else {
-				cout<<"Not a join"<<endl;
-				#ifdef _DEP
 				if(isdep){
 					if(!done){
 						resultORFactor =1.0 -resultORFactor;
@@ -405,57 +401,24 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 	                }
 
 		            if (currentCompOp->code == EQUALS) {
-		                    resultORFactor +=(1.0 / ((*attrData)[leftRelation][currentCompOp->left->value]));
+		                    resultORFactor +=(1.0 / (statMap[leftRelation]->attributes[currentCompOp->left->value]));
 		                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
 		            }
-
-
-					#ifdef _DEBUG
-		            cout<<"or "<<std::setprecision (15) <<resultORFactor<<endl;
-				    cout<<"ikr "<< statMap[leftRelation]->attributes[currentCompOp->left->value]<<endl;
-		            #endif
 				} else{
                     if (currentCompOp->code == GREATER_THAN || currentCompOp->code == LESS_THAN) {
 	                    resultORFactor *= (2.0 / 3.0);
 	                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
                     }
                     if (currentCompOp->code == EQUALS) {
-                        resultORFactor *=(1.0- (1.0 / (*attrData)[leftRelation][currentCompOp->left->value]));
+                        resultORFactor *=(1.0- (1.0 / statMap[leftRelation]->attributes[currentCompOp->left->value]));
                         relOpMap[currentCompOp->left->value] = currentCompOp->code;
 	                }
-					#ifdef _DEBUG
-		            cout<<"or"<<resultORFactor<<endl;
-					cout<<"ikr "<< statMap[leftRelation]->attributes[currentCompOp->left->value]<<endl;
-		            #endif
 				}
-
-				#else
-
-				if (currentCompOp->code == GREATER_THAN || currentCompOp->code == LESS_THAN) {
-	                resultORFactor *= (2.0 / 3.0);
-	                relOpMap[currentCompOp->left->value] = currentCompOp->code;
-	            }
-	            
-	            if (currentCompOp->code == EQUALS) {
-                    resultORFactor *=(1.0- (1.0 / statMap[leftRelation]->attributes[currentCompOp->left->value]));
-                    relOpMap[currentCompOp->left->value] = currentCompOp->code;
-	            }
-				#endif
             }
             currentOr = currentOr->rightOr;
         }
-
-	    #ifdef _DEP
 	    if(!isdep)
 			resultORFactor =1.0 -resultORFactor;	
-        #else
-	    	resultORFactor =1.0 -resultORFactor;
-	    #endif
-
-		#ifdef _DEBUG
-			cout<<"prev and"<<resultANDFactor <<" or "<< resultORFactor<<"curr and "<< resultANDFactor*resultORFactor<<endl;
-		#endif
-
 	    isdep=false;
 	    done =false;
 
@@ -474,9 +437,9 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
         double leftTupleCount = statMap[leftRelation]->numTuples;
         resultEstimate = leftTupleCount * resultANDFactor;
     }
-    cout<<"size:"<<statMap.size();
     if (isApply) {
-		statMap[joinLeftRelation + "_" + joinRightRelation] = new RelationInfo();
+    	if(isJoinPerformed)
+			statMap[joinLeftRelation + "_" + joinRightRelation] = new RelationInfo();
 	    map<string, int>::iterator relOpMapITR, distinctCountMapITR;
 	    set<string> addedJoinAttrSet;
 	    if (isJoinPerformed){
@@ -491,7 +454,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
                     if(statMap.find(relNames[i]) != statMap.end()){
                     	cnt = statMap[relNames[i]]->attributes.count(relOpMapITR->first);
                     } else{
-                    	continue;
+                    	cnt = 0;
                     }
                     if (cnt == 0){
                         continue;
@@ -539,9 +502,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
             delete statMap[joinRightRelation];
             statMap.erase(joinLeftRelation);
             statMap.erase(joinRightRelation);
-
-            // attrData->erase(joinLeftRelation);
-            // attrData->erase(joinRightRelation);
         }
     }
     return resultEstimate;
