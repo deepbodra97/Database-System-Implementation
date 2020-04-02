@@ -438,7 +438,7 @@ void q8 (){
 	
 		
 	double result = s.Estimate(final, relName,2);
-
+	cout<<"result: "<<result<<endl;
 	if(fabs(result-48000)>0.1)
 		cout<<"error in estimating Q8\n";
 

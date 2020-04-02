@@ -295,8 +295,7 @@ void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJo
 
 }
 
-double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin)
-{
+double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
 	cout<<"Estimate: start "<<isCalledFrmApply<<endl;
     double resultEstimate = 0.0;
     // TODO error checking
@@ -475,19 +474,25 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
         double leftTupleCount = statMap[leftRelation]->numTuples;
         resultEstimate = leftTupleCount * resultANDFactor;
     }
-
+    cout<<"size:"<<statMap.size();
     if (isApply) {
 		statMap[joinLeftRelation + "_" + joinRightRelation] = new RelationInfo();
 	    map<string, int>::iterator relOpMapITR, distinctCountMapITR;
 	    set<string> addedJoinAttrSet;
 	    if (isJoinPerformed){
             for (relOpMapITR = relOpMap.begin(); relOpMapITR != relOpMap.end(); relOpMapITR++) {
+                
                 for (int i = 0; i < statMap.size()-1; i++) {
                     if (relNames[i] == NULL){
                         continue;
                     }
-                    int cnt = statMap[relNames[i]]->attributes.count(relOpMapITR->first);
 
+                    int cnt;
+                    if(statMap.find(relNames[i]) != statMap.end()){
+                    	cnt = statMap[relNames[i]]->attributes.count(relOpMapITR->first);
+                    } else{
+                    	continue;
+                    }
                     if (cnt == 0){
                         continue;
                     }
