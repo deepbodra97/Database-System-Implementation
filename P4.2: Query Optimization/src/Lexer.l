@@ -35,15 +35,45 @@ void yyerror(char*s);
 
 %%
 
+"SELECT"		return(SELECT);
+
+"FROM"			return(FROM);
+
+"WHERE"			return(WHERE);
+
+"SUM"			return(SUM);
+
+"AND"			return(AND);
+
+"GROUP"			return(GROUP);
+
+"DISTINCT"		return(DISTINCT);
+
+"BY"			return(BY);
+
+"OR"			return(OR);
+
+"AS"			return(AS);
+
 "("			return('(');
+
+"<"                     return('<');
+
+">"                     return('>');
+
+"="                     return('=');
 
 ")"    	        	return(')');
 
-"<"    		      	return('<');
+"+"    	        	return('+');
 
-">"    		 	return('>');
+"-"    	        	return('-');
 
-"=" 			return('=');
+"/"    	        	return('/');
+
+"*"    	        	return('*');
+
+","    	        	return(',');
 
 -?[0-9]+ 	       {yylval.actualChars = strdup(yytext);
   			return(Int); 
@@ -53,23 +83,23 @@ void yyerror(char*s);
   			return(Float);
 			}
 
-"OR"      		return(OR);
-
-"AND"			return(AND);
-
-\'[^'\n]*\' 	       {/* take care of ' in a string */
-	 		if (yytext[yyleng - 2] == '\\') {
-     				yymore();
-   			} else {
-				yylval.actualChars = strdup(yytext + 1);	
-				yylval.actualChars[strlen(yylval.actualChars) - 1] = 0;
-     				return(String);
-   			}
-			}
-
-[A-Za-z][\.A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
+[A-Za-z][A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
   			return(Name);
 			}     
+
+[A-Za-z][A-Za-z0-9_-]*\.[A-Za-z][A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
+  			return(Name);
+			}     
+
+\'[^'\n]*\'            {/* take care of ' in a string */
+                        if (yytext[yyleng - 2] == '\\') {
+                                yymore();
+                        } else {
+                                yylval.actualChars = strdup(yytext + 1);
+                                yylval.actualChars[strlen(yylval.actualChars) - 1] = 0;
+                                return(String);
+                        }
+                        }
 
 \n                	lineno++;
 
