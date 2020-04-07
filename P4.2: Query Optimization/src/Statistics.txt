@@ -1,0 +1,15 @@
+relation
+lineitem_part_lineitem_part
+8
+attributes
+l_partkey
+200000
+l_shipinstruct
+4
+l_shipmode
+7
+p_container
+40
+p_partkey
+200000
+EOF

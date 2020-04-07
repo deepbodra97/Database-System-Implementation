@@ -23,19 +23,6 @@ Statistics::~Statistics(){
 	}
 }
 
-void Statistics::Print(){ // Prints the statMap on the cmd line
-	for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
-		string relationName = it1->first; 
-		RelationInfo *relationInfo = it1->second;
-		cout << relationName << " :: " << relationInfo->numTuples << endl;
-		for(map<string, int>::iterator it2 = relationInfo->attributes.begin(); it2 != relationInfo->attributes.end(); it2++) {
-			string attributeName = it2->first; 
-			int numDistincts = it2->second;
-			cout << attributeName << " : " << numDistincts << endl;
-		}
-	}
-}
-
 void Statistics::AddRel(char *relName, int numTuples){
 	RelationInfo *relationInfo = new RelationInfo(numTuples);
 	statMap[string(relName)] = relationInfo;
@@ -295,6 +282,19 @@ string Statistics::GetRelation(string attribute){ // get the relation from statM
 		if(it2 != it1->second->attributes.end()){
 			relation = it1->first;
 			return relation;
+		}
+	}
+}
+
+void Statistics::Print(){ // Prints the statMap on the cmd line
+	for(map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1 != statMap.end(); it1++) {
+		string relationName = it1->first; 
+		RelationInfo *relationInfo = it1->second;
+		cout << relationName << " :: " << relationInfo->numTuples << endl;
+		for(map<string, int>::iterator it2 = relationInfo->attributes.begin(); it2 != relationInfo->attributes.end(); it2++) {
+			string attributeName = it2->first; 
+			int numDistincts = it2->second;
+			cout << attributeName << " : " << numDistincts << endl;
 		}
 	}
 }
