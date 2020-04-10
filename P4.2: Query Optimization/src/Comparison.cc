@@ -24,7 +24,7 @@ Comparison::Comparison(const Comparison &copy_me)
 }
 
 
-void Comparison :: Print () {
+void Comparison :: Print () const{
 
 	cout << "Att " << whichAtt1 << " from ";
 
@@ -103,7 +103,7 @@ OrderMaker :: OrderMaker(Schema *schema) {
 }
 
 
-void OrderMaker :: Print () {
+void OrderMaker :: Print () const{
 	printf("NumAtts = %5d\n", numAtts);
 	for (int i = 0; i < numAtts; i++)
 	{
@@ -121,7 +121,25 @@ int OrderMaker::GetNumAtts() const { return numAtts; }
 
 int* OrderMaker::GetAtts() { return whichAtts; }
 
+// NEW
+std::ostream& operator<<(std::ostream& os, const OrderMaker& myorder) {
+  os << myorder.numAtts << ' ';
+  for(int i=0; i<myorder.numAtts; ++i) os << myorder.whichAtts[i] << ' ';
+  for(int i=0; i<myorder.numAtts; ++i) os << myorder.whichTypes[i] << ' ';
+  os << std::endl;
+  return os;
+}
 
+// NEW
+std::istream& operator>>(std::istream& is, OrderMaker& myorder) {
+  is >> myorder.numAtts;
+  for(int i=0; i<myorder.numAtts; ++i) is >> myorder.whichAtts[i];
+  for(int i=0; i<myorder.numAtts; ++i) {
+    int t; is >> t;
+    myorder.whichTypes[i] = static_cast<Type>(t);
+  }
+  return is;
+}
 
 int CNF :: GetSortOrders (OrderMaker &left, OrderMaker &right) {
 
@@ -266,7 +284,7 @@ int CNF :: GetOrder (OrderMaker &left, OrderMaker &right) {
 
 
 
-void CNF :: Print () {
+void CNF :: Print () const {
 
 	for (int i = 0; i < numAnds; i++) {
 		
@@ -703,4 +721,11 @@ void CNF :: GrowFromParseTree (struct AndList *parseTree, Schema *mySchema,
 	remove("hkljdfgkSDFSDF");
 }
 
-
+// NEW
+void OrderMaker::growFromParseTree(NameList* gAtts, Schema* inputSchema) {
+  for(; gAtts; gAtts = gAtts->next, numAtts++) {
+    // FATALIF ((whichAtts[numAtts] = inputSchema->Find(gAtts->name))==-1,
+    //          "Grouping by non-existing attribute.");
+    whichTypes[numAtts] = inputSchema->FindType(gAtts->name);
+  }
+}

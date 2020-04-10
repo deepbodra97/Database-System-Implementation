@@ -98,7 +98,7 @@ void Statistics::Write(char *fromWhere){
 	statFile.close();
 }
 
-void  Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoin){
+void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoin){
 	shouldApply = true;
 	Estimate(parseTree, relNames, numToJoin);
 	shouldApply = false;

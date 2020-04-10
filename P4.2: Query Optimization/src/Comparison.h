@@ -32,7 +32,7 @@ public:
 	Comparison(const Comparison &copyMe);
 
 	// print to the screen
-	void Print ();
+	void Print () const;
 };
 
 
@@ -61,10 +61,16 @@ public:
 	OrderMaker(Schema *schema);
 
 	// print to the screen
-	void Print ();
+	void Print () const;
 
 	int GetNumAtts() const;
     int* GetAtts() ;
+
+    void growFromParseTree(NameList* gAtts, Schema* inputSchema);
+
+    // NEW
+	friend std::ostream& operator<<(std::ostream& os, const OrderMaker& myorder);
+  	friend std::istream& operator>>(std::istream& is, OrderMaker& myorder);
 };
 
 class Record;
@@ -97,7 +103,7 @@ public:
 	OrderMaker* CreateQueryMaker(OrderMaker& order);
 
 	// print the comparison structure to the screen
-	void Print ();
+	void Print () const;
 
         // this takes a parse tree for a CNF and converts it into a 2-D
         // matrix storing the same CNF expression.  This function is applicable

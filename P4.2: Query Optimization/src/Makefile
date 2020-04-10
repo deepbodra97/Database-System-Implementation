@@ -13,11 +13,11 @@ gtest_statistics.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o B
 gtest_relop.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o
 	$(CC) -o gtest_relop.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o -lfl -lpthread -lgtest
 
-main:   y.tab.o lex.yy.o main.o
-	$(CC) -o main y.tab.o lex.yy.o main.o -lfl
+# main: Interpreter.o QueryPlan.o y.tab.o lex.yy.o main.o
+# 	$(CC) -o main Interpreter.o QueryPlan.o y.tab.o lex.yy.o main.o -lfl
 
-# main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o
-# 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o -lfl -lpthread
+main: Interpreter.o QueryPlan.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o Ddl.o main.o
+	$(CC) -o main Interpreter.o QueryPlan.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o Ddl.o main.o -lfl -lpthread
 
 a4-1.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o test.o
 	$(CC) -o a4-1.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o test.o -lfl -lpthread
@@ -36,9 +36,9 @@ gtest_relop.o: gtest_relop.cc
 
 main.o: main.cc
 	$(CC) -g -c main.cc
-	
-test.o: test.cc
-	$(CC) -g -c test.cc
+
+# test.o: test.cc
+# 	$(CC) -g -c test.cc
 
 # a3test.o: a3test.cc
 # 	$(CC) -g -c a3test.cc
@@ -48,6 +48,15 @@ a2test.o: a2test.cc
 
 a1-test.o: a1-test.cc
 	$(CC) -g -c a1-test.cc
+
+Ddl.o: Ddl.cc
+	$(CC) -g -c Ddl.cc
+
+Interpreter.o: Interpreter.cc
+	$(CC) -g -c Interpreter.cc
+
+QueryPlan.o: QueryPlan.cc
+	$(CC) -g -c QueryPlan.cc
 
 Statistics.o: Statistics.cc
 	$(CC) -g -c Statistics.cc

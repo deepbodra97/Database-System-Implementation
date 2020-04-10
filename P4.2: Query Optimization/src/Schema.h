@@ -48,16 +48,26 @@ public:
 	Type FindType (char *attName);
 
 	// this reads the specification for the schema in from a file
-	Schema (char *fName, char *relName);
+	// Schema (char *fName, char *relName);
 
 	// this composes a schema instance in-memory
 	Schema (char *fName, int num_atts, Attribute *atts);
+
+	// NEW
+
+	// this combines two schemas, used as the result schema of a join
+    Schema (const Schema& left, const Schema& right);
+
+    // NEW
+    // this reads the specification for the schema in from a file
+    Schema (char *fName, char *relName, const char* alias = "");
 
 	// this constructs a sort order structure that can be used to
 	// place a lexicographic ordering on the records using this type of schema
 	int GetSortOrder (OrderMaker &order);
 
 	~Schema ();
+
 
 };
 
