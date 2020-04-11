@@ -97,4 +97,10 @@ struct AndList {
 
 };
 
+struct AttrList{
+	char *name;
+	int type;
+	struct AttrList *next;
+};
+
 #endif

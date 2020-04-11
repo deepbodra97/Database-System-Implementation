@@ -13,8 +13,8 @@ gtest_statistics.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o B
 gtest_relop.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o
 	$(CC) -o gtest_relop.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o -lfl -lpthread -lgtest
 
-main:   y.tab.o lex.yy.o main.o
-	$(CC) -o main y.tab.o lex.yy.o main.o -lfl
+main: Interface.o Statistics.o y.tab.o lex.yy.o main.o
+	$(CC) -o main Interface.o Statistics.o y.tab.o lex.yy.o main.o -lfl
 
 # main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o
 # 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o -lfl -lpthread
@@ -48,6 +48,9 @@ a2test.o: a2test.cc
 
 a1-test.o: a1-test.cc
 	$(CC) -g -c a1-test.cc
+
+Interface.o: Interface.cc
+	$(CC) -g -c Interface.cc
 
 Statistics.o: Statistics.cc
 	$(CC) -g -c Statistics.cc
