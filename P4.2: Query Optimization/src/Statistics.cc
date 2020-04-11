@@ -105,6 +105,8 @@ void Statistics::Apply(struct AndList *parseTree, char *relNames[], int numToJoi
 }
 
 double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numToJoin){
+	cout<<"Estimate:start"<<endl;
+	Print();
 	double cost = 0.0, ANDMultiplier = 1.0, ORMultiplier = 1.0;
 	struct AndList *ptrAND = parseTree;
 	struct OrList *ptrOR;
@@ -207,6 +209,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 		double leftNumTuples = statMap[leftJoinRelation]->numTuples;
 		cost = leftNumTuples*rightNumTuples*ANDMultiplier; // cost for join
 	} else {
+		cout<<"leftRelation:"<<leftRelation<<endl;
 		double leftNumTuples = statMap[leftRelation]->numTuples;
 		cost = leftNumTuples * ANDMultiplier; // cost if not a join
 	}

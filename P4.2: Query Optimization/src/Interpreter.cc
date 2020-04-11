@@ -43,7 +43,7 @@ void Interpreter::run() {
     cout<<"CNF is correct"<<endl;
     s.Read(fileName);
     cout<<"Statistics.txt has been loaded"<<endl;
-    s.Print();
+    // s.Print();
     if (newtable) {
       if (d.createTable()) cout << "Create table " << newtable << std::endl;
       else cout << "Table " << newtable << " already exists." << std::endl;
