@@ -27,6 +27,7 @@ class Statistics{
 public:
 	map<string, RelationInfo*> statMap;
 	bool shouldApply; // if true then the estimation will be applied
+	int numRels = 0;
 
 	Statistics();
 	Statistics(Statistics &copyMe);	 // Performs deep copy

@@ -332,6 +332,7 @@ BinaryNode::BinaryNode(const std::string& opName, QueryNode* l, QueryNode* r, St
     relNames[numRels++] = strdup(l->relNames[i++]);
   for (size_t j=0; j<r->numRels;)
     relNames[numRels++] = strdup(r->relNames[j++]);
+  // stat->numRels = l->numRels+r->numRels;
 }
 
 ProjectNode::ProjectNode(NameList* atts, QueryNode* c):
@@ -430,6 +431,7 @@ void ProjectNode::execute(Pipe** pipes, RelationalOp** relops) {
   Project* p = new Project();
 
   p->outputSchema = outSchema; // debug
+  cout<<"ProjectNode: keepMe="<<*keepMe<<endl;
 
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = p;

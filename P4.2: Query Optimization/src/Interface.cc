@@ -89,7 +89,7 @@ void Interface::Run() {
       plan.print();
       plan.execute();
     }
-    Clear();
+    // Clear();
   // }
 }
 

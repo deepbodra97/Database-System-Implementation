@@ -72,6 +72,7 @@ void* SelectFile::Operate (void *arg) {
 PROJECT
 **************************************************************************************************/
 void Project::Run (Pipe &inPipe, Pipe &outPipe, int *keepMe, int numAttsInput, int numAttsOutput) {
+	cout<<"Project Run: keepMe="<<*keepMe<<endl;
 	RelationalOpThreadMemberHolder *params = new RelationalOpThreadMemberHolder(NULL, &inPipe, NULL, &outPipe, NULL, NULL, NULL, numAttsInput, numAttsOutput, keepMe, this->runLength, NULL, NULL, NULL); // init thread params
 	
 	// debug 
@@ -88,13 +89,13 @@ void* Project::Operate (void *arg) {
 	// debug
 		// int x=1;
 		// params->keepMe = &x;
-		// cout<<"keepMe="<<endl;
-		// for(int* km = params->keepMe;km;km++){
-			// cout<<*km<<" ";
-		// }
-		// cout<<endl;
-		// cout<<"numAttsInput="<<params->numAttsInput<<endl;
-		// cout<<"numAttsOutput="<<params->numAttsOutput<<endl;
+		cout<<"keepMe="<<endl;
+		for(int* km = params->keepMe;km;km++){
+			cout<<*km<<" ";
+		}
+		cout<<endl;
+		cout<<"numAttsInput="<<params->numAttsInput<<endl;
+		cout<<"numAttsOutput="<<params->numAttsOutput<<endl;
 
 
 		// cout<<"keepMe="<<endl;

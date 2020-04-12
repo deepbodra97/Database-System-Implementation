@@ -241,8 +241,13 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 		set<string> joinAttributesProcessedSet;
 		if (isJoinPerformed){
 			for (iter_attributeToComparisonTypeMap = attributeToComparisonTypeMap.begin(); iter_attributeToComparisonTypeMap != attributeToComparisonTypeMap.end(); iter_attributeToComparisonTypeMap++) {
-				for (int i = 0; i < statMap.size()-1; i++) {
+				for (int i = 0; i < statMap.size()-1 && i<numToJoin ; i++) {
 					int attributeCount = 0;
+					if(relNames[i] == NULL){
+						continue;
+					}
+					cout<<"relNames[i]:"<<relNames[i]<<endl;
+
 					if(statMap.find(relNames[i]) != statMap.end()){ // if relNames[i] is in statMap
 						attributeCount = statMap[relNames[i]]->attributes.count(iter_attributeToComparisonTypeMap->first); // find how many attributes have iter_attributeToComparisonTypeMap->first
 					}
