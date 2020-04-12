@@ -205,7 +205,9 @@ void QueryPlan::makeSums() {
 }
 
 void QueryPlan::makeProjects() {
-  if (attsToSelect && !finalFunction && !groupingAtts) root = new ProjectNode(attsToSelect, root);
+  if (attsToSelect && !finalFunction && !groupingAtts) {
+    root = new ProjectNode(attsToSelect, root);
+  }
 }
 
 void QueryPlan::makeDistinct() {
@@ -345,10 +347,12 @@ ProjectNode::ProjectNode(NameList* atts, QueryNode* c):
      exit(EXIT_FAILURE);   
   }
   for (; atts; atts=atts->next, numAttsOut++) {
-    if(keepMe[numAttsOut]=cSchema->Find(atts->name) == -1){
+    cout<<"ProjectNode: atts->name="<<atts->name<<","<<cSchema->Find(atts->name)<<endl;
+    if((keepMe[numAttsOut]=cSchema->Find(atts->name)) == -1){
       cout<<"Error: Attribute not found"<<endl;
       exit(EXIT_FAILURE);
     }
+    cout<<"keepMe verify: "<<keepMe[numAttsOut]<<endl;
     // FATALIF ((keepMe[numAttsOut]=cSchema->Find(atts->name))==-1,
              // "Projecting non-existing attribute.");
     makeAttr(resultAtts[numAttsOut], atts->name, cSchema->FindType(atts->name));
@@ -431,7 +435,7 @@ void ProjectNode::execute(Pipe** pipes, RelationalOp** relops) {
   Project* p = new Project();
 
   p->outputSchema = outSchema; // debug
-  cout<<"ProjectNode: keepMe="<<*keepMe<<endl;
+  cout<<"ProjectNode execute: keepMe="<<*keepMe<<endl;
 
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = p;
