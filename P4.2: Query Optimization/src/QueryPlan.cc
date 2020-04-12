@@ -59,6 +59,65 @@ int PrintTable(){
   }
 }
 
+void PrintParseTree(struct AndList *pAnd)
+{
+  cout << "(";
+  while (pAnd)
+    {
+      struct OrList *pOr = pAnd->left;
+      while (pOr)
+        {
+          struct ComparisonOp *pCom = pOr->left;
+          if (pCom!=NULL)
+            {
+              {
+                struct Operand *pOperand = pCom->left;
+                if(pOperand!=NULL)
+                  {
+                    cout<<pOperand->value<<"";
+                  }
+              }
+              switch(pCom->code)
+                {
+                case LESS_THAN:
+                  cout<<" < "; break;
+                case GREATER_THAN:
+                  cout<<" > "; break;
+                case EQUALS:
+                  cout<<" = "; break;
+                default:
+                  cout << " unknown code " << pCom->code;
+                }
+              {
+                struct Operand *pOperand = pCom->right;
+                if(pOperand!=NULL)
+                  {
+                    cout<<pOperand->value<<"";
+                  }
+              }
+            }
+          if(pOr->rightOr)
+            {
+              cout<<" OR ";
+            }
+          pOr = pOr->rightOr;
+        }
+      if(pAnd->rightAnd)
+        {
+          cout<<") AND (";
+        }
+      pAnd = pAnd->rightAnd;
+    }
+  cout << ")" << endl;
+}
+
+void PrintAttributes(Attribute* ptrAtt, int n){
+  for(int i=0; i<n; i++){
+    cout<<ptrAtt->name<<endl;
+    ptrAtt++;
+  }
+}
+
 /**********************************************************************
  * API                                                                *
  **********************************************************************/
@@ -86,10 +145,12 @@ void QueryPlan::setOutput(char* out) {
 }
 
 void QueryPlan::execute() {
+  cout<<"outName:"<<outName<<"stdout:"<<stdout<<endl;
   outFile = (outName == "STDOUT" ? stdout
     : outName == "NONE" ? NULL
     : fopen(outName.c_str(), "w"));   // closed by query executor
   if (outFile) {
+    cout<<"outFile:"<<outFile<<endl;
     int numNodes = root->pipeId;
     Pipe** pipes = new Pipe*[numNodes];
     RelationalOp** relops = new RelationalOp*[numNodes];
@@ -114,7 +175,7 @@ void QueryPlan::execute() {
 void QueryPlan::makeLeafs() {
   for (TableList* table = tables; table; table = table->next) {
     cout<<"makeLeafs:"<<table->tableName<<endl;
-    PrintTable();
+    // PrintTable();
     stat->CopyRel(table->tableName, table->aliasAs);
     makeNode(pushed, used, LeafNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, stat));
     nodes.push_back(newLeaf);
@@ -215,62 +276,10 @@ QueryNode::~QueryNode() {
     delete[] relNames[i];
 }
 
-void PrintParseTree(struct AndList *pAnd)
-{
-  cout << "(";
-  while (pAnd)
-    {
-      struct OrList *pOr = pAnd->left;
-      while (pOr)
-        {
-          struct ComparisonOp *pCom = pOr->left;
-          if (pCom!=NULL)
-            {
-              {
-                struct Operand *pOperand = pCom->left;
-                if(pOperand!=NULL)
-                  {
-                    cout<<pOperand->value<<"";
-                  }
-              }
-              switch(pCom->code)
-                {
-                case LESS_THAN:
-                  cout<<" < "; break;
-                case GREATER_THAN:
-                  cout<<" > "; break;
-                case EQUALS:
-                  cout<<" = "; break;
-                default:
-                  cout << " unknown code " << pCom->code;
-                }
-              {
-                struct Operand *pOperand = pCom->right;
-                if(pOperand!=NULL)
-                  {
-                    cout<<pOperand->value<<"";
-                  }
-              }
-            }
-          if(pOr->rightOr)
-            {
-              cout<<" OR ";
-            }
-          pOr = pOr->rightOr;
-        }
-      if(pAnd->rightAnd)
-        {
-          cout<<") AND (";
-        }
-      pAnd = pAnd->rightAnd;
-    }
-  cout << ")" << endl;
-}
-
 AndList* QueryNode::pushSelection(AndList*& alist, Schema* target) {
   AndList header; header.rightAnd = alist;  // make a list header to
   // avoid handling special cases deleting the first list element
-  cout<<"alist:"<<alist<<endl;
+  // cout<<"alist:"<<alist<<endl;
   AndList *cur = alist, *pre = &header, *result = NULL;
   for (; cur; cur = pre->rightAnd)
     if (containedIn(cur->left, target)) {   // should push
@@ -279,7 +288,7 @@ AndList* QueryNode::pushSelection(AndList*& alist, Schema* target) {
       result = cur;        // prepend the new node to result list
     } else pre = cur;
   alist = header.rightAnd;  // special case: first element moved
-  cout<<"result:"<<result<<endl;
+  // cout<<"result:"<<result<<endl;
   return result;
 }
 
@@ -292,13 +301,7 @@ bool QueryNode::containedIn(OrList* ors, Schema* target) {
 
 bool QueryNode::containedIn(ComparisonOp* cmp, Schema* target) {
   cout<<"containedIn:cmp"<<endl;
-  cout<<"target:"<<endl;
-  Attribute* ptrAtt = target->GetAtts();
-  for(int i=0; i<target->GetNumAtts(); i++){
-    cout<<ptrAtt->name<<endl;
-    ptrAtt++;
-  }
-  
+  PrintAttributes(target->GetAtts(), target->GetNumAtts());
   Operand *left = cmp->left, *right = cmp->right;
   cout<<"left:"<<left->value<<","<<left->code<<"|"<<" right->value:"<<right->value<<","<<right->code<<endl;
   // bool result = (left->code!=NAME || target->Find(left->value)!=-1)&&(right->code!=NAME || target->Find(right->value)!=-1);
@@ -323,6 +326,8 @@ UnaryNode::UnaryNode(const std::string& opName, Schema* out, QueryNode* c, Stati
 BinaryNode::BinaryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st):
   QueryNode (opName, new Schema(*l->outSchema, *r->outSchema), st),
   left(l), right(r), pleft(left->pout), pright(right->pout) {
+  cout<<"BinaryNode Schema:"<<endl;
+  outSchema->print();
   for (size_t i=0; i<l->numRels;)
     relNames[numRels++] = strdup(l->relNames[i++]);
   for (size_t j=0; j<r->numRels;)
@@ -334,7 +339,15 @@ ProjectNode::ProjectNode(NameList* atts, QueryNode* c):
   Schema* cSchema = c->outSchema;
   Attribute resultAtts[MAX_ATTS];
   // FATALIF (cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
+  if(cSchema->GetNumAtts()>MAX_ATTS){
+    cout<<"Error: Too many attributes"<<endl; 
+     exit(EXIT_FAILURE);   
+  }
   for (; atts; atts=atts->next, numAttsOut++) {
+    if(keepMe[numAttsOut]=cSchema->Find(atts->name) == -1){
+      cout<<"Error: Attribute not found"<<endl;
+      exit(EXIT_FAILURE);
+    }
     // FATALIF ((keepMe[numAttsOut]=cSchema->Find(atts->name))==-1,
              // "Projecting non-existing attribute.");
     makeAttr(resultAtts[numAttsOut], atts->name, cSchema->FindType(atts->name));
@@ -390,7 +403,10 @@ Schema* GroupByNode::resultSchema(NameList* gAtts, FuncOperator* parseTree, Quer
 }
 
 WriteNode::WriteNode(FILE*& out, QueryNode* c):
-  UnaryNode("WriteOut", new Schema(*c->outSchema), c, NULL), outFile(out) {}
+  UnaryNode("WriteOut", new Schema(*c->outSchema), c, NULL), outFile(out) {
+    // cout<<"WriteNodeSchema:"<<endl;
+    // c->outSchema->print();
+  }
 
 
 /**********************************************************************
@@ -401,6 +417,9 @@ void LeafNode::execute(Pipe** pipes, RelationalOp** relops) {
   cout<<"dbName="<<dbName<<" relNames[0]="<<relNames[0]<<endl;
   dbf.Open((char*)dbName.c_str()); opened = true;
   SelectFile* sf = new SelectFile();
+
+  sf->outputSchema = outSchema; // debug
+
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = sf;
   sf -> Run(dbf, *pipes[pout], selOp, literal);
@@ -409,6 +428,9 @@ void LeafNode::execute(Pipe** pipes, RelationalOp** relops) {
 void ProjectNode::execute(Pipe** pipes, RelationalOp** relops) {
   child -> execute(pipes, relops);
   Project* p = new Project();
+
+  p->outputSchema = outSchema; // debug
+
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = p;
   p -> Run(*pipes[pin], *pipes[pout], keepMe, numAttsIn, numAttsOut);
@@ -439,8 +461,13 @@ void GroupByNode::execute(Pipe** pipes, RelationalOp** relops) {
 }
 
 void JoinNode::execute(Pipe** pipes, RelationalOp** relops) {
+  // cout<<"JoinNode Schema:"<<endl;
+  // outSchema->print();
   left -> execute(pipes, relops); right -> execute(pipes, relops);
   Join* j = new Join();
+
+  j->outputSchema = outSchema;
+
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = j;
   j -> Run(*pipes[pleft], *pipes[pright], *pipes[pout], selOp, literal);
@@ -452,6 +479,7 @@ void WriteNode::execute(Pipe** pipes, RelationalOp** relops) {
   pipes[pout] = new Pipe(PIPE_SIZE);
   relops[pout] = w;
   w -> Run(*pipes[pin], outFile, *outSchema);
+
 }
 
 /**********************************************************************
@@ -470,10 +498,10 @@ void QueryNode::printOperator(std::ostream& os, size_t level) const {
 }
 
 void QueryNode::printSchema(std::ostream& os, size_t level) const {
-#ifdef _OUTPUT_SCHEMA__
+// #ifdef _OUTPUT_SCHEMA__
   os << annot(level) << "Output schema:" << endl;
   outSchema->print(os);
-#endif
+// #endif
 }
 
 void LeafNode::printPipe(std::ostream& os, size_t level) const {

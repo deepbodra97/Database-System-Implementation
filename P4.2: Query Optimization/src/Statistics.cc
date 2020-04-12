@@ -136,7 +136,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 
 	map<string, int> attributeToComparisonTypeMap;
 	cout<<"ptrAND:"<<ptrAND<<endl;
-	Print();
+	// Print();
 	while (ptrAND != NULL) { // traversing the parseTree wrt AND
 
 		ptrOR = ptrAND->left;

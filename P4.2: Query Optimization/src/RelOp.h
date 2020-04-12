@@ -23,6 +23,8 @@ public:
 	OrderMaker *groupAtts;
 	Pipe *inPipeR;
 	FILE *outFile;
+	std::vector<Record*> outputCache;
+	Schema *outputSchema;
 
 	RelationalOpThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, FILE *outFile, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
 		this->mySchema = mySchema;
@@ -50,9 +52,20 @@ public:
 	virtual void WaitUntilDone ();
 
 	// tell us how much internal memory the operation can use
-	virtual void Use_n_Pages (int n);
+	virtual void Use_n_Pages (int n=100);
 	int runLength = 100; //default runlength
 	int GetRunLength (void) {return runLength;}
+
+	// debug
+	Schema* outputSchema;
+	
+	void PrintCache(std::vector<Record*> cache, Schema *mySchema){
+		Record record;
+		for(vector<Record*>::iterator it=cache.begin();it!=cache.end();++it){
+        	(*it)->Print(mySchema);
+    	}
+	};
+	// debug end
 
 protected:
 	pthread_t operatorThread;
@@ -95,7 +108,7 @@ public:
 	void Run (Pipe &inPipeL, Pipe &inPipeR, Pipe &outPipe, CNF &selOp, Record &literal);
 private:
 	static void* Operate(void* param);
-	static void SortMergeJoin(Pipe* leftPipe, OrderMaker* leftOrderMaker, Pipe* rightPipe, OrderMaker* rightOrderMaker, Pipe* pout, CNF* selOp, Record* literal, int runLength);
+	static void SortMergeJoin(Pipe* leftPipe, OrderMaker* leftOrderMaker, Pipe* rightPipe, OrderMaker* rightOrderMaker, Pipe* pout, CNF* selOp, Record* literal, int runLength, RelationalOpThreadMemberHolder* params);
 	static void NestedLoopJoin(Pipe* leftPipe, Pipe* rightPipe, Pipe* pout, CNF* selOp, Record* literal, int runLength);
 	static void JoinBufferWithFile(FixedSizeRecordBuffer& buffer, DBFile& file, Pipe& out, Record& literal, CNF& selOp);
 	static void PipeToFile(Pipe& inPipe, DBFile& outFile);

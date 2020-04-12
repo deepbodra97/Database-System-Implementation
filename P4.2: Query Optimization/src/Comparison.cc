@@ -726,6 +726,7 @@ void OrderMaker::growFromParseTree(NameList* gAtts, Schema* inputSchema) {
   for(; gAtts; gAtts = gAtts->next, numAtts++) {
     // FATALIF ((whichAtts[numAtts] = inputSchema->Find(gAtts->name))==-1,
     //          "Grouping by non-existing attribute.");
+    whichAtts[numAtts] = inputSchema->Find(gAtts->name);
     whichTypes[numAtts] = inputSchema->FindType(gAtts->name);
   }
 }

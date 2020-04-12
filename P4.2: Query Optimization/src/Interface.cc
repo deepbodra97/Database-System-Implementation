@@ -62,11 +62,11 @@ void Interface::Run() {
   Ddl d; 
   QueryPlan plan(&s);
   cout<<"plan(): Done"<<endl;
-  while(true) {
+  // while(true) {
     cout << "DeepDB> ";
     if (yyparse() != 0) {
       cout << "Can't parse your CNF.\n";
-      continue;
+      // continue;
     }
     cout<<"CNF is correct"<<endl;
     s.Read(fileName);
@@ -84,12 +84,13 @@ void Interface::Run() {
     } else if (deoutput) {
       plan.setOutput(deoutput);
     } else if (attsToSelect || finalFunction) {
+      plan.setOutput("output.txt");
       plan.plan();
       plan.print();
       plan.execute();
     }
     Clear();
-  }
+  // }
 }
 
 void Interface::Clear() {
