@@ -416,5 +416,3 @@ int ComparisonEngine :: Run (Record *left, Record *right, Record *literal, Compa
 	}
 
 }
-
-

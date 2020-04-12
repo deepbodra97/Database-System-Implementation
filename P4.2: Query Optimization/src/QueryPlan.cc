@@ -50,6 +50,15 @@ extern int distinctAtts;
 extern int distinctFunc;
 
 
+// DEBUG
+int PrintTable(){
+  TableList *t = tables;
+  while(t!=0){
+    cout<<t->tableName<<endl;
+    t = t->next;
+  }
+}
+
 /**********************************************************************
  * API                                                                *
  **********************************************************************/
@@ -104,9 +113,12 @@ void QueryPlan::execute() {
  **********************************************************************/
 void QueryPlan::makeLeafs() {
   for (TableList* table = tables; table; table = table->next) {
+    cout<<"makeLeafs:"<<table->tableName<<endl;
+    PrintTable();
     stat->CopyRel(table->tableName, table->aliasAs);
     makeNode(pushed, used, LeafNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, stat));
     nodes.push_back(newLeaf);
+    cout<<"here"<<endl;
   }
 }
 
@@ -203,9 +215,62 @@ QueryNode::~QueryNode() {
     delete[] relNames[i];
 }
 
+void PrintParseTree(struct AndList *pAnd)
+{
+  cout << "(";
+  while (pAnd)
+    {
+      struct OrList *pOr = pAnd->left;
+      while (pOr)
+        {
+          struct ComparisonOp *pCom = pOr->left;
+          if (pCom!=NULL)
+            {
+              {
+                struct Operand *pOperand = pCom->left;
+                if(pOperand!=NULL)
+                  {
+                    cout<<pOperand->value<<"";
+                  }
+              }
+              switch(pCom->code)
+                {
+                case LESS_THAN:
+                  cout<<" < "; break;
+                case GREATER_THAN:
+                  cout<<" > "; break;
+                case EQUALS:
+                  cout<<" = "; break;
+                default:
+                  cout << " unknown code " << pCom->code;
+                }
+              {
+                struct Operand *pOperand = pCom->right;
+                if(pOperand!=NULL)
+                  {
+                    cout<<pOperand->value<<"";
+                  }
+              }
+            }
+          if(pOr->rightOr)
+            {
+              cout<<" OR ";
+            }
+          pOr = pOr->rightOr;
+        }
+      if(pAnd->rightAnd)
+        {
+          cout<<") AND (";
+        }
+      pAnd = pAnd->rightAnd;
+    }
+  cout << ")" << endl;
+}
+
 AndList* QueryNode::pushSelection(AndList*& alist, Schema* target) {
   AndList header; header.rightAnd = alist;  // make a list header to
   // avoid handling special cases deleting the first list element
+  cout<<"alist:"<<alist<<endl;
   AndList *cur = alist, *pre = &header, *result = NULL;
   for (; cur; cur = pre->rightAnd)
     if (containedIn(cur->left, target)) {   // should push
@@ -214,17 +279,31 @@ AndList* QueryNode::pushSelection(AndList*& alist, Schema* target) {
       result = cur;        // prepend the new node to result list
     } else pre = cur;
   alist = header.rightAnd;  // special case: first element moved
+  cout<<"result:"<<result<<endl;
   return result;
 }
 
 bool QueryNode::containedIn(OrList* ors, Schema* target) {
+  cout<<"containedIn:ors"<<endl;
   for (; ors; ors=ors->rightOr)
     if (!containedIn(ors->left, target)) return false;
   return true;
 }
 
 bool QueryNode::containedIn(ComparisonOp* cmp, Schema* target) {
+  cout<<"containedIn:cmp"<<endl;
+  cout<<"target:"<<endl;
+  Attribute* ptrAtt = target->GetAtts();
+  for(int i=0; i<target->GetNumAtts(); i++){
+    cout<<ptrAtt->name<<endl;
+    ptrAtt++;
+  }
+  
   Operand *left = cmp->left, *right = cmp->right;
+  cout<<"left:"<<left->value<<","<<left->code<<"|"<<" right->value:"<<right->value<<","<<right->code<<endl;
+  // bool result = (left->code!=NAME || target->Find(left->value)!=-1)&&(right->code!=NAME || target->Find(right->value)!=-1);
+  bool result = target->Find(right->value);
+  cout<<"return="<<result<<endl;
   return (left->code!=NAME || target->Find(left->value)!=-1) &&
          (right->code!=NAME || target->Find(right->value)!=-1);
 }
@@ -232,6 +311,7 @@ bool QueryNode::containedIn(ComparisonOp* cmp, Schema* target) {
 LeafNode::LeafNode(AndList*& boolean, AndList*& pushed, char* relName, char* alias, Statistics* st):
   QueryNode("Select File", new Schema(catalog_path, relName, alias), relName, st), opened(false) {
   pushed = pushSelection(boolean, outSchema);
+  cout<<"pushed:"<<pushed<<endl;
   estimate = stat->Estimate(pushed, relNames, numRels);
   stat->Apply(pushed, relNames, numRels);
   selOp.GrowFromParseTree(pushed, outSchema, literal);
@@ -271,6 +351,7 @@ JoinNode::JoinNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode*
   estimate = stat->Estimate(pushed, relNames, numRels);
   stat->Apply(pushed, relNames, numRels);
   cost = l->cost + estimate + r->cost;
+  cout<<"JoinNode:cost="<<cost<<endl;
   selOp.GrowFromParseTree(pushed, l->outSchema, r->outSchema, literal);
 }
 
@@ -317,6 +398,7 @@ WriteNode::WriteNode(FILE*& out, QueryNode* c):
  **********************************************************************/
 void LeafNode::execute(Pipe** pipes, RelationalOp** relops) {
   std::string dbName = std::string(relNames[0]) + ".bin";
+  cout<<"dbName="<<dbName<<" relNames[0]="<<relNames[0]<<endl;
   dbf.Open((char*)dbName.c_str()); opened = true;
   SelectFile* sf = new SelectFile();
   pipes[pout] = new Pipe(PIPE_SIZE);

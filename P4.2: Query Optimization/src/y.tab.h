@@ -45,99 +45,81 @@ extern int yydebug;
 # define YYTOKENTYPE
   enum yytokentype
   {
-    FilePath = 258,
-    Name = 259,
-    Attribute = 260,
-    Float = 261,
-    Int = 262,
-    String = 263,
-    CREATE = 264,
-    DROP = 265,
-    TABLE = 266,
-    SELECT = 267,
-    GROUP = 268,
-    DISTINCT = 269,
-    BY = 270,
-    FROM = 271,
-    WHERE = 272,
-    SUM = 273,
-    AS = 274,
-    AND = 275,
-    OR = 276,
-    INTEGER_ATTR = 277,
-    FLOAT_ATTR = 278,
-    STRING_ATTR = 279,
-    HEAP = 280,
-    SORTED = 281,
-    ON = 282,
-    SET = 283,
-    INSERT = 284,
-    INTO = 285,
-    OUTPUT = 286,
-    NONE = 287,
-    STDOUT = 288,
-    UPDATE = 289,
-    STATISTICS = 290,
-    SHUTDOWN = 291
+    Name = 258,
+    Float = 259,
+    Int = 260,
+    String = 261,
+    SELECT = 262,
+    GROUP = 263,
+    DISTINCT = 264,
+    BY = 265,
+    FROM = 266,
+    WHERE = 267,
+    SUM = 268,
+    AS = 269,
+    AND = 270,
+    OR = 271,
+    CREATE = 272,
+    TABLE = 273,
+    HEAP = 274,
+    INSERT = 275,
+    INTO = 276,
+    SET = 277,
+    OUTPUT = 278,
+    DROP = 279,
+    SORTED = 280,
+    ON = 281
   };
 #endif
 /* Tokens.  */
-#define FilePath 258
-#define Name 259
-#define Attribute 260
-#define Float 261
-#define Int 262
-#define String 263
-#define CREATE 264
-#define DROP 265
-#define TABLE 266
-#define SELECT 267
-#define GROUP 268
-#define DISTINCT 269
-#define BY 270
-#define FROM 271
-#define WHERE 272
-#define SUM 273
-#define AS 274
-#define AND 275
-#define OR 276
-#define INTEGER_ATTR 277
-#define FLOAT_ATTR 278
-#define STRING_ATTR 279
-#define HEAP 280
-#define SORTED 281
-#define ON 282
-#define SET 283
-#define INSERT 284
-#define INTO 285
-#define OUTPUT 286
-#define NONE 287
-#define STDOUT 288
-#define UPDATE 289
-#define STATISTICS 290
-#define SHUTDOWN 291
+#define Name 258
+#define Float 259
+#define Int 260
+#define String 261
+#define SELECT 262
+#define GROUP 263
+#define DISTINCT 264
+#define BY 265
+#define FROM 266
+#define WHERE 267
+#define SUM 268
+#define AS 269
+#define AND 270
+#define OR 271
+#define CREATE 272
+#define TABLE 273
+#define HEAP 274
+#define INSERT 275
+#define INTO 276
+#define SET 277
+#define OUTPUT 278
+#define DROP 279
+#define SORTED 280
+#define ON 281
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 
 union YYSTYPE
 {
-#line 49 "Parser.y" /* yacc.c:1909  */
+#line 31 "Parser.y" /* yacc.c:1909  */
 
-  struct FuncOperand *myOperand;
-  struct FuncOperator *myOperator;
-  struct TableList *myTables;
-  struct ComparisonOp *myComparison;
-  struct Operand *myBoolOperand;
-  struct OrList *myOrList;
-  struct AndList *myAndList;
-  struct NameList *myNames;
-  struct AttrList *myAttrs;
-  char *actualChars;
-  char whichOne;
-  int attrType;
+ 	struct FuncOperand *myOperand;
+	struct FuncOperator *myOperator; 
+	struct TableList *myTables;
+	struct ComparisonOp *myComparison;
+	struct Operand *myBoolOperand;
+	struct OrList *myOrList;
+	struct AndList *myAndList;
+	struct NameList *myNames;
 
-#line 141 "y.tab.h" /* yacc.c:1909  */
+	struct AttrList *myAttrList; // new	
+	struct NameList *mysortattrs; // new
+
+	char *actualChars;
+	char whichOne;
+
+#line 123 "y.tab.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

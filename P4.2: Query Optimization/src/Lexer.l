@@ -35,47 +35,47 @@ void yyerror(char*s);
 
 %%
 
-"ON"      return(ON);
-
-"SORTED"    return(SORTED);
-
-"DROP"      return(DROP);
-
-"SET"     return(SET);
-
-"OUTPUT"    return(OUTPUT);
-
-"CREATE"    return(CREATE);
-
-"TABLE"     return(TABLE);
-
-"HEAP"      return(HEAP);
-
-"INSERT"    return(INSERT);
-
+"ON"      return(ON); 
+  
+"SORTED"    return(SORTED); 
+  
+"DROP"      return(DROP); 
+  
+"SET"     return(SET);  
+  
+"OUTPUT"    return(OUTPUT); 
+  
+"CREATE"    return(CREATE); 
+  
+"TABLE"     return(TABLE);  
+  
+"HEAP"      return(HEAP); 
+  
+"INSERT"    return(INSERT); 
+  
 "INTO"      return(INTO);
 
-"SELECT"    return(SELECT);
+"SELECT"		return(SELECT);
 
-"FROM"      return(FROM);
+"FROM"			return(FROM);
 
-"WHERE"     return(WHERE);
+"WHERE"			return(WHERE);
 
-"SUM"     return(SUM);
+"SUM"			return(SUM);
 
-"AND"     return(AND);
+"AND"			return(AND);
 
-"GROUP"     return(GROUP);
+"GROUP"			return(GROUP);
 
-"DISTINCT"    return(DISTINCT);
+"DISTINCT"		return(DISTINCT);
 
-"BY"      return(BY);
+"BY"			return(BY);
 
-"OR"      return(OR);
+"OR"			return(OR);
 
-"AS"      return(AS);
+"AS"			return(AS);
 
-"("     return('(');
+"("			return('(');
 
 "<"                     return('<');
 
@@ -83,35 +83,35 @@ void yyerror(char*s);
 
 "="                     return('=');
 
-")"               return(')');
+")"    	        	return(')');
 
-"+"               return('+');
+"+"    	        	return('+');
 
-"-"               return('-');
+"-"    	        	return('-');
 
-"/"               return('/');
+"/"    	        	return('/');
 
-"*"               return('*');
+"*"    	        	return('*');
 
-","               return(',');
+","    	        	return(',');
 
-";"                     return(';');
+";"               return(';');
 
--?[0-9]+         {yylval.actualChars = strdup(yytext);
-        return(Int); 
-            }
+-?[0-9]+ 	       {yylval.actualChars = strdup(yytext);
+  			return(Int); 
+		        }
 
 -?[0-9]+\.[0-9]*       {yylval.actualChars = strdup(yytext); 
-        return(Float);
-      }
+  			return(Float);
+			}
 
 [A-Za-z][A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
-        return(Name);
-      }     
+  			return(Name);
+			}     
 
 [A-Za-z][A-Za-z0-9_-]*\.[A-Za-z][A-Za-z0-9_-]* {yylval.actualChars = strdup(yytext);
-        return(Name);
-      }     
+  			return(Name);
+			}     
 
 \'[^'\n]*\'            {/* take care of ' in a string */
                         if (yytext[yyleng - 2] == '\\') {
@@ -123,11 +123,11 @@ void yyerror(char*s);
                         }
                         }
 
-\n                  lineno++;
+\n                	lineno++;
 
-[ \t]               ;
+[ \t]             	;
 
-.                   yyerror("LEX_ERROR: invalid character");
+.                 	yyerror("LEX_ERROR: invalid character");
 
 %%
 
@@ -138,4 +138,5 @@ void yyerror(char *s) {
 int yywrap(void){
   return 1;
 }
+
 

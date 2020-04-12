@@ -1,3 +1,4 @@
+ 
 %{
 
 	#include "ParseTree.h" 
@@ -16,15 +17,14 @@
 	struct AndList *boolean; // the predicate in the WHERE clause
 	struct NameList *groupingAtts; // grouping atts (NULL if no grouping)
 	struct NameList *attsToSelect; // the set of attributes in the SELECT (NULL if no such atts)
-	struct AttrList *newattrs;
-	struct NameList *sortattrs;	
+	struct AttrList *newattrs; // new
+	struct NameList *sortattrs;	// new
 	int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query 
 	int distinctFunc;  // 1 if there is a DISTINCT in an aggregate query
-	char *newtable;
-	char *newfile;
-	char *oldtable;
-	char *deoutput;
-
+	char *newtable; // new
+	char *newfile; // new
+	char *oldtable; // new
+	char *deoutput; // new
 %}
 
 // this stores all of the types returned by production rules
@@ -37,8 +37,10 @@
 	struct OrList *myOrList;
 	struct AndList *myAndList;
 	struct NameList *myNames;
-	struct AttrList *myAttrList;
-	struct NameList *mysortattrs;
+
+	struct AttrList *myAttrList; // new	
+	struct NameList *mysortattrs; // new
+
 	char *actualChars;
 	char whichOne;
 }
@@ -57,17 +59,19 @@
 %token AS
 %token AND
 %token OR
-%token CREATE
-%token TABLE
-%token HEAP
-%token INSERT
-%token INTO
-%token SET
-%token OUTPUT
-%token DROP
-%token SORTED
+
+// new:start
+%token CREATE	
+%token TABLE	
+%token HEAP	
+%token INSERT	
+%token INTO	
+%token SET	
+%token OUTPUT	
+%token DROP	
+%token SORTED	
 %token ON
-//%token INTEGER
+// new:end
 
 %type <myOrList> OrList
 %type <myAndList> AndList
@@ -79,8 +83,9 @@
 %type <myTables> Tables
 %type <myBoolOperand> Literal
 %type <myNames> Atts
-%type <myAttrList> NewAtts
-%type <mysortattrs> SortAtts
+
+%type <myAttrList> NewAtts // new	
+%type <mysortattrs> SortAtts // new
 
 %start SQL
 
@@ -94,99 +99,92 @@
 
 %%
 
-
-SQL: SELECT WhatIWant FROM Tables WHERE AndList ';'
+SQL: SELECT WhatIWant FROM Tables WHERE AndList
 {
 	tables = $4;
 	boolean = $6;	
 	groupingAtts = NULL;
-        YYACCEPT;
 }
 
-| SELECT WhatIWant FROM Tables WHERE AndList GROUP BY Atts ';'
+| SELECT WhatIWant FROM Tables WHERE AndList GROUP BY Atts
 {
 	tables = $4;
 	boolean = $6;	
 	groupingAtts = $9;
-        YYACCEPT;
 }
 
-| CREATE TABLE Name '(' NewAtts ')' AS HEAP ';'
-{
-	newtable = $3;
-	newattrs = $5;
-        YYACCEPT;
-}
-
-| CREATE TABLE Name '(' NewAtts ')' AS SORTED ON SortAtts ';'
-{
-	newtable = $3;
-	newattrs = $5;
-	sortattrs = $10;
-        YYACCEPT;
-}
-
-| INSERT String INTO Name ';'
-{
-	newfile = $2;
-	oldtable = $4;
-        YYACCEPT;
-}
-
-| DROP TABLE Name ';'
-{
-	oldtable = $3;
-        YYACCEPT;
-}
-
-| SET OUTPUT Name ';'
-{
-	deoutput = $3;
-        YYACCEPT;
+| CREATE TABLE Name '(' NewAtts ')' AS HEAP
+	{	
+		newtable = $3;	
+		newattrs = $5;	
+	}	
+		
+	| CREATE TABLE Name '(' NewAtts ')' AS SORTED ON SortAtts	
+	{	
+		newtable = $3;	
+		newattrs = $5;	
+		sortattrs = $10;	
+	}	
+		
+	| INSERT String INTO Name
+	{	
+		newfile = $2;	
+		oldtable = $4;	
+	}	
+		
+	| DROP TABLE Name	
+	{	
+		oldtable = $3;	
+	}	
+		
+	| SET OUTPUT Name	
+	{	
+		deoutput = $3;	
+	}	
+	;	
+		
+	NewAtts: Name Name	
+	{	
+		$$ = (struct AttrList *) malloc (sizeof (struct AttrList));	
+		$$->name = $1;	
+		if(strcmp($2,"INTEGER")==0)	
+			$$->type = 0;	
+		else if(strcmp($2,"DOUBLE")==0)	
+			$$->type = 1;	
+		else if(strcmp($2,"STRING")==0)	
+			$$->type = 2;	
+		//$$->type = $2;	
+		$$->next = NULL;	
+	}	
+		
+	| Name Name ',' NewAtts	
+	{	
+		$$ = (struct AttrList *) malloc (sizeof (struct AttrList));	
+		$$->name = $1;	
+		if(strcmp($2,"INTEGER")==0)	
+			$$->type = 0;	
+		else if(strcmp($2,"DOUBLE")==0)	
+			$$->type = 1;	
+		else if(strcmp($2,"STRING")==0)	
+			$$->type = 2;	
+		//$$->type = $4;	
+		$$->next = $4;	
+	};	
+		
+	SortAtts: Name	
+	{	
+		$$ = (struct NameList *) malloc (sizeof (struct NameList));	
+		$$->name = $1;	
+		$$->next = NULL;	
+	}	
+		
+	| Name ',' SortAtts	
+	{	
+		$$ = (struct NameList *) malloc (sizeof (struct NameList));	
+		$$->name = $1;	
+		$$->next = $3;
 }
 ;
-
-NewAtts: Name Name
-{
-	$$ = (struct AttrList *) malloc (sizeof (struct AttrList));
-	$$->name = $1;
-	if(strcmp($2,"INTEGER")==0)
-		$$->type = 0;
-	else if(strcmp($2,"DOUBLE")==0)
-		$$->type = 1;
-	else if(strcmp($2,"STRING")==0)
-		$$->type = 2;
-	//$$->type = $2;
-	$$->next = NULL;
-}
-
-| Name Name ',' NewAtts
-{
-	$$ = (struct AttrList *) malloc (sizeof (struct AttrList));
-	$$->name = $1;
-	if(strcmp($2,"INTEGER")==0)
-		$$->type = 0;
-	else if(strcmp($2,"DOUBLE")==0)
-		$$->type = 1;
-	else if(strcmp($2,"STRING")==0)
-		$$->type = 2;
-	//$$->type = $4;
-	$$->next = $4;
-};
-
-SortAtts: Name
-{
-	$$ = (struct NameList *) malloc (sizeof (struct NameList));
-	$$->name = $1;
-	$$->next = NULL;
-}
-
-| Name ',' SortAtts
-{
-	$$ = (struct NameList *) malloc (sizeof (struct NameList));
-	$$->name = $1;
-	$$->next = $3;
-};
 
 WhatIWant: Function ',' Atts 
 {
@@ -461,3 +459,4 @@ Float
 ;
 
 %%
+
