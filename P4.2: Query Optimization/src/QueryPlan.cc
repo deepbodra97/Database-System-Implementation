@@ -148,7 +148,7 @@ void QueryPlan::execute() {
   cout<<"outName:"<<outName<<"stdout:"<<stdout<<endl;
   outFile = (outName == "STDOUT" ? stdout
     : outName == "NONE" ? NULL
-    : fopen(outName.c_str(), "w"));   // closed by query executor
+    : fopen(outName.c_str(), "a"));   // closed by query executor
   if (outFile) {
     cout<<"outFile:"<<outFile<<endl;
     int numNodes = root->pipeId;

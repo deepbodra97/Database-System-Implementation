@@ -11,18 +11,20 @@ n.n_regionkey
 n.n_comment
 left:n.n_name,3| right->value:UNITED STATES,4
 return=1
-pushed:0x5625fd293070
+pushed:0x55a059360070
 relNames:nation
 numToJoin:1
-ptrAND:0x5625fd293070
+ptrAND:0x55a059360070
 left child of type NAME
 leftAttribute=n.n_name
 relNames:nation
 numToJoin:1
-ptrAND:0x5625fd293070
+ptrAND:0x55a059360070
 left child of type NAME
 leftAttribute=n.n_name
 here
+ProjectNode: atts->name=n.n_nationkey,0
+keepMe verify: 0
 -> WriteOut:    * Output to 0x1
    * Output schema:
   Att0: n.n_nationkey int
@@ -41,14 +43,20 @@ here
   Att2: n.n_regionkey int
   Att3: n.n_comment string
          * Output pipe: 0
-outName:output.txtstdout:0x7f6d3b0fc760
-outFile:0x5625fd294620
+outName:output.txtstdout:0x7ff63b9ac760
+outFile:0x55a059361620
 dbName=nation.bin relNames[0]=nation
+ProjectNode execute: keepMe=0
+Project Run: keepMe=0
 RelOp:WriteOut
   Att0: n.n_nationkey int
 Project output
+keepMe=
+
+numAttsInput=4
+numAttsOutput=1
 SelectFile output
-@***************************************************************************************************************************
+Ð***************************************************************************************************************************
 TC2
 plan(): Done
 DeepDB> CNF is correct
@@ -87,15 +95,15 @@ n.n_regionkey
 n.n_comment
 left:n.n_nationkey,3| right->value:5,2
 return=1
-pushed:0x55bc26b61190
+pushed:0x560162bf2190
 relNames:nation
 numToJoin:1
-ptrAND:0x55bc26b61190
+ptrAND:0x560162bf2190
 left child of type NAME
 leftAttribute=n.n_nationkey
 relNames:nation
 numToJoin:1
-ptrAND:0x55bc26b61190
+ptrAND:0x560162bf2190
 left child of type NAME
 leftAttribute=n.n_nationkey
 here
@@ -120,7 +128,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -128,7 +136,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -155,7 +163,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=0
 relNames:region
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -163,7 +171,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:region
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -191,7 +199,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -199,19 +207,21 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x55bc26b611b0
+ptrAND:0x560162bf21b0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
 rightAttribute=r.r_regionkey
 join relations:n<->r
 JoinNode:cost=24
+ProjectNode: atts->name=n.n_name,1
+keepMe verify: 1
 -> WriteOut:    * Output to 0x1
    * Output schema:
   Att0: n.n_name string
    * Output pipe: 4
    * Input pipe: 3
-   -> Project: 0
+   -> Project: 1
       * 7 input attributes; 1 output attributes
       * Output schema:
   Att0: n.n_name string
@@ -241,17 +251,23 @@ JoinNode:cost=24
   Att1: r.r_name string
   Att2: r.r_comment string
             * Output pipe: 0
-outName:output.txtstdout:0x7f272de86760
-outFile:0x55bc26b62690
+outName:output.txtstdout:0x7fa35d58d760
+outFile:0x560162bf3690
 dbName=nation.bin relNames[0]=nation
 dbName=region.bin relNames[0]=region
+ProjectNode execute: keepMe=1
+Project Run: keepMe=1
 RelOp:WriteOut
   Att0: n.n_name string
 Project output
+keepMe=
+
+numAttsInput=7
+numAttsOutput=1
 SortMergeJoin output
 SelectFile output
 SelectFile output
- ***************************************************************************************************************************
+***************************************************************************************************************************
 TC3
 plan(): Done
 DeepDB> CNF is correct
@@ -290,15 +306,15 @@ n.n_regionkey
 n.n_comment
 left:n.n_name,3| right->value:UNITED STATES,4
 return=1
-pushed:0x55e2211cd1c0
+pushed:0x5606ab96e1c0
 relNames:nation
 numToJoin:1
-ptrAND:0x55e2211cd1c0
+ptrAND:0x5606ab96e1c0
 left child of type NAME
 leftAttribute=n.n_name
 relNames:nation
 numToJoin:1
-ptrAND:0x55e2211cd1c0
+ptrAND:0x5606ab96e1c0
 left child of type NAME
 leftAttribute=n.n_name
 here
@@ -323,7 +339,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -331,7 +347,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -358,7 +374,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=0
 relNames:region
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -366,7 +382,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:region
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -394,7 +410,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -402,7 +418,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x55e2211cd1e0
+ptrAND:0x5606ab96e1e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -442,8 +458,8 @@ JoinNode:cost=24
   Att1: r.r_name string
   Att2: r.r_comment string
             * Output pipe: 0
-outName:output.txtstdout:0x7f847f3fd760
-outFile:0x55e2211ce6c0
+outName:output.txtstdout:0x7f14fe428760
+outFile:0x5606ab96f6c0
 dbName=nation.bin relNames[0]=nation
 dbName=region.bin relNames[0]=region
 RelOp:WriteOut
@@ -490,15 +506,15 @@ n.n_regionkey
 n.n_comment
 left:n.n_name,3| right->value:UNITED STATES,4
 return=1
-pushed:0x56071195f1c0
+pushed:0x5647782121c0
 relNames:nation
 numToJoin:1
-ptrAND:0x56071195f1c0
+ptrAND:0x5647782121c0
 left child of type NAME
 leftAttribute=n.n_name
 relNames:nation
 numToJoin:1
-ptrAND:0x56071195f1c0
+ptrAND:0x5647782121c0
 left child of type NAME
 leftAttribute=n.n_name
 here
@@ -523,7 +539,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -531,7 +547,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -558,7 +574,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=0
 relNames:region
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -566,7 +582,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:region
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -594,7 +610,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -602,7 +618,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x56071195f1e0
+ptrAND:0x5647782121e0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -646,8 +662,8 @@ JoinNode:cost=24
   Att1: r.r_name string
   Att2: r.r_comment string
             * Output pipe: 0
-outName:output.txtstdout:0x7f4a87ec4760
-outFile:0x560711960700
+outName:output.txtstdout:0x7f6499153760
+outFile:0x564778213700
 dbName=nation.bin relNames[0]=nation
 dbName=region.bin relNames[0]=region
 RelOp:WriteOut
@@ -752,15 +768,15 @@ n.n_regionkey
 n.n_comment
 left:n.n_nationkey,3| right->value:10,2
 return=1
-pushed:0x564c850b8380
+pushed:0x559fa4853380
 relNames:nation
 numToJoin:1
-ptrAND:0x564c850b8380
+ptrAND:0x559fa4853380
 left child of type NAME
 leftAttribute=n.n_nationkey
 relNames:nation
 numToJoin:1
-ptrAND:0x564c850b8380
+ptrAND:0x559fa4853380
 left child of type NAME
 leftAttribute=n.n_nationkey
 here
@@ -796,7 +812,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -804,7 +820,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -847,7 +863,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -855,7 +871,7 @@ rightAttribute=c.c_nationkey
 join relations:n_r<->c
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -894,7 +910,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:region
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -902,7 +918,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:region
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -946,7 +962,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:region
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -954,7 +970,7 @@ rightAttribute=c.c_nationkey
 join relations:n_r<->c
 relNames:region
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1008,7 +1024,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1016,7 +1032,7 @@ rightAttribute=c.c_nationkey
 join relations:n<->c
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1060,7 +1076,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1068,7 +1084,7 @@ rightAttribute=r.r_regionkey
 join relations:n_c<->r
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1122,7 +1138,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:customer
 numToJoin:2
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1130,7 +1146,7 @@ rightAttribute=c.c_nationkey
 join relations:n<->c
 relNames:customer
 numToJoin:2
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1174,7 +1190,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:customer
 numToJoin:3
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1182,7 +1198,7 @@ rightAttribute=r.r_regionkey
 join relations:n_c<->r
 relNames:customer
 numToJoin:3
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1307,7 +1323,7 @@ left:n.n_regionkey,3| right->value:r.r_regionkey,3
 return=1
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1315,7 +1331,7 @@ rightAttribute=r.r_regionkey
 join relations:n<->r
 relNames:nation
 numToJoin:2
-ptrAND:0x564c850b83c0
+ptrAND:0x559fa48533c0
 left child of type NAME
 leftAttribute=n.n_regionkey
 right child of type NAME
@@ -1359,7 +1375,7 @@ left:n.n_nationkey,3| right->value:c.c_nationkey,3
 return=1
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1367,7 +1383,7 @@ rightAttribute=c.c_nationkey
 join relations:n_r<->c
 relNames:nation
 numToJoin:3
-ptrAND:0x564c850b83a0
+ptrAND:0x559fa48533a0
 left child of type NAME
 leftAttribute=n.n_nationkey
 right child of type NAME
@@ -1459,8 +1475,8 @@ JoinNode:cost=150024
   Att6: c.c_mktsegment string
   Att7: c.c_comment string
                * Output pipe: 0
-outName:output.txtstdout:0x7fa90d4b1760
-outFile:0x564c850b9b60
+outName:output.txtstdout:0x7ff70ecd3760
+outFile:0x559fa4854b60
 dbName=nation.bin relNames[0]=nation
 dbName=region.bin relNames[0]=region
 dbName=customer.bin relNames[0]=customer
@@ -1471,8 +1487,8 @@ NumAtts =     1
 RelOp:WriteOut
   Att0: sum int
   Att1: r.r_regionkey int
-SelectFile output
 SortMergeJoin output
+SelectFile output
 SelectFile output
 SelectFile output
 ***************************************************************************************************************************
@@ -1544,15 +1560,15 @@ s.s_acctbal
 s.s_comment
 left:s.s_acctbal,3| right->value:2500.0,1
 return=1
-pushed:0x564cf0797320
+pushed:0x557d6daad320
 relNames:supplier
 numToJoin:1
-ptrAND:0x564cf0797320
+ptrAND:0x557d6daad320
 left child of type NAME
 leftAttribute=s.s_acctbal
 relNames:supplier
 numToJoin:1
-ptrAND:0x564cf0797320
+ptrAND:0x557d6daad320
 left child of type NAME
 leftAttribute=s.s_acctbal
 here
@@ -1754,7 +1770,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1762,7 +1778,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:part
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1818,7 +1834,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1826,7 +1842,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:part
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1886,7 +1902,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:partsupp
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1894,7 +1910,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:partsupp
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1950,7 +1966,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:partsupp
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1958,7 +1974,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:partsupp
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2012,7 +2028,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:supplier
 numToJoin:2
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2020,7 +2036,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->ps
 relNames:supplier
 numToJoin:2
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2076,7 +2092,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=1
 relNames:supplier
 numToJoin:3
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2084,7 +2100,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->s_ps
 relNames:supplier
 numToJoin:3
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2138,7 +2154,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=0
 relNames:partsupp
 numToJoin:2
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2146,7 +2162,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->ps
 relNames:partsupp
 numToJoin:2
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2202,7 +2218,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=0
 relNames:partsupp
 numToJoin:3
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2210,7 +2226,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->s_ps
 relNames:partsupp
 numToJoin:3
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2270,7 +2286,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=1
 relNames:part
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2278,7 +2294,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:part
 numToJoin:2
-ptrAND:0x564cf0797360
+ptrAND:0x557d6daad360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2334,7 +2350,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2342,7 +2358,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:part
 numToJoin:3
-ptrAND:0x564cf0797340
+ptrAND:0x557d6daad340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2435,8 +2451,8 @@ JoinNode:cost=1599999
   Att5: s.s_acctbal double
   Att6: s.s_comment string
             * Output pipe: 1
-outName:output.txtstdout:0x7fddcf7d9760
-outFile:0x564cf0798bb0
+outName:output.txtstdout:0x7f160b09a760
+outFile:0x557d6daaebb0
 dbName=part.bin relNames[0]=part
 dbName=partsupp.bin relNames[0]=partsupp
 dbName=supplier.bin relNames[0]=supplier
@@ -2447,8 +2463,8 @@ RelOp:WriteOut
 GroupBy ordermaker
 NumAtts =     1
   0:    14 Int
-SelectFile output
 SortMergeJoin output
+SelectFile output
 SelectFile output
 SelectFile output
 ***************************************************************************************************************************
