@@ -264,7 +264,7 @@ Schema :: Schema (char *fName, char *relName, const char* alias) {
 	fclose (foo);
 }
 
-void Schema::print(std::ostream& os) const {
+void Schema::Print(std::ostream& os) const {
   const char* typenames[3] = {"int", "double", "string"};
   for (size_t i = 0; i < numAtts; ++i)
     os << "  Att" << i << ": " << myAtts[i].name << " " << typenames[myAtts[i].myType] << endl;

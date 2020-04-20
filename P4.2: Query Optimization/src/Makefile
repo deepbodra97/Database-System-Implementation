@@ -13,8 +13,8 @@ gtest_statistics.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o B
 gtest_relop.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o
 	$(CC) -o gtest_relop.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o yyfunc.tab.o lex.yy.o lex.yyfunc.o gtest_relop.o -lfl -lpthread -lgtest
 
-main: Interface.o QueryPlan.o Ddl.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o main.o
-	$(CC) -o main Interface.o QueryPlan.o Ddl.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o main.o -lfl -lpthread
+main: Interface.o QueryPlan.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o main.o
+	$(CC) -o main Interface.o QueryPlan.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o main.o -lfl -lpthread
 
 # main: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o
 # 	$(CC) -o main Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o main.o -lfl -lpthread
@@ -55,8 +55,8 @@ Interface.o: Interface.cc
 QueryPlan.o: QueryPlan.cc
 	$(CC) -g -c QueryPlan.cc
 
-Ddl.o: Ddl.cc
-	$(CC) -g -c Ddl.cc
+# Ddl.o: Ddl.cc
+# 	$(CC) -g -c Ddl.cc
 
 Statistics.o: Statistics.cc
 	$(CC) -g -c Statistics.cc

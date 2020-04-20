@@ -5,7 +5,6 @@
 
 #include "Defs.h"
 // #include "Errors.h"
-#include "Stl.h"
 #include "QueryPlan.h"
 #include "Pipe.h"
 #include "RelOp.h"
@@ -17,7 +16,7 @@ using std::endl;
 using std::string;
 
 extern char* catalog_path;
-extern char* dbfile_dir;
+extern char* dbfileile_dir;
 extern char* tpch_dir;
 
 // from parser
@@ -101,47 +100,47 @@ extern int distinctFunc;
 /**********************************************************************
  * API                                                                *
  **********************************************************************/
-	QueryPlan::QueryPlan(Statistics* st): root(NULL), outName("STDOUT"), stat(st), used(NULL) {}
+	QueryPlan::QueryPlan(Statistics* st): root(NULL), outName("STDOUT"), statistics(st), used(NULL) {}
 
-	void QueryPlan::plan() {
-  makeLeafs();  // these nodes read from file
-  makeJoins();
-  makeSums();
-  makeProjects();
-  makeDistinct();
-  makeWrite();
+	void QueryPlan::Plan() {
+  CreateLeafQueryNodes();  // these nodes read from file
+  CreateJoinQueryNodes();
+  CreateSumQueryNodes();
+  CreateProjectQueryNodes();
+  CreateDistinctQueryNodes();
+  CreateWriteOutQueryNodes();
 
   // clean up
   swap(boolean, used);
   // FATALIF(used, "WHERE clause syntax error.");
 }
 
-void QueryPlan::print(std::ostream& os) const {
-	root->print(os);
+void QueryPlan::Print(std::ostream& os) const {
+	root->Print(os);
 }
 
-void QueryPlan::setOutput(char* out) {
+void QueryPlan::SetOutput(char* out) {
 	outName = out;
 }
 
-void QueryPlan::execute() {
+void QueryPlan::Execute() {
 	cout<<"outName:"<<outName<<"stdout:"<<stdout<<endl;
-	outFile = (outName == "STDOUT" ? stdout
+	outputFile = (outName == "STDOUT" ? stdout
 		: outName == "NONE" ? NULL
 	: fopen(outName.c_str(), "a"));   // closed by query executor
-	if (outFile) {
-		cout<<"outFile:"<<outFile<<endl;
+	if (outputFile) {
+		cout<<"outputFile:"<<outputFile<<endl;
 		int numNodes = root->pipeId;
 		Pipe** pipes = new Pipe*[numNodes];
 		RelationalOp** relops = new RelationalOp*[numNodes];
-		root->execute(pipes, relops);
+		root->Execute(pipes, relops);
 		for (int i=0; i<numNodes; ++i)
 			relops[i] -> WaitUntilDone();
 		for (int i=0; i<numNodes; ++i) {
 			delete pipes[i]; delete relops[i];
 		}
 		delete[] pipes; delete[] relops;
-		if (outFile!=stdout) fclose(outFile);
+		if (outputFile!=stdout) fclose(outputFile);
 	}
 	root->pipeId = 0;
 	delete root; root = NULL;
@@ -152,16 +151,16 @@ void QueryPlan::execute() {
 /**********************************************************************
  * Query optimization                                                 *
  **********************************************************************/
-void QueryPlan::makeLeafs() {
+void QueryPlan::CreateLeafQueryNodes() {
 	for (TableList* table = tables; table; table = table->next) {
-		cout<<"makeLeafs:"<<table->tableName<<endl;
+		cout<<"CreateLeafQueryNodes:"<<table->tableName<<endl;
 	// PrintTable();
-		stat->CopyRel(table->tableName, table->aliasAs);
-		// makeNode(pushed, used, LeafNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, stat));
+		statistics->CopyRel(table->tableName, table->aliasAs);
+		// makeNode(pushed, used, LeafQueryNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, statistics));
 		// makeNode(pushed, recycler, nodeType, newNode, params)
 		AndList* pushed;
-		LeafNode* newLeaf = new LeafNode(boolean, pushed, table->tableName, table->aliasAs, stat);
-		concatList(used, pushed);
+		LeafQueryNode* newLeaf = new LeafQueryNode(boolean, pushed, table->tableName, table->aliasAs, statistics);
+		ConcatenateAndList(used, pushed);
 
 
 		nodes.push_back(newLeaf);
@@ -169,8 +168,8 @@ void QueryPlan::makeLeafs() {
 	}
 }
 
-void QueryPlan::makeJoins() {
-	orderJoins();
+void QueryPlan::CreateJoinQueryNodes() {
+	LoadMinCostJoin();
 	while (nodes.size()>1) {
 		// popVector(nodes, left, right);
 
@@ -179,55 +178,55 @@ void QueryPlan::makeJoins() {
 		QueryNode* right = nodes.back();
 		nodes.pop_back();
 
-		// makeNode(pushed, used, JoinNode, newJoinNode, (boolean, pushed, left, right, stat));
+		// makeNode(pushed, used, JoinQueryNode, newJoinQueryNode, (boolean, pushed, left, right, statistics));
 
 		AndList* pushed;
-		JoinNode* newJoinNode = new JoinNode(boolean, pushed, left, right, stat);
-		concatList(used, pushed);
+		JoinQueryNode* newJoinQueryNode = new JoinQueryNode(boolean, pushed, left, right, statistics);
+		ConcatenateAndList(used, pushed);
 
-		nodes.push_back(newJoinNode);
+		nodes.push_back(newJoinQueryNode);
 	}
 	root = nodes.front();
 }
 
-void QueryPlan::makeSums() {
+void QueryPlan::CreateSumQueryNodes() {
 	if (groupingAtts) {
 	// FATALIF (!finalFunction, "Grouping without aggregation functions!");
 	// FATALIF (distinctAtts, "No dedup after aggregate!");
-		if (distinctFunc) root = new DedupNode(root);
-		root = new GroupByNode(groupingAtts, finalFunction, root);
+		if (distinctFunc) root = new DistinctQueryNode(root);
+		root = new GroupByQueryNode(groupingAtts, finalFunction, root);
 	} else if (finalFunction) {
-		root = new SumNode(finalFunction, root);
+		root = new SumQueryNode(finalFunction, root);
 	}
 }
 
-void QueryPlan::makeProjects() {
+void QueryPlan::CreateProjectQueryNodes() {
 	if (attsToSelect && !finalFunction && !groupingAtts) {
-		root = new ProjectNode(attsToSelect, root);
+		root = new ProjectQueryNode(attsToSelect, root);
 	}
 }
 
-void QueryPlan::makeDistinct() {
-	if (distinctAtts) root = new DedupNode(root);
+void QueryPlan::CreateDistinctQueryNodes() {
+	if (distinctAtts) root = new DistinctQueryNode(root);
 }
 
-void QueryPlan::makeWrite() {
-	root = new WriteNode(outFile, root);
+void QueryPlan::CreateWriteOutQueryNodes() {
+	root = new WriteOutQueryNode(outputFile, root);
 }
 
-void QueryPlan::orderJoins() {
+void QueryPlan::LoadMinCostJoin() {
 	std::vector<QueryNode*> operands(nodes);
 	sort(operands.begin(), operands.end());
-	int minCost = INT_MAX, cost;
+	int minCost = INT_MAX, actualCost;
   do {           // traverse all possible permutations
-  	if ((cost=evalOrder(operands, *stat, minCost))<minCost && cost>0) {
-  		minCost = cost; nodes = operands; 
+  	if ((actualCost=EstimateJoinPermutationCost(operands, *statistics, minCost))<minCost && actualCost>0) {
+  		minCost = actualCost; nodes = operands; 
   	}
   } while (next_permutation(operands.begin(), operands.end()));
 }
 
-int QueryPlan::evalOrder(std::vector<QueryNode*> operands, Statistics st, int bestFound) {  // intentional copy
-  	std::vector<JoinNode*> freeList;  // all new nodes made in this simulation; need to be freed
+int QueryPlan::EstimateJoinPermutationCost(std::vector<QueryNode*> operands, Statistics st, int bestFound) {  // intentional copy
+  	std::vector<JoinQueryNode*> freeList;  // all new nodes made in this simulation; need to be freed
   	AndList* recycler = NULL;         // AndList needs recycling
   	while (operands.size()>1) {       // simulate join
 	  	// popVector(operands, left, right);
@@ -236,27 +235,27 @@ int QueryPlan::evalOrder(std::vector<QueryNode*> operands, Statistics st, int be
 		QueryNode* right = operands.back();
 		operands.pop_back();
 
-	  	// makeNode(pushed, recycler, JoinNode, newJoinNode, (boolean, pushed, left, right, &st));
+	  	// makeNode(pushed, recycler, JoinQueryNode, newJoinQueryNode, (boolean, pushed, left, right, &st));
 
 	  	AndList* pushed;
-		JoinNode* newJoinNode = new JoinNode(boolean, pushed, left, right, &st);
-		concatList(recycler, pushed);
+		JoinQueryNode* newJoinQueryNode = new JoinQueryNode(boolean, pushed, left, right, &st);
+		ConcatenateAndList(recycler, pushed);
 
-	  	operands.push_back(newJoinNode);
-	  	freeList.push_back(newJoinNode);
-		if (newJoinNode->estimate<=0 || newJoinNode->cost>bestFound) break;  // branch and bound
+	  	operands.push_back(newJoinQueryNode);
+	  	freeList.push_back(newJoinQueryNode);
+		if (newJoinQueryNode->estimatedCost<=0 || newJoinQueryNode->actualCost>bestFound) break;  // branch and bound
 	}
-	int cost = operands.back()->cost;
+	int actualCost = operands.back()->actualCost;
 	// freeAll(freeList);
 	for (int i = 0; i < freeList.size(); ++i) {
 		--freeList[i]->pipeId;
 		free(freeList[i]);  // recycler pipeIds but do not free children
 	}
-	concatList(boolean, recycler);   // put the AndLists back for future use
-  	return operands.back()->estimate<0 ? -1 : cost;
+	ConcatenateAndList(boolean, recycler);   // put the AndLists back for future use
+  	return operands.back()->estimatedCost<0 ? -1 : actualCost;
 }
 
-void QueryPlan::concatList(AndList*& left, AndList*& right) {
+void QueryPlan::ConcatenateAndList(AndList*& left, AndList*& right) {
 	if (!left) { swap(left, right); return; }
 	AndList *pre = left, *cur = left->rightAnd;
 	for (; cur; pre = cur, cur = cur->rightAnd);
@@ -270,49 +269,49 @@ void QueryPlan::concatList(AndList*& left, AndList*& right) {
 int QueryNode::pipeId = 0;
 
 QueryNode::QueryNode(const std::string& op, Schema* out, Statistics* st):
-opName(op), outSchema(out), numRels(0), estimate(0), cost(0), stat(st), pout(pipeId++) {}
+opName(op), outputSchema(out), numRels(0), estimatedCost(0), actualCost(0), statistics(st), outputPipeId(pipeId++) {}
 
 QueryNode::QueryNode(const std::string& op, Schema* out, char* rName, Statistics* st):
-opName(op), outSchema(out), numRels(0), estimate(0), cost(0), stat(st), pout(pipeId++) {
+opName(op), outputSchema(out), numRels(0), estimatedCost(0), actualCost(0), statistics(st), outputPipeId(pipeId++) {
 	if (rName) relNames[numRels++] = strdup(rName);
 }
 
-QueryNode::QueryNode(const std::string& op, Schema* out, char* rNames[], size_t num, Statistics* st):
-opName(op), outSchema(out), numRels(0), estimate(0), cost(0), stat(st), pout(pipeId++) {
+QueryNode::QueryNode(const std::string& op, Schema* out, char* rNames[], int num, Statistics* st):
+opName(op), outputSchema(out), numRels(0), estimatedCost(0), actualCost(0), statistics(st), outputPipeId(pipeId++) {
 	for (; numRels<num; ++numRels)
 		relNames[numRels] = strdup(rNames[numRels]);
 }
 
 QueryNode::~QueryNode() {
-	delete outSchema;
-	for (size_t i=0; i<numRels; ++i)
+	delete outputSchema;
+	for (int i=0; i<numRels; ++i)
 		delete[] relNames[i];
 }
 
-AndList* QueryNode::pushSelection(AndList*& alist, Schema* target) {
-  AndList header; header.rightAnd = alist;  // make a list header to
-  // avoid handling special cases deleting the first list element
-  // cout<<"alist:"<<alist<<endl;
-  AndList *cur = alist, *pre = &header, *result = NULL;
-  for (; cur; cur = pre->rightAnd)
-	if (containedIn(cur->left, target)) {   // should push
+AndList* QueryNode::MoveSelectionDown(AndList*& alist, Schema* target) {
+	AndList header; header.rightAnd = alist;  // make a list header to
+	// avoid handling special cases deleting the first list element
+	// cout<<"alist:"<<alist<<endl;
+	AndList *cur = alist, *pre = &header, *result = NULL;
+	for (; cur; cur = pre->rightAnd)
+	if (DoesSchemaContainOr(cur->left, target)) {   // should push
 		pre->rightAnd = cur->rightAnd;
-	  cur->rightAnd = result;        // *move* the node to the result list
-	  result = cur;        // prepend the new node to result list
+		cur->rightAnd = result;        // *move* the node to the result list
+		result = cur;        // prepend the new node to result list
 	} else pre = cur;
-  alist = header.rightAnd;  // special case: first element moved
-  // cout<<"result:"<<result<<endl;
-  return result;
+	alist = header.rightAnd;  // special case: first element moved
+	// cout<<"result:"<<result<<endl;
+	return result;
 }
 
-bool QueryNode::containedIn(OrList* ors, Schema* target) {
+bool QueryNode::DoesSchemaContainOr(OrList* ors, Schema* target) {
 	cout<<"containedIn:ors"<<endl;
 	for (; ors; ors=ors->rightOr)
-		if (!containedIn(ors->left, target)) return false;
+		if (!DoesSchemaContainComparisonOp(ors->left, target)) return false;
 	return true;
 }
 
-bool QueryNode::containedIn(ComparisonOp* cmp, Schema* target) {
+bool QueryNode::DoesSchemaContainComparisonOp(ComparisonOp* cmp, Schema* target) {
 	cout<<"containedIn:cmp"<<endl;
 	PrintAttributes(target->GetAtts(), target->GetNumAtts());
 	Operand *left = cmp->left, *right = cmp->right;
@@ -324,33 +323,31 @@ bool QueryNode::containedIn(ComparisonOp* cmp, Schema* target) {
 	(right->code!=NAME || target->Find(right->value)!=-1);
 }
 
-LeafNode::LeafNode(AndList*& boolean, AndList*& pushed, char* relName, char* alias, Statistics* st):
-QueryNode("Select File", new Schema(catalog_path, relName, alias), relName, st), opened(false) {
-	pushed = pushSelection(boolean, outSchema);
+LeafQueryNode::LeafQueryNode(AndList*& boolean, AndList*& pushed, char* relName, char* alias, Statistics* st):
+QueryNode("Select File", new Schema(catalog_path, relName, alias), relName, st), isDBfileOpen(false) {
+	pushed = MoveSelectionDown(boolean, outputSchema);
 	cout<<"pushed:"<<pushed<<endl;
-	estimate = stat->Estimate(pushed, relNames, numRels);
-	stat->Apply(pushed, relNames, numRels);
-	selOp.GrowFromParseTree(pushed, outSchema, literal);
+	estimatedCost = statistics->Estimate(pushed, relNames, numRels);
+	statistics->Apply(pushed, relNames, numRels);
+	selOp.GrowFromParseTree(pushed, outputSchema, literal);
 }
 
-UnaryNode::UnaryNode(const std::string& opName, Schema* out, QueryNode* c, Statistics* st):
-QueryNode (opName, out, c->relNames, c->numRels, st), child(c), pin(c->pout) {}
+OnePipeQueryNode::OnePipeQueryNode(const std::string& opName, Schema* out, QueryNode* c, Statistics* st): QueryNode (opName, out, c->relNames, c->numRels, st), child(c), inputPipeId(c->outputPipeId) {}
 
-BinaryNode::BinaryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st):
-QueryNode (opName, new Schema(*l->outSchema, *r->outSchema), st),
-left(l), right(r), pleft(left->pout), pright(right->pout) {
-	cout<<"BinaryNode Schema:"<<endl;
-	outSchema->print();
-	for (size_t i=0; i<l->numRels;)
+TwoPipeQueryNode::TwoPipeQueryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st): QueryNode (opName, new Schema(*l->outputSchema, *r->outputSchema), st),
+leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInputPipeId(rightChild->outputPipeId) {
+	cout<<"TwoPipeQueryNode Schema:"<<endl;
+	outputSchema->Print();
+	for (int i=0; i<l->numRels;)
 		relNames[numRels++] = strdup(l->relNames[i++]);
-	for (size_t j=0; j<r->numRels;)
+	for (int j=0; j<r->numRels;)
 		relNames[numRels++] = strdup(r->relNames[j++]);
-  // stat->numRels = l->numRels+r->numRels;
+  // statistics->numRels = l->numRels+r->numRels;
 }
 
-ProjectNode::ProjectNode(NameList* atts, QueryNode* c):
-UnaryNode("Project", NULL, c, NULL), numAttsIn(c->outSchema->GetNumAtts()), numAttsOut(0) {
-	Schema* cSchema = c->outSchema;
+ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* c):
+OnePipeQueryNode("Project", NULL, c, NULL), numAttsIn(c->outputSchema->GetNumAtts()), numAttsOut(0) {
+	Schema* cSchema = c->outputSchema;
 	Attribute resultAtts[MAX_ATTS];
   // FATALIF (cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
 	if(cSchema->GetNumAtts()>MAX_ATTS){
@@ -358,7 +355,7 @@ UnaryNode("Project", NULL, c, NULL), numAttsIn(c->outSchema->GetNumAtts()), numA
 		exit(EXIT_FAILURE);   
 	}
 	for (; atts; atts=atts->next, numAttsOut++) {
-		cout<<"ProjectNode: atts->name="<<atts->name<<","<<cSchema->Find(atts->name)<<endl;
+		cout<<"ProjectQueryNode: atts->name="<<atts->name<<","<<cSchema->Find(atts->name)<<endl;
 		if((keepMe[numAttsOut]=cSchema->Find(atts->name)) == -1){
 			cout<<"Error: Attribute not found"<<endl;
 			exit(EXIT_FAILURE);
@@ -369,44 +366,44 @@ UnaryNode("Project", NULL, c, NULL), numAttsIn(c->outSchema->GetNumAtts()), numA
 		resultAtts[numAttsOut].name = atts->name;
 		resultAtts[numAttsOut].myType = cSchema->FindType(atts->name);
 	}
-	outSchema = new Schema ("", numAttsOut, resultAtts);
+	outputSchema = new Schema ("", numAttsOut, resultAtts);
 }
 
-DedupNode::DedupNode(QueryNode* c):
-UnaryNode("Deduplication", new Schema(*c->outSchema), c, NULL), dedupOrder(c->outSchema) {}
+DistinctQueryNode::DistinctQueryNode(QueryNode* c):
+OnePipeQueryNode("Deduplication", new Schema(*c->outputSchema), c, NULL), dedupOrder(c->outputSchema) {}
 
-JoinNode::JoinNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode* r, Statistics* st):
-BinaryNode("Join", l, r, st) {
-	pushed = pushSelection(boolean, outSchema);
-	estimate = stat->Estimate(pushed, relNames, numRels);
-	stat->Apply(pushed, relNames, numRels);
-	cost = l->cost + estimate + r->cost;
-	cout<<"JoinNode:cost="<<cost<<endl;
-	selOp.GrowFromParseTree(pushed, l->outSchema, r->outSchema, literal);
+JoinQueryNode::JoinQueryNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode* r, Statistics* st):
+TwoPipeQueryNode("Join", l, r, st) {
+	pushed = MoveSelectionDown(boolean, outputSchema);
+	estimatedCost = statistics->Estimate(pushed, relNames, numRels);
+	statistics->Apply(pushed, relNames, numRels);
+	actualCost = l->actualCost + estimatedCost + r->actualCost;
+	cout<<"JoinQueryNode:actualCost="<<actualCost<<endl;
+	selOp.GrowFromParseTree(pushed, l->outputSchema, r->outputSchema, literal);
 }
 
-SumNode::SumNode(FuncOperator* parseTree, QueryNode* c):
-UnaryNode("Sum", resultSchema(parseTree, c), c, NULL) {
-	f.GrowFromParseTree (parseTree, *c->outSchema);
+SumQueryNode::SumQueryNode(FuncOperator* parseTree, QueryNode* c):
+OnePipeQueryNode("Sum", resultSchema(parseTree, c), c, NULL) {
+	f.GrowFromParseTree (parseTree, *c->outputSchema);
 }
 
-Schema* SumNode::resultSchema(FuncOperator* parseTree, QueryNode* c) {
+Schema* SumQueryNode::resultSchema(FuncOperator* parseTree, QueryNode* c) {
 	Function fun;
 	Attribute atts[2][1] = {{{"sum", Int}}, {{"sum", Double}}};
-	fun.GrowFromParseTree (parseTree, *c->outSchema);
+	fun.GrowFromParseTree (parseTree, *c->outputSchema);
 	return new Schema ("", 1, atts[fun.GetReturnsIntType()]);
 }
 
-GroupByNode::GroupByNode(NameList* gAtts, FuncOperator* parseTree, QueryNode* c):
-UnaryNode("Group by", resultSchema(gAtts, parseTree, c), c, NULL) {
-	grpOrder.growFromParseTree(gAtts, c->outSchema);
-	f.GrowFromParseTree (parseTree, *c->outSchema);
+GroupByQueryNode::GroupByQueryNode(NameList* gAtts, FuncOperator* parseTree, QueryNode* c):
+OnePipeQueryNode("Group by", resultSchema(gAtts, parseTree, c), c, NULL) {
+	grpOrder.growFromParseTree(gAtts, c->outputSchema);
+	f.GrowFromParseTree (parseTree, *c->outputSchema);
 }
 
-Schema* GroupByNode::resultSchema(NameList* gAtts, FuncOperator* parseTree, QueryNode* c) {
+Schema* GroupByQueryNode::resultSchema(NameList* gAtts, FuncOperator* parseTree, QueryNode* c) {
 	Function fun;
 	Attribute atts[2][1] = {{{"sum", Int}}, {{"sum", Double}}};
-	Schema* cSchema = c->outSchema;
+	Schema* cSchema = c->outputSchema;
 	fun.GrowFromParseTree (parseTree, *cSchema);
 	Attribute resultAtts[MAX_ATTS];
   // FATALIF (1+cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
@@ -421,84 +418,84 @@ Schema* GroupByNode::resultSchema(NameList* gAtts, FuncOperator* parseTree, Quer
 	return new Schema ("", numAttsOut, resultAtts);
 }
 
-WriteNode::WriteNode(FILE*& out, QueryNode* c):
-UnaryNode("WriteOut", new Schema(*c->outSchema), c, NULL), outFile(out) {
-	// cout<<"WriteNodeSchema:"<<endl;
-	// c->outSchema->print();
+WriteOutQueryNode::WriteOutQueryNode(FILE*& out, QueryNode* c):
+OnePipeQueryNode("WriteOut", new Schema(*c->outputSchema), c, NULL), outputFile(out) {
+	// cout<<"WriteOutQueryNodeSchema:"<<endl;
+	// c->outputSchema->Print();
 }
 
 
 /**********************************************************************
  * Query execution                                                    *
  **********************************************************************/
-void LeafNode::execute(Pipe** pipes, RelationalOp** relops) {
+void LeafQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 	std::string dbName = std::string(relNames[0]) + ".bin";
 	cout<<"dbName="<<dbName<<" relNames[0]="<<relNames[0]<<endl;
-	dbf.Open((char*)dbName.c_str()); opened = true;
+	dbfile.Open((char*)dbName.c_str()); isDBfileOpen = true;
 	SelectFile* sf = new SelectFile();
 
-  sf->outputSchema = outSchema; // debug
+  sf->outputSchema = outputSchema; // debug
 
-  pipes[pout] = new Pipe(PIPE_SIZE);
-  relops[pout] = sf;
-  sf -> Run(dbf, *pipes[pout], selOp, literal);
+  pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+  relops[outputPipeId] = sf;
+  sf -> Run(dbfile, *pipes[outputPipeId], selOp, literal);
 }
 
-void ProjectNode::execute(Pipe** pipes, RelationalOp** relops) {
-	child -> execute(pipes, relops);
+void ProjectQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+	child -> Execute(pipes, relops);
 	Project* p = new Project();
 
-  p->outputSchema = outSchema; // debug
-  cout<<"ProjectNode execute: keepMe="<<*keepMe<<endl;
+  p->outputSchema = outputSchema; // debug
+  cout<<"ProjectQueryNode Execute: keepMe="<<*keepMe<<endl;
 
-  pipes[pout] = new Pipe(PIPE_SIZE);
-  relops[pout] = p;
-  p -> Run(*pipes[pin], *pipes[pout], keepMe, numAttsIn, numAttsOut);
+  pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+  relops[outputPipeId] = p;
+  p -> Run(*pipes[inputPipeId], *pipes[outputPipeId], keepMe, numAttsIn, numAttsOut);
 }
 
-void DedupNode::execute(Pipe** pipes, RelationalOp** relops) {
-	child -> execute(pipes, relops);
+void DistinctQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+	child -> Execute(pipes, relops);
 	DuplicateRemoval* dedup = new DuplicateRemoval();
-	pipes[pout] = new Pipe(PIPE_SIZE);
-	relops[pout] = dedup;
-	dedup -> Run(*pipes[pin], *pipes[pout], *outSchema);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = dedup;
+	dedup -> Run(*pipes[inputPipeId], *pipes[outputPipeId], *outputSchema);
 }
 
-void SumNode::execute(Pipe** pipes, RelationalOp** relops) {
-	child -> execute(pipes, relops);
+void SumQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+	child -> Execute(pipes, relops);
 	Sum* s = new Sum();
-	pipes[pout] = new Pipe(PIPE_SIZE);
-	relops[pout] = s;
-	s -> Run(*pipes[pin], *pipes[pout], f);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = s;
+	s -> Run(*pipes[inputPipeId], *pipes[outputPipeId], f);
 }
 
-void GroupByNode::execute(Pipe** pipes, RelationalOp** relops) {
-	child -> execute(pipes, relops);
+void GroupByQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+	child -> Execute(pipes, relops);
 	GroupBy* grp = new GroupBy();
-	pipes[pout] = new Pipe(PIPE_SIZE);
-	relops[pout] = grp;
-	grp -> Run(*pipes[pin], *pipes[pout], grpOrder, f);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = grp;
+	grp -> Run(*pipes[inputPipeId], *pipes[outputPipeId], grpOrder, f);
 }
 
-void JoinNode::execute(Pipe** pipes, RelationalOp** relops) {
-  // cout<<"JoinNode Schema:"<<endl;
-  // outSchema->print();
-	left -> execute(pipes, relops); right -> execute(pipes, relops);
+void JoinQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+  // cout<<"JoinQueryNode Schema:"<<endl;
+  // outputSchema->Print();
+	leftChild -> Execute(pipes, relops); rightChild -> Execute(pipes, relops);
 	Join* j = new Join();
 
-	j->outputSchema = outSchema;
+	j->outputSchema = outputSchema;
 
-	pipes[pout] = new Pipe(PIPE_SIZE);
-	relops[pout] = j;
-	j -> Run(*pipes[pleft], *pipes[pright], *pipes[pout], selOp, literal);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = j;
+	j -> Run(*pipes[leftInputPipeId], *pipes[rightInputPipeId], *pipes[outputPipeId], selOp, literal);
 }
 
-void WriteNode::execute(Pipe** pipes, RelationalOp** relops) {
-	child -> execute(pipes, relops);
+void WriteOutQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
+	child -> Execute(pipes, relops);
 	WriteOut* w = new WriteOut();
-	pipes[pout] = new Pipe(PIPE_SIZE);
-	relops[pout] = w;
-	w -> Run(*pipes[pin], outFile, *outSchema);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = w;
+	w -> Run(*pipes[inputPipeId], outputFile, *outputSchema);
 
 }
 
@@ -520,68 +517,68 @@ string IndentOperatorInfo(int level){
 	return Indent(level, "+ ");
 }
 
-void QueryNode::print(std::ostream& os, size_t level) const {
-	printOperator(os, level);
-	printAnnot(os, level);
-	printSchema(os, level);
-	printPipe(os, level);
-	printChildren(os, level);
+void QueryNode::Print(std::ostream& os, int level) const {
+	PrintOperator(os, level);
+	PrintOperatorInfo(os, level);
+	PrintSchema(os, level);
+	PrintPipe(os, level);
+	PrintChildren(os, level);
 }
 
-void QueryNode::printOperator(std::ostream& os, size_t level) const {
+void QueryNode::PrintOperator(std::ostream& os, int level) const {
 	os << IndentOperator(level) << opName << ": ";
 }
 
-void QueryNode::printSchema(std::ostream& os, size_t level) const {
+void QueryNode::PrintSchema(std::ostream& os, int level) const {
 // #ifdef _OUTPUT_SCHEMA__
 	os << IndentOperatorInfo(level) << "Output schema:" << endl;
-	outSchema->print(os);
+	outputSchema->Print(os);
 // #endif
 }
 
-void LeafNode::printPipe(std::ostream& os, size_t level) const {
-	os << IndentOperatorInfo(level) << "Output pipe: " << pout << endl;
+void LeafQueryNode::PrintPipe(std::ostream& os, int level) const {
+	os << IndentOperatorInfo(level) << "Output pipe: " << outputPipeId << endl;
 }
 
-void UnaryNode::printPipe(std::ostream& os, size_t level) const {
-	os << IndentOperatorInfo(level) << "Output pipe: " << pout << endl;
-	os << IndentOperatorInfo(level) << "Input pipe: " << pin << endl;
+void OnePipeQueryNode::PrintPipe(std::ostream& os, int level) const {
+	os << IndentOperatorInfo(level) << "Output pipe: " << outputPipeId << endl;
+	os << IndentOperatorInfo(level) << "Input pipe: " << inputPipeId << endl;
 }
 
-void BinaryNode::printPipe(std::ostream& os, size_t level) const {
-	os << IndentOperatorInfo(level) << "Output pipe: " << pout << endl;
-	os << IndentOperatorInfo(level) << "Input pipe: " << pleft << ", " << pright << endl;
+void TwoPipeQueryNode::PrintPipe(std::ostream& os, int level) const {
+	os << IndentOperatorInfo(level) << "Output pipe: " << outputPipeId << endl;
+	os << IndentOperatorInfo(level) << "Input pipe: " << leftInputPipeId << ", " << rightInputPipeId << endl;
 }
 
-void LeafNode::printOperator(std::ostream& os, size_t level) const {
+void LeafQueryNode::PrintOperator(std::ostream& os, int level) const {
 	os << IndentOperator(level) << "Select from " << relNames[0] << ": ";
 }
 
-void LeafNode::printAnnot(std::ostream& os, size_t level) const {
+void LeafQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	selOp.Print();
 }
 
-void ProjectNode::printAnnot(std::ostream& os, size_t level) const {
+void ProjectQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	os << keepMe[0];
-	for (size_t i=1; i<numAttsOut; ++i) os << ',' << keepMe[i];
+	for (int i=1; i<numAttsOut; ++i) os << ',' << keepMe[i];
 		os << endl;
 	os << IndentOperatorInfo(level) << numAttsIn << " input attributes; " << numAttsOut << " output attributes" << endl;
 }
 
-void JoinNode::printAnnot(std::ostream& os, size_t level) const {
+void JoinQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	selOp.Print();
-	os << IndentOperatorInfo(level) << "Estimate = " << estimate << ", Cost = " << cost << endl;
+	os << IndentOperatorInfo(level) << "Estimate = " << estimatedCost << ", Cost = " << actualCost << endl;
 }
 
-void SumNode::printAnnot(std::ostream& os, size_t level) const {
+void SumQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&f))->Print();
 }
 
-void GroupByNode::printAnnot(std::ostream& os, size_t level) const {
+void GroupByQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	os << IndentOperatorInfo(level) << "OrderMaker: "; (const_cast<OrderMaker*>(&grpOrder))->Print();
 	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&f))->Print();
 }
 
-void WriteNode::printAnnot(std::ostream& os, size_t level) const {
-	os << IndentOperatorInfo(level) << "Output to " << outFile << endl;
+void WriteOutQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
+	os << IndentOperatorInfo(level) << "Output to " << outputFile << endl;
 }

@@ -68,7 +68,7 @@ public:
 	// place a lexicographic ordering on the records using this type of schema
 	int GetSortOrder (OrderMaker &order);
 
-	void print(std::ostream& os = std::cout) const;
+	void Print(std::ostream& os = std::cout) const;
 
 	~Schema ();
 

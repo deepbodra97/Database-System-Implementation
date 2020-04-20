@@ -420,7 +420,7 @@ void* WriteOut::Operate (void *arg) {
 	RelationalOpThreadMemberHolder *params = (RelationalOpThreadMemberHolder*) arg;
 	Record currentRecord;
 	cout<<"RelOp:WriteOut"<<endl;
-	params->mySchema->print();
+	params->mySchema->Print();
 	while(params->inPipe->Remove(&currentRecord)){
 		// currentRecord.Print(params->mySchema);
 		currentRecord.Write(params->outFile, params->mySchema);

@@ -3,7 +3,7 @@
 #include "Interface.h"
 #include "Statistics.h"
 #include "QueryPlan.h"
-#include "Ddl.h"
+// #include "Ddl.h"
 
 using namespace std;
 
@@ -59,7 +59,7 @@ void Interface::Run() {
   Ddl d; 
   QueryPlan plan(&s); */
   Statistics s;
-  Ddl d; 
+  // Ddl d; 
   QueryPlan plan(&s);
   cout<<"plan(): Done"<<endl;
   // while(true) {
@@ -72,7 +72,7 @@ void Interface::Run() {
     s.Read(fileName);
     cout<<"Statistics.txt has been loaded"<<endl;
     // PrintTables();
-    if (newtable) {
+    /*if (newtable) {
       if (d.createTable()) cout << "Create table " << newtable << std::endl;
       else cout << "Table " << newtable << " already exists." << std::endl;
     } else if (oldtable && newfile) {
@@ -83,12 +83,12 @@ void Interface::Run() {
       else cout << "Table " << oldtable << " does not exist." << std::endl;
     } else if (deoutput) {
       plan.setOutput(deoutput);
-    } else if (attsToSelect || finalFunction) {
-      plan.setOutput("output.txt");
-      plan.plan();
-      plan.print();
-      // plan.execute();
-    }
+    } else if (attsToSelect || finalFunction) {*/
+      plan.SetOutput("output.txt");
+      plan.Plan();
+      plan.Print();
+      // plan.Execute();
+    // }
     // Clear();
   // }
 }
