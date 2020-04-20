@@ -48,6 +48,10 @@ void Statistics::CopyRel(char *oldName, char *newName){
 }
 	
 void Statistics::Read(char *fromWhere){
+	// for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // loop through all the relations
+	// 	delete it1->second; // delete RelationInfo instance
+	// 	statMap.erase(it1->first); // remove the key
+	// }
 	statMap.clear();
 	ifstream statFile;
 	statFile.open(fromWhere);

@@ -1,1498 +1,3 @@
-TC1
-plan(): Done
-DeepDB> CNF is correct
-Statistics.txt has been loaded
-makeLeafs:nation
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_name,3| right->value:UNITED STATES,4
-return=1
-pushed:0x55a059360070
-relNames:nation
-numToJoin:1
-ptrAND:0x55a059360070
-left child of type NAME
-leftAttribute=n.n_name
-relNames:nation
-numToJoin:1
-ptrAND:0x55a059360070
-left child of type NAME
-leftAttribute=n.n_name
-here
-ProjectNode: atts->name=n.n_nationkey,0
-keepMe verify: 0
--> WriteOut:    * Output to 0x1
-   * Output schema:
-  Att0: n.n_nationkey int
-   * Output pipe: 2
-   * Input pipe: 1
-   -> Project: 0
-      * 4 input attributes; 1 output attributes
-      * Output schema:
-  Att0: n.n_nationkey int
-      * Output pipe: 1
-      * Input pipe: 0
-      -> Select from nation: ( Att 1 from left record = Att 0 from literal record (String)) 
-         * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-         * Output pipe: 0
-outName:output.txtstdout:0x7ff63b9ac760
-outFile:0x55a059361620
-dbName=nation.bin relNames[0]=nation
-ProjectNode execute: keepMe=0
-Project Run: keepMe=0
-RelOp:WriteOut
-  Att0: n.n_nationkey int
-Project output
-keepMe=
-
-numAttsInput=4
-numAttsOutput=1
-SelectFile output
-Ð***************************************************************************************************************************
-TC2
-plan(): Done
-DeepDB> CNF is correct
-Statistics.txt has been loaded
-makeLeafs:region
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:5,2
-return=1
-pushed:0
-here
-makeLeafs:nation
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_nationkey,3| right->value:5,2
-return=1
-pushed:0x560162bf2190
-relNames:nation
-numToJoin:1
-ptrAND:0x560162bf2190
-left child of type NAME
-leftAttribute=n.n_nationkey
-relNames:nation
-numToJoin:1
-ptrAND:0x560162bf2190
-left child of type NAME
-leftAttribute=n.n_nationkey
-here
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: n.n_nationkey int
-  Att4: n.n_name string
-  Att5: n.n_regionkey int
-  Att6: n.n_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-relNames:region
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:region
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x560162bf21b0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-ProjectNode: atts->name=n.n_name,1
-keepMe verify: 1
--> WriteOut:    * Output to 0x1
-   * Output schema:
-  Att0: n.n_name string
-   * Output pipe: 4
-   * Input pipe: 3
-   -> Project: 1
-      * 7 input attributes; 1 output attributes
-      * Output schema:
-  Att0: n.n_name string
-      * Output pipe: 3
-      * Input pipe: 2
-      -> Join: ( Att 2 from left record = Att 0 from right record (Int)) 
-         * Estimate = 24, Cost = 24
-         * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-         * Output pipe: 2
-         * Input pipe: 1, 0
-         -> Select from nation: ( Att 0 from left record > Att 0 from literal record (Int)) 
-            * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-            * Output pipe: 1
-         -> Select from region:             * Output schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-            * Output pipe: 0
-outName:output.txtstdout:0x7fa35d58d760
-outFile:0x560162bf3690
-dbName=nation.bin relNames[0]=nation
-dbName=region.bin relNames[0]=region
-ProjectNode execute: keepMe=1
-Project Run: keepMe=1
-RelOp:WriteOut
-  Att0: n.n_name string
-Project output
-keepMe=
-
-numAttsInput=7
-numAttsOutput=1
-SortMergeJoin output
-SelectFile output
-SelectFile output
-***************************************************************************************************************************
-TC3
-plan(): Done
-DeepDB> CNF is correct
-Statistics.txt has been loaded
-makeLeafs:region
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_name,3| right->value:UNITED STATES,4
-return=1
-pushed:0
-here
-makeLeafs:nation
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_name,3| right->value:UNITED STATES,4
-return=1
-pushed:0x5606ab96e1c0
-relNames:nation
-numToJoin:1
-ptrAND:0x5606ab96e1c0
-left child of type NAME
-leftAttribute=n.n_name
-relNames:nation
-numToJoin:1
-ptrAND:0x5606ab96e1c0
-left child of type NAME
-leftAttribute=n.n_name
-here
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: n.n_nationkey int
-  Att4: n.n_name string
-  Att5: n.n_regionkey int
-  Att6: n.n_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-relNames:region
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:region
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x5606ab96e1e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
--> WriteOut:    * Output to 0x1
-   * Output schema:
-  Att0: sum int
-   * Output pipe: 4
-   * Input pipe: 3
-   -> Sum:       * Function:       * Output schema:
-  Att0: sum int
-      * Output pipe: 3
-      * Input pipe: 2
-      -> Join: ( Att 2 from left record = Att 0 from right record (Int)) 
-         * Estimate = 24, Cost = 24
-         * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-         * Output pipe: 2
-         * Input pipe: 1, 0
-         -> Select from nation: ( Att 1 from left record = Att 0 from literal record (String)) 
-            * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-            * Output pipe: 1
-         -> Select from region:             * Output schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-            * Output pipe: 0
-outName:output.txtstdout:0x7f14fe428760
-outFile:0x5606ab96f6c0
-dbName=nation.bin relNames[0]=nation
-dbName=region.bin relNames[0]=region
-RelOp:WriteOut
-  Att0: sum int
-SortMergeJoin output
-SelectFile output
-SelectFile output
- ***************************************************************************************************************************
-TC4
-plan(): Done
-DeepDB> CNF is correct
-Statistics.txt has been loaded
-makeLeafs:region
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_name,3| right->value:UNITED STATES,4
-return=1
-pushed:0
-here
-makeLeafs:nation
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_name,3| right->value:UNITED STATES,4
-return=1
-pushed:0x5647782121c0
-relNames:nation
-numToJoin:1
-ptrAND:0x5647782121c0
-left child of type NAME
-leftAttribute=n.n_name
-relNames:nation
-numToJoin:1
-ptrAND:0x5647782121c0
-left child of type NAME
-leftAttribute=n.n_name
-here
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: n.n_nationkey int
-  Att4: n.n_name string
-  Att5: n.n_regionkey int
-  Att6: n.n_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-relNames:region
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:region
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x5647782121e0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
--> WriteOut:    * Output to 0x1
-   * Output schema:
-  Att0: sum int
-  Att1: n.n_regionkey int
-   * Output pipe: 4
-   * Input pipe: 3
-   -> Group by:       * OrderMaker: NumAtts =     1
-  0:     2 Int
-      * Function:       * Output schema:
-  Att0: sum int
-  Att1: n.n_regionkey int
-      * Output pipe: 3
-      * Input pipe: 2
-      -> Join: ( Att 2 from left record = Att 0 from right record (Int)) 
-         * Estimate = 24, Cost = 24
-         * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-         * Output pipe: 2
-         * Input pipe: 1, 0
-         -> Select from nation: ( Att 1 from left record = Att 0 from literal record (String)) 
-            * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-            * Output pipe: 1
-         -> Select from region:             * Output schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-            * Output pipe: 0
-outName:output.txtstdout:0x7f6499153760
-outFile:0x564778213700
-dbName=nation.bin relNames[0]=nation
-dbName=region.bin relNames[0]=region
-RelOp:WriteOut
-  Att0: sum int
-  Att1: n.n_regionkey int
-GroupBy ordermaker
-NumAtts =     1
-  0:     2 Int
-SortMergeJoin output
-SelectFile output
-SelectFile output
- ***************************************************************************************************************************
-TC5
-plan(): Done
-DeepDB> CNF is correct
-Statistics.txt has been loaded
-makeLeafs:customer
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:10,2
-return=1
-pushed:0
-here
-makeLeafs:region
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:10,2
-return=1
-pushed:0
-here
-makeLeafs:nation
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_nationkey,3| right->value:10,2
-return=1
-pushed:0x559fa4853380
-relNames:nation
-numToJoin:1
-ptrAND:0x559fa4853380
-left child of type NAME
-leftAttribute=n.n_nationkey
-relNames:nation
-numToJoin:1
-ptrAND:0x559fa4853380
-left child of type NAME
-leftAttribute=n.n_nationkey
-here
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-  Att7: c.c_custkey int
-  Att8: c.c_name string
-  Att9: c.c_address string
-  Att10: c.c_nationkey int
-  Att11: c.c_phone string
-  Att12: c.c_acctbal double
-  Att13: c.c_mktsegment string
-  Att14: c.c_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-JoinNode:cost=150024
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: n.n_nationkey int
-  Att4: n.n_name string
-  Att5: n.n_regionkey int
-  Att6: n.n_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:region
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:region
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: n.n_nationkey int
-  Att4: n.n_name string
-  Att5: n.n_regionkey int
-  Att6: n.n_comment string
-  Att7: c.c_custkey int
-  Att8: c.c_name string
-  Att9: c.c_address string
-  Att10: c.c_nationkey int
-  Att11: c.c_phone string
-  Att12: c.c_acctbal double
-  Att13: c.c_mktsegment string
-  Att14: c.c_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:region
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-relNames:region
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-JoinNode:cost=150024
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: c.c_custkey int
-  Att5: c.c_name string
-  Att6: c.c_address string
-  Att7: c.c_nationkey int
-  Att8: c.c_phone string
-  Att9: c.c_acctbal double
-  Att10: c.c_mktsegment string
-  Att11: c.c_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n<->c
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n<->c
-JoinNode:cost=150000
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: c.c_custkey int
-  Att5: c.c_name string
-  Att6: c.c_address string
-  Att7: c.c_nationkey int
-  Att8: c.c_phone string
-  Att9: c.c_acctbal double
-  Att10: c.c_mktsegment string
-  Att11: c.c_comment string
-  Att12: r.r_regionkey int
-  Att13: r.r_name string
-  Att14: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n_c<->r
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n_c<->r
-JoinNode:cost=299999
-BinaryNode Schema:
-  Att0: c.c_custkey int
-  Att1: c.c_name string
-  Att2: c.c_address string
-  Att3: c.c_nationkey int
-  Att4: c.c_phone string
-  Att5: c.c_acctbal double
-  Att6: c.c_mktsegment string
-  Att7: c.c_comment string
-  Att8: n.n_nationkey int
-  Att9: n.n_name string
-  Att10: n.n_regionkey int
-  Att11: n.n_comment string
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:customer
-numToJoin:2
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n<->c
-relNames:customer
-numToJoin:2
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n<->c
-JoinNode:cost=150000
-BinaryNode Schema:
-  Att0: c.c_custkey int
-  Att1: c.c_name string
-  Att2: c.c_address string
-  Att3: c.c_nationkey int
-  Att4: c.c_phone string
-  Att5: c.c_acctbal double
-  Att6: c.c_mktsegment string
-  Att7: c.c_comment string
-  Att8: n.n_nationkey int
-  Att9: n.n_name string
-  Att10: n.n_regionkey int
-  Att11: n.n_comment string
-  Att12: r.r_regionkey int
-  Att13: r.r_name string
-  Att14: r.r_comment string
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:customer
-numToJoin:3
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n_c<->r
-relNames:customer
-numToJoin:3
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n_c<->r
-JoinNode:cost=299999
-BinaryNode Schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-  Att3: c.c_custkey int
-  Att4: c.c_name string
-  Att5: c.c_address string
-  Att6: c.c_nationkey int
-  Att7: c.c_phone string
-  Att8: c.c_acctbal double
-  Att9: c.c_mktsegment string
-  Att10: c.c_comment string
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-r.r_regionkey
-r.r_name
-r.r_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=0
-Error: parseTree=NULL and numToJoin>1Error: parseTree=NULL and numToJoin>1JoinNode:cost=-1
-BinaryNode Schema:
-  Att0: c.c_custkey int
-  Att1: c.c_name string
-  Att2: c.c_address string
-  Att3: c.c_nationkey int
-  Att4: c.c_phone string
-  Att5: c.c_acctbal double
-  Att6: c.c_mktsegment string
-  Att7: c.c_comment string
-  Att8: r.r_regionkey int
-  Att9: r.r_name string
-  Att10: r.r_comment string
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-Error: parseTree=NULL and numToJoin>1Error: parseTree=NULL and numToJoin>1JoinNode:cost=-1
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-left:n.n_regionkey,3| right->value:r.r_regionkey,3
-return=1
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-relNames:nation
-numToJoin:2
-ptrAND:0x559fa48533c0
-left child of type NAME
-leftAttribute=n.n_regionkey
-right child of type NAME
-rightAttribute=r.r_regionkey
-join relations:n<->r
-JoinNode:cost=24
-BinaryNode Schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-  Att7: c.c_custkey int
-  Att8: c.c_name string
-  Att9: c.c_address string
-  Att10: c.c_nationkey int
-  Att11: c.c_phone string
-  Att12: c.c_acctbal double
-  Att13: c.c_mktsegment string
-  Att14: c.c_comment string
-containedIn:ors
-containedIn:cmp
-n.n_nationkey
-n.n_name
-n.n_regionkey
-n.n_comment
-r.r_regionkey
-r.r_name
-r.r_comment
-c.c_custkey
-c.c_name
-c.c_address
-c.c_nationkey
-c.c_phone
-c.c_acctbal
-c.c_mktsegment
-c.c_comment
-left:n.n_nationkey,3| right->value:c.c_nationkey,3
-return=1
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-relNames:nation
-numToJoin:3
-ptrAND:0x559fa48533a0
-left child of type NAME
-leftAttribute=n.n_nationkey
-right child of type NAME
-rightAttribute=c.c_nationkey
-join relations:n_r<->c
-JoinNode:cost=150024
--> WriteOut:    * Output to 0x1
-   * Output schema:
-  Att0: sum int
-  Att1: r.r_regionkey int
-   * Output pipe: 7
-   * Input pipe: 6
-   -> Group by:       * OrderMaker: NumAtts =     1
-  0:     4 Int
-      * Function:       * Output schema:
-  Att0: sum int
-  Att1: r.r_regionkey int
-      * Output pipe: 6
-      * Input pipe: 5
-      -> Deduplication:          * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-  Att7: c.c_custkey int
-  Att8: c.c_name string
-  Att9: c.c_address string
-  Att10: c.c_nationkey int
-  Att11: c.c_phone string
-  Att12: c.c_acctbal double
-  Att13: c.c_mktsegment string
-  Att14: c.c_comment string
-         * Output pipe: 5
-         * Input pipe: 4
-         -> Join: ( Att 0 from left record = Att 3 from right record (Int)) 
-            * Estimate = 150000, Cost = 150024
-            * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-  Att7: c.c_custkey int
-  Att8: c.c_name string
-  Att9: c.c_address string
-  Att10: c.c_nationkey int
-  Att11: c.c_phone string
-  Att12: c.c_acctbal double
-  Att13: c.c_mktsegment string
-  Att14: c.c_comment string
-            * Output pipe: 4
-            * Input pipe: 3, 0
-            -> Join: ( Att 2 from left record = Att 0 from right record (Int)) 
-               * Estimate = 24, Cost = 24
-               * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-  Att4: r.r_regionkey int
-  Att5: r.r_name string
-  Att6: r.r_comment string
-               * Output pipe: 3
-               * Input pipe: 2, 1
-               -> Select from nation: ( Att 0 from left record > Att 0 from literal record (Int)) 
-                  * Output schema:
-  Att0: n.n_nationkey int
-  Att1: n.n_name string
-  Att2: n.n_regionkey int
-  Att3: n.n_comment string
-                  * Output pipe: 2
-               -> Select from region:                   * Output schema:
-  Att0: r.r_regionkey int
-  Att1: r.r_name string
-  Att2: r.r_comment string
-                  * Output pipe: 1
-            -> Select from customer:                * Output schema:
-  Att0: c.c_custkey int
-  Att1: c.c_name string
-  Att2: c.c_address string
-  Att3: c.c_nationkey int
-  Att4: c.c_phone string
-  Att5: c.c_acctbal double
-  Att6: c.c_mktsegment string
-  Att7: c.c_comment string
-               * Output pipe: 0
-outName:output.txtstdout:0x7ff70ecd3760
-outFile:0x559fa4854b60
-dbName=nation.bin relNames[0]=nation
-dbName=region.bin relNames[0]=region
-dbName=customer.bin relNames[0]=customer
-SortMergeJoin output
-GroupBy ordermaker
-NumAtts =     1
-  0:     4 Int
-RelOp:WriteOut
-  Att0: sum int
-  Att1: r.r_regionkey int
-SortMergeJoin output
-SelectFile output
-SelectFile output
-SelectFile output
-***************************************************************************************************************************
-TC6
 plan(): Done
 DeepDB> CNF is correct
 Statistics.txt has been loaded
@@ -1560,15 +65,15 @@ s.s_acctbal
 s.s_comment
 left:s.s_acctbal,3| right->value:2500.0,1
 return=1
-pushed:0x557d6daad320
+pushed:0x55e640937320
 relNames:supplier
 numToJoin:1
-ptrAND:0x557d6daad320
+ptrAND:0x55e640937320
 left child of type NAME
 leftAttribute=s.s_acctbal
 relNames:supplier
 numToJoin:1
-ptrAND:0x557d6daad320
+ptrAND:0x55e640937320
 left child of type NAME
 leftAttribute=s.s_acctbal
 here
@@ -1770,7 +275,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1778,7 +283,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:part
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1834,7 +339,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1842,7 +347,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:part
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1902,7 +407,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:partsupp
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1910,7 +415,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:partsupp
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -1966,7 +471,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:partsupp
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -1974,7 +479,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:partsupp
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2028,7 +533,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:supplier
 numToJoin:2
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2036,7 +541,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->ps
 relNames:supplier
 numToJoin:2
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2092,7 +597,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=1
 relNames:supplier
 numToJoin:3
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2100,7 +605,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->s_ps
 relNames:supplier
 numToJoin:3
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2154,7 +659,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=0
 relNames:partsupp
 numToJoin:2
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2162,7 +667,7 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->ps
 relNames:partsupp
 numToJoin:2
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2218,7 +723,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=0
 relNames:partsupp
 numToJoin:3
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2226,7 +731,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->s_ps
 relNames:partsupp
 numToJoin:3
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2286,7 +791,7 @@ left:p.p_partkey,3| right->value:ps.ps_partkey,3
 return=1
 relNames:part
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2294,7 +799,7 @@ rightAttribute=ps.ps_partkey
 join relations:p<->ps
 relNames:part
 numToJoin:2
-ptrAND:0x557d6daad360
+ptrAND:0x55e640937360
 left child of type NAME
 leftAttribute=p.p_partkey
 right child of type NAME
@@ -2350,7 +855,7 @@ left:s.s_suppkey,3| right->value:ps.ps_suppkey,3
 return=1
 relNames:part
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
@@ -2358,27 +863,27 @@ rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 relNames:part
 numToJoin:3
-ptrAND:0x557d6daad340
+ptrAND:0x55e640937340
 left child of type NAME
 leftAttribute=s.s_suppkey
 right child of type NAME
 rightAttribute=ps.ps_suppkey
 join relations:s<->p_ps
 JoinNode:cost=1599999
--> WriteOut:    * Output to 0x1
+---> WriteOut:    * Output to 0x1
    * Output schema:
   Att0: sum double
   Att1: s.s_suppkey int
    * Output pipe: 6
    * Input pipe: 5
-   -> Group by:       * OrderMaker: NumAtts =     1
+   ---> Group by:       * OrderMaker: NumAtts =     1
   0:    14 Int
       * Function:       * Output schema:
   Att0: sum double
   Att1: s.s_suppkey int
       * Output pipe: 5
       * Input pipe: 4
-      -> Join: ( Att 0 from right record = Att 10 from left record (Int)) 
+      ---> Join: ( Att 0 from right record = Att 10 from left record (Int)) 
          * Estimate = 799999, Cost = 1599999
          * Output schema:
   Att0: p.p_partkey int
@@ -2404,7 +909,7 @@ JoinNode:cost=1599999
   Att20: s.s_comment string
          * Output pipe: 4
          * Input pipe: 3, 1
-         -> Join: ( Att 0 from left record = Att 0 from right record (Int)) 
+         ---> Join: ( Att 0 from left record = Att 0 from right record (Int)) 
             * Estimate = 800000, Cost = 800000
             * Output schema:
   Att0: p.p_partkey int
@@ -2423,7 +928,7 @@ JoinNode:cost=1599999
   Att13: ps.ps_comment string
             * Output pipe: 3
             * Input pipe: 2, 0
-            -> Select from part:                * Output schema:
+            ---> Select from part:                * Output schema:
   Att0: p.p_partkey int
   Att1: p.p_name string
   Att2: p.p_mfgr string
@@ -2434,14 +939,14 @@ JoinNode:cost=1599999
   Att7: p.p_retailprice double
   Att8: p.p_comment string
                * Output pipe: 2
-            -> Select from partsupp:                * Output schema:
+            ---> Select from partsupp:                * Output schema:
   Att0: ps.ps_partkey int
   Att1: ps.ps_suppkey int
   Att2: ps.ps_availqty int
   Att3: ps.ps_supplycost double
   Att4: ps.ps_comment string
                * Output pipe: 0
-         -> Select from supplier: ( Att 5 from left record > Att 0 from literal record (Double)) 
+         ---> Select from supplier: ( Att 5 from left record > Att 0 from literal record (Double)) 
             * Output schema:
   Att0: s.s_suppkey int
   Att1: s.s_name string
@@ -2451,20 +956,3 @@ JoinNode:cost=1599999
   Att5: s.s_acctbal double
   Att6: s.s_comment string
             * Output pipe: 1
-outName:output.txtstdout:0x7f160b09a760
-outFile:0x557d6daaebb0
-dbName=part.bin relNames[0]=part
-dbName=partsupp.bin relNames[0]=partsupp
-dbName=supplier.bin relNames[0]=supplier
-SortMergeJoin output
-RelOp:WriteOut
-  Att0: sum double
-  Att1: s.s_suppkey int
-GroupBy ordermaker
-NumAtts =     1
-  0:    14 Int
-SortMergeJoin output
-SelectFile output
-SelectFile output
-SelectFile output
-***************************************************************************************************************************
