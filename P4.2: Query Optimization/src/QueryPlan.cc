@@ -181,7 +181,13 @@ void QueryPlan::makeLeafs() {
 void QueryPlan::makeJoins() {
 	orderJoins();
 	while (nodes.size()>1) {
-		popVector(nodes, left, right);
+		// popVector(nodes, left, right);
+
+		QueryNode* left = nodes.back();
+		nodes.pop_back();
+		QueryNode* right = nodes.back();
+		nodes.pop_back();
+
 		makeNode(pushed, used, JoinNode, newJoinNode, (boolean, pushed, left, right, stat));
 		nodes.push_back(newJoinNode);
 	}
@@ -228,7 +234,12 @@ int QueryPlan::evalOrder(std::vector<QueryNode*> operands, Statistics st, int be
   std::vector<JoinNode*> freeList;  // all new nodes made in this simulation; need to be freed
   AndList* recycler = NULL;         // AndList needs recycling
   while (operands.size()>1) {       // simulate join
-  	popVector(operands, left, right);
+  	// popVector(operands, left, right);
+  	QueryNode* left = operands.back();
+	operands.pop_back();
+	QueryNode* right = operands.back();
+	operands.pop_back();
+
   	makeNode(pushed, recycler, JoinNode, newJoinNode, (boolean, pushed, left, right, &st));
   	operands.push_back(newJoinNode);
   	freeList.push_back(newJoinNode);
