@@ -12,21 +12,6 @@
 
 // #define _OUTPUT_SCHEMA__
 
-#define popVector(vel, el1, el2)                \
-QueryNode* el1 = vel.back();                  \
-vel.pop_back();                               \
-QueryNode* el2 = vel.back();                  \
-vel.pop_back();
-
-#define makeNode(pushed, recycler, nodeType, newNode, params)           \
-AndList* pushed;                                                      \
-nodeType* newNode = new nodeType params;                              \
-concatList(recycler, pushed);
-
-#define freeAll(freeList)                                        \
-for (size_t __ii = 0; __ii < freeList.size(); ++__ii) {        \
-	--freeList[__ii]->pipeId; free(freeList[__ii]);  } // recycler pipeIds but do not free children
-
 
 using std::endl;
 using std::string;
@@ -172,7 +157,13 @@ void QueryPlan::makeLeafs() {
 		cout<<"makeLeafs:"<<table->tableName<<endl;
 	// PrintTable();
 		stat->CopyRel(table->tableName, table->aliasAs);
-		makeNode(pushed, used, LeafNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, stat));
+		// makeNode(pushed, used, LeafNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, stat));
+		// makeNode(pushed, recycler, nodeType, newNode, params)
+		AndList* pushed;
+		LeafNode* newLeaf = new LeafNode(boolean, pushed, table->tableName, table->aliasAs, stat);
+		concatList(used, pushed);
+
+
 		nodes.push_back(newLeaf);
 		cout<<"here"<<endl;
 	}
@@ -188,7 +179,12 @@ void QueryPlan::makeJoins() {
 		QueryNode* right = nodes.back();
 		nodes.pop_back();
 
-		makeNode(pushed, used, JoinNode, newJoinNode, (boolean, pushed, left, right, stat));
+		// makeNode(pushed, used, JoinNode, newJoinNode, (boolean, pushed, left, right, stat));
+
+		AndList* pushed;
+		JoinNode* newJoinNode = new JoinNode(boolean, pushed, left, right, stat);
+		concatList(used, pushed);
+
 		nodes.push_back(newJoinNode);
 	}
 	root = nodes.front();
@@ -231,24 +227,33 @@ void QueryPlan::orderJoins() {
 }
 
 int QueryPlan::evalOrder(std::vector<QueryNode*> operands, Statistics st, int bestFound) {  // intentional copy
-  std::vector<JoinNode*> freeList;  // all new nodes made in this simulation; need to be freed
-  AndList* recycler = NULL;         // AndList needs recycling
-  while (operands.size()>1) {       // simulate join
-  	// popVector(operands, left, right);
-  	QueryNode* left = operands.back();
-	operands.pop_back();
-	QueryNode* right = operands.back();
-	operands.pop_back();
+  	std::vector<JoinNode*> freeList;  // all new nodes made in this simulation; need to be freed
+  	AndList* recycler = NULL;         // AndList needs recycling
+  	while (operands.size()>1) {       // simulate join
+	  	// popVector(operands, left, right);
+	  	QueryNode* left = operands.back();
+		operands.pop_back();
+		QueryNode* right = operands.back();
+		operands.pop_back();
 
-  	makeNode(pushed, recycler, JoinNode, newJoinNode, (boolean, pushed, left, right, &st));
-  	operands.push_back(newJoinNode);
-  	freeList.push_back(newJoinNode);
-	if (newJoinNode->estimate<=0 || newJoinNode->cost>bestFound) break;  // branch and bound
-}
-int cost = operands.back()->cost;
-freeAll(freeList);
-  concatList(boolean, recycler);   // put the AndLists back for future use
-  return operands.back()->estimate<0 ? -1 : cost;
+	  	// makeNode(pushed, recycler, JoinNode, newJoinNode, (boolean, pushed, left, right, &st));
+
+	  	AndList* pushed;
+		JoinNode* newJoinNode = new JoinNode(boolean, pushed, left, right, &st);
+		concatList(recycler, pushed);
+
+	  	operands.push_back(newJoinNode);
+	  	freeList.push_back(newJoinNode);
+		if (newJoinNode->estimate<=0 || newJoinNode->cost>bestFound) break;  // branch and bound
+	}
+	int cost = operands.back()->cost;
+	// freeAll(freeList);
+	for (int i = 0; i < freeList.size(); ++i) {
+		--freeList[i]->pipeId;
+		free(freeList[i]);  // recycler pipeIds but do not free children
+	}
+	concatList(boolean, recycler);   // put the AndLists back for future use
+  	return operands.back()->estimate<0 ? -1 : cost;
 }
 
 void QueryPlan::concatList(AndList*& left, AndList*& right) {
