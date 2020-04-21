@@ -126,7 +126,7 @@ protected:
 	QueryNode* child;
 	int inputPipeId;  // input pipe
 
-	OnePipeQueryNode(const std::string& opName, Schema* out, QueryNode* c, Statistics* st);
+	OnePipeQueryNode(const std::string& opName, Schema* out, QueryNode* node, Statistics* st);
 	virtual ~OnePipeQueryNode() { delete child; }
 	void PrintPipe(std::ostream& os, int level) const;
 	void PrintChildren(std::ostream& os, int level) const { child->Print(os, level+1); }
@@ -156,9 +156,9 @@ class ProjectQueryNode: private OnePipeQueryNode {
 	friend class QueryPlan;
 
 	int keepMe[MAX_ATTS];
-	int numAttsIn, numAttsOut;
+	int numInputAttributes, numOutputAttributes;
 
-	ProjectQueryNode(NameList* atts, QueryNode* c);
+	ProjectQueryNode(NameList* atts, QueryNode* node);
 	void PrintOperatorInfo(std::ostream& os = std::cout, int level = 0) const;
 	void Execute(Pipe** pipes, RelationalOp** relops);
 };
@@ -166,9 +166,9 @@ class ProjectQueryNode: private OnePipeQueryNode {
 class DistinctQueryNode: private OnePipeQueryNode {
 	friend class QueryPlan;
 
-	OrderMaker dedupOrder;
+	OrderMaker orderMakerDistinct;
 
-	DistinctQueryNode(QueryNode* c);
+	DistinctQueryNode(QueryNode* node);
 	void PrintOperatorInfo(std::ostream& os = std::cout, int level = 0) const {}
 	void Execute(Pipe** pipes, RelationalOp** relops);
 };
@@ -176,10 +176,10 @@ class DistinctQueryNode: private OnePipeQueryNode {
 class SumQueryNode: private OnePipeQueryNode {
 	friend class QueryPlan;
 
-	Function f;
+	Function function;
 
-	SumQueryNode(FuncOperator* parseTree, QueryNode* c);
-	Schema* resultSchema(FuncOperator* parseTree, QueryNode* c);
+	SumQueryNode(FuncOperator* parseTree, QueryNode* node);
+	Schema* resultSchema(FuncOperator* parseTree, QueryNode* node);
 	void PrintOperatorInfo(std::ostream& os = std::cout, int level = 0) const;
 	void Execute(Pipe** pipes, RelationalOp** relops);
 };
@@ -187,11 +187,11 @@ class SumQueryNode: private OnePipeQueryNode {
 class GroupByQueryNode: private OnePipeQueryNode {
 	friend class QueryPlan;
 
-	OrderMaker grpOrder;
-	Function f;
+	OrderMaker orderMakerGroupBy;
+	Function function;
 
-	GroupByQueryNode(NameList* gAtts, FuncOperator* parseTree, QueryNode* c);
-	Schema* resultSchema(NameList* gAtts, FuncOperator* parseTree, QueryNode* c);
+	GroupByQueryNode(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node);
+	Schema* resultSchema(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node);
 	void PrintOperatorInfo(std::ostream& os = std::cout, int level = 0) const;
 	void Execute(Pipe** pipes, RelationalOp** relops);
 };
@@ -212,7 +212,7 @@ class WriteOutQueryNode: private OnePipeQueryNode {
 
 	FILE*& outputFile;
 
-	WriteOutQueryNode(FILE*& out, QueryNode* c);
+	WriteOutQueryNode(FILE*& out, QueryNode* node);
 	void PrintOperatorInfo(std::ostream& os = std::cout, int level = 0) const;
 	void Execute(Pipe** pipes, RelationalOp** relops);
 };

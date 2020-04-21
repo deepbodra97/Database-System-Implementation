@@ -332,7 +332,7 @@ QueryNode("Select File", new Schema(catalog_path, relName, alias), relName, st),
 	selOp.GrowFromParseTree(pushed, outputSchema, literal);
 }
 
-OnePipeQueryNode::OnePipeQueryNode(const std::string& opName, Schema* out, QueryNode* c, Statistics* st): QueryNode (opName, out, c->relNames, c->numRels, st), child(c), inputPipeId(c->outputPipeId) {}
+OnePipeQueryNode::OnePipeQueryNode(const std::string& opName, Schema* out, QueryNode* node, Statistics* st): QueryNode (opName, out, node->relNames, node->numRels, st), child(node), inputPipeId(node->outputPipeId) {}
 
 TwoPipeQueryNode::TwoPipeQueryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st): QueryNode (opName, new Schema(*l->outputSchema, *r->outputSchema), st),
 leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInputPipeId(rightChild->outputPipeId) {
@@ -345,32 +345,32 @@ leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInpu
   // statistics->numRels = l->numRels+r->numRels;
 }
 
-ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* c):
-OnePipeQueryNode("Project", NULL, c, NULL), numAttsIn(c->outputSchema->GetNumAtts()), numAttsOut(0) {
-	Schema* cSchema = c->outputSchema;
+ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* node):
+OnePipeQueryNode("Project", NULL, node, NULL), numInputAttributes(node->outputSchema->GetNumAtts()), numOutputAttributes(0) {
+	Schema* cSchema = node->outputSchema;
 	Attribute resultAtts[MAX_ATTS];
   // FATALIF (cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
 	if(cSchema->GetNumAtts()>MAX_ATTS){
 		cout<<"Error: Too many attributes"<<endl; 
 		exit(EXIT_FAILURE);   
 	}
-	for (; atts; atts=atts->next, numAttsOut++) {
+	for (; atts; atts=atts->next, numOutputAttributes++) {
 		cout<<"ProjectQueryNode: atts->name="<<atts->name<<","<<cSchema->Find(atts->name)<<endl;
-		if((keepMe[numAttsOut]=cSchema->Find(atts->name)) == -1){
+		if((keepMe[numOutputAttributes]=cSchema->Find(atts->name)) == -1){
 			cout<<"Error: Attribute not found"<<endl;
 			exit(EXIT_FAILURE);
 		}
-		cout<<"keepMe verify: "<<keepMe[numAttsOut]<<endl;
-	// FATALIF ((keepMe[numAttsOut]=cSchema->Find(atts->name))==-1,
+		cout<<"keepMe verify: "<<keepMe[numOutputAttributes]<<endl;
+	// FATALIF ((keepMe[numOutputAttributes]=cSchema->Find(atts->name))==-1,
 			 // "Projecting non-existing attribute.");
-		resultAtts[numAttsOut].name = atts->name;
-		resultAtts[numAttsOut].myType = cSchema->FindType(atts->name);
+		resultAtts[numOutputAttributes].name = atts->name;
+		resultAtts[numOutputAttributes].myType = cSchema->FindType(atts->name);
 	}
-	outputSchema = new Schema ("", numAttsOut, resultAtts);
+	outputSchema = new Schema ("", numOutputAttributes, resultAtts);
 }
 
-DistinctQueryNode::DistinctQueryNode(QueryNode* c):
-OnePipeQueryNode("Deduplication", new Schema(*c->outputSchema), c, NULL), dedupOrder(c->outputSchema) {}
+DistinctQueryNode::DistinctQueryNode(QueryNode* node):
+OnePipeQueryNode("Deduplication", new Schema(*node->outputSchema), node, NULL), orderMakerDistinct(node->outputSchema) {}
 
 JoinQueryNode::JoinQueryNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode* r, Statistics* st):
 TwoPipeQueryNode("Join", l, r, st) {
@@ -382,46 +382,46 @@ TwoPipeQueryNode("Join", l, r, st) {
 	selOp.GrowFromParseTree(pushed, l->outputSchema, r->outputSchema, literal);
 }
 
-SumQueryNode::SumQueryNode(FuncOperator* parseTree, QueryNode* c):
-OnePipeQueryNode("Sum", resultSchema(parseTree, c), c, NULL) {
-	f.GrowFromParseTree (parseTree, *c->outputSchema);
+SumQueryNode::SumQueryNode(FuncOperator* parseTree, QueryNode* node):
+OnePipeQueryNode("Sum", resultSchema(parseTree, node), node, NULL) {
+	function.GrowFromParseTree (parseTree, *node->outputSchema);
 }
 
-Schema* SumQueryNode::resultSchema(FuncOperator* parseTree, QueryNode* c) {
+Schema* SumQueryNode::resultSchema(FuncOperator* parseTree, QueryNode* node) {
 	Function fun;
 	Attribute atts[2][1] = {{{"sum", Int}}, {{"sum", Double}}};
-	fun.GrowFromParseTree (parseTree, *c->outputSchema);
+	fun.GrowFromParseTree (parseTree, *node->outputSchema);
 	return new Schema ("", 1, atts[fun.GetReturnsIntType()]);
 }
 
-GroupByQueryNode::GroupByQueryNode(NameList* gAtts, FuncOperator* parseTree, QueryNode* c):
-OnePipeQueryNode("Group by", resultSchema(gAtts, parseTree, c), c, NULL) {
-	grpOrder.growFromParseTree(gAtts, c->outputSchema);
-	f.GrowFromParseTree (parseTree, *c->outputSchema);
+GroupByQueryNode::GroupByQueryNode(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node):
+OnePipeQueryNode("Group by", resultSchema(groupingAttributes, parseTree, node), node, NULL) {
+	orderMakerGroupBy.growFromParseTree(groupingAttributes, node->outputSchema);
+	function.GrowFromParseTree (parseTree, *node->outputSchema);
 }
 
-Schema* GroupByQueryNode::resultSchema(NameList* gAtts, FuncOperator* parseTree, QueryNode* c) {
+Schema* GroupByQueryNode::resultSchema(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node) {
 	Function fun;
 	Attribute atts[2][1] = {{{"sum", Int}}, {{"sum", Double}}};
-	Schema* cSchema = c->outputSchema;
+	Schema* cSchema = node->outputSchema;
 	fun.GrowFromParseTree (parseTree, *cSchema);
 	Attribute resultAtts[MAX_ATTS];
   // FATALIF (1+cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
 	resultAtts[0].name = "sum";
 	resultAtts[0].myType = fun.GetReturnsIntType();
-	int numAttsOut = 1;
-	for (; gAtts; gAtts=gAtts->next, numAttsOut++) {
-	// FATALIF (cSchema->Find(gAtts->name)==-1, "Grouping by non-existing attribute.");
-		resultAtts[numAttsOut].name = gAtts->name;
-		resultAtts[numAttsOut].myType = cSchema->FindType(gAtts->name);
+	int numOutputAttributes = 1;
+	for (; groupingAttributes; groupingAttributes=groupingAttributes->next, numOutputAttributes++) {
+	// FATALIF (cSchema->Find(groupingAttributes->name)==-1, "Grouping by non-existing attribute.");
+		resultAtts[numOutputAttributes].name = groupingAttributes->name;
+		resultAtts[numOutputAttributes].myType = cSchema->FindType(groupingAttributes->name);
 	}
-	return new Schema ("", numAttsOut, resultAtts);
+	return new Schema ("", numOutputAttributes, resultAtts);
 }
 
-WriteOutQueryNode::WriteOutQueryNode(FILE*& out, QueryNode* c):
-OnePipeQueryNode("WriteOut", new Schema(*c->outputSchema), c, NULL), outputFile(out) {
+WriteOutQueryNode::WriteOutQueryNode(FILE*& out, QueryNode* node):
+OnePipeQueryNode("WriteOut", new Schema(*node->outputSchema), node, NULL), outputFile(out) {
 	// cout<<"WriteOutQueryNodeSchema:"<<endl;
-	// c->outputSchema->Print();
+	// node->outputSchema->Print();
 }
 
 
@@ -450,7 +450,7 @@ void ProjectQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 
   pipes[outputPipeId] = new Pipe(PIPE_SIZE);
   relops[outputPipeId] = p;
-  p -> Run(*pipes[inputPipeId], *pipes[outputPipeId], keepMe, numAttsIn, numAttsOut);
+  p -> Run(*pipes[inputPipeId], *pipes[outputPipeId], keepMe, numInputAttributes, numOutputAttributes);
 }
 
 void DistinctQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
@@ -466,7 +466,7 @@ void SumQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 	Sum* s = new Sum();
 	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
 	relops[outputPipeId] = s;
-	s -> Run(*pipes[inputPipeId], *pipes[outputPipeId], f);
+	s -> Run(*pipes[inputPipeId], *pipes[outputPipeId], function);
 }
 
 void GroupByQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
@@ -474,7 +474,7 @@ void GroupByQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 	GroupBy* grp = new GroupBy();
 	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
 	relops[outputPipeId] = grp;
-	grp -> Run(*pipes[inputPipeId], *pipes[outputPipeId], grpOrder, f);
+	grp -> Run(*pipes[inputPipeId], *pipes[outputPipeId], orderMakerGroupBy, function);
 }
 
 void JoinQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
@@ -560,9 +560,9 @@ void LeafQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 
 void ProjectQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 	os << keepMe[0];
-	for (int i=1; i<numAttsOut; ++i) os << ',' << keepMe[i];
+	for (int i=1; i<numOutputAttributes; ++i) os << ',' << keepMe[i];
 		os << endl;
-	os << IndentOperatorInfo(level) << numAttsIn << " input attributes; " << numAttsOut << " output attributes" << endl;
+	os << IndentOperatorInfo(level) << numInputAttributes << " input attributes; " << numOutputAttributes << " output attributes" << endl;
 }
 
 void JoinQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
@@ -571,12 +571,12 @@ void JoinQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
 }
 
 void SumQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
-	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&f))->Print();
+	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&function))->Print();
 }
 
 void GroupByQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
-	os << IndentOperatorInfo(level) << "OrderMaker: "; (const_cast<OrderMaker*>(&grpOrder))->Print();
-	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&f))->Print();
+	os << IndentOperatorInfo(level) << "OrderMaker: "; (const_cast<OrderMaker*>(&orderMakerGroupBy))->Print();
+	os << IndentOperatorInfo(level) << "Function: "; (const_cast<Function*>(&function))->Print();
 }
 
 void WriteOutQueryNode::PrintOperatorInfo(std::ostream& os, int level) const {
