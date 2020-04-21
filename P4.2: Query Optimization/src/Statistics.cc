@@ -48,12 +48,13 @@ void Statistics::CopyRel(char *oldName, char *newName){
 }
 	
 void Statistics::Read(char *fromWhere){
-	// for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // loop through all the relations
-	// 	delete it1->second; // delete RelationInfo instance
-	// 	statMap.erase(it1->first); // remove the key
-	// }
+	for (map<string, RelationInfo*>::iterator it1 = statMap.begin(); it1!=statMap.end(); it1++){ // loop through all the relations
+		delete it1->second; // delete RelationInfo instance
+		statMap.erase(it1->first); // remove the key
+	}
 	statMap.clear();
 	ifstream statFile;
+	cout<<"statFile fromWhere="<<fromWhere<<endl;
 	statFile.open(fromWhere);
 	if(!statFile){ // if statFile not found then create new file and write "EOF" to it
 		cout<<"Statistics.txt is empty"<<endl;

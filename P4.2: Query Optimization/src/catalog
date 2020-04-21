@@ -100,3 +100,10 @@ l_shipmode String
 l_comment String
 END
 
+BEGIN
+test1
+test1.tbl
+t11 Int
+t12 Double
+t13 String
+END

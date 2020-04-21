@@ -4,12 +4,9 @@
 #include <algorithm>
 
 #include "Defs.h"
-// #include "Errors.h"
 #include "QueryPlan.h"
 #include "Pipe.h"
 #include "RelOp.h"
-
-// #define _OUTPUT_SCHEMA__
 
 
 using std::endl;
@@ -102,18 +99,20 @@ extern int distinctFunc;
  **********************************************************************/
 	QueryPlan::QueryPlan(Statistics* st): root(NULL), outName("STDOUT"), statistics(st), used(NULL) {}
 
-	void QueryPlan::Plan() {
-  CreateLeafQueryNodes();  // these nodes read from file
-  CreateJoinQueryNodes();
-  CreateSumQueryNodes();
-  CreateProjectQueryNodes();
-  CreateDistinctQueryNodes();
-  CreateWriteOutQueryNodes();
+	QueryPlan::~QueryPlan() { if (root) delete root; }
 
-  // clean up
-  swap(boolean, used);
-  // FATALIF(used, "WHERE clause syntax error.");
-}
+	void QueryPlan::Plan() {
+		CreateLeafQueryNodes();  // these nodes read from file
+		CreateJoinQueryNodes();
+		CreateSumQueryNodes();
+		CreateProjectQueryNodes();
+		CreateDistinctQueryNodes();
+		CreateWriteOutQueryNodes();
+
+		// clean up
+		swap(boolean, used);
+		// FATALIF(used, "WHERE clause syntax error.");
+	}
 
 void QueryPlan::Print(std::ostream& os) const {
 	root->Print(os);
@@ -143,7 +142,7 @@ void QueryPlan::Execute() {
 		if (outputFile!=stdout) fclose(outputFile);
 	}
 	root->pipeId = 0;
-	delete root; root = NULL;
+	// delete root; root = NULL;
 	nodes.clear();
 }
 
@@ -154,7 +153,7 @@ void QueryPlan::Execute() {
 void QueryPlan::CreateLeafQueryNodes() {
 	for (TableList* table = tables; table; table = table->next) {
 		cout<<"CreateLeafQueryNodes:"<<table->tableName<<endl;
-	// PrintTable();
+		// PrintTable();
 		statistics->CopyRel(table->tableName, table->aliasAs);
 		// makeNode(pushed, used, LeafQueryNode, newLeaf, (boolean, pushed, table->tableName, table->aliasAs, statistics));
 		// makeNode(pushed, recycler, nodeType, newNode, params)
@@ -407,6 +406,10 @@ Schema* GroupByQueryNode::resultSchema(NameList* groupingAttributes, FuncOperato
 	fun.GrowFromParseTree (parseTree, *cSchema);
 	Attribute resultAtts[MAX_ATTS];
   // FATALIF (1+cSchema->GetNumAtts()>MAX_ATTS, "Too many attributes.");
+	/*if(l+cSchema->GetNumAtts() > MAX_ATTS){
+		cout<<"Error: Too many attributes"<<endl;
+		exit(EXIT_FAILURE);
+	}*/
 	resultAtts[0].name = "sum";
 	resultAtts[0].myType = fun.GetReturnsIntType();
 	int numOutputAttributes = 1;
@@ -434,11 +437,11 @@ void LeafQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 	dbfile.Open((char*)dbName.c_str()); isDBfileOpen = true;
 	SelectFile* sf = new SelectFile();
 
-  sf->outputSchema = outputSchema; // debug
+	sf->outputSchema = outputSchema; // debug
 
-  pipes[outputPipeId] = new Pipe(PIPE_SIZE);
-  relops[outputPipeId] = sf;
-  sf -> Run(dbfile, *pipes[outputPipeId], selOp, literal);
+	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
+	relops[outputPipeId] = sf;
+	sf -> Run(dbfile, *pipes[outputPipeId], selOp, literal);
 }
 
 void ProjectQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
@@ -523,6 +526,12 @@ void QueryNode::Print(std::ostream& os, int level) const {
 	PrintSchema(os, level);
 	PrintPipe(os, level);
 	PrintChildren(os, level);
+	/*PrintLeftChild(os, level);
+	PrintRightChild(os, level);
+	PrintOperator(os, level);
+	PrintOperatorInfo(os, level);
+	PrintSchema(os, level);
+	PrintPipe(os, level);*/
 }
 
 void QueryNode::PrintOperator(std::ostream& os, int level) const {

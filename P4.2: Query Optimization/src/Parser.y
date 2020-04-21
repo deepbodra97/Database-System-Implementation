@@ -1,6 +1,6 @@
- 
-%{
-
+ %{
+ 	int yydebug = 1;
+ 	
 	#include "ParseTree.h" 
 	#include <stdio.h>
 	#include <string.h>
@@ -226,7 +226,9 @@ Function: SUM '(' CompoundExp ')'
 
 Atts: Name
 {
+	std::cout<<"case 19"<<std::endl;
 	$$ = (struct NameList *) malloc (sizeof (struct NameList));
+	std::cout<<"case 19 no malloc error"<<std::endl;
 	$$->name = $1;
 	$$->next = NULL;
 } 
@@ -240,7 +242,9 @@ Atts: Name
 
 Tables: Name AS Name 
 {
+	std::cout<<"case 21"<<std::endl;
 	$$ = (struct TableList *) malloc (sizeof (struct TableList));
+	std::cout<<"case 21 no malloc error"<<std::endl;
 	$$->tableName = $1;
 	$$->aliasAs = $3;
 	$$->next = NULL;
@@ -328,6 +332,7 @@ Op: '-'
 
 AndList: '(' OrList ')' AND AndList
 {
+		std::cout<<"case 32"<<std::endl;
         // here we need to pre-pend the OrList to the AndList
         // first we allocate space for this node
         $$ = (struct AndList *) malloc (sizeof (struct AndList));
@@ -342,8 +347,10 @@ AndList: '(' OrList ')' AND AndList
 
 | '(' OrList ')'
 {
+		std::cout<<"case 33"<<std::endl;
         // just return the OrList!
         $$ = (struct AndList *) malloc (sizeof (struct AndList));
+		std::cout<<"case 33 no malloc error"<<std::endl;
         $$->left = $2;
         $$->rightAnd = NULL;
 }
@@ -459,4 +466,3 @@ Float
 ;
 
 %%
-

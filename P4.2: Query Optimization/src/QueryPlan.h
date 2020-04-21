@@ -20,7 +20,7 @@ class QueryNode;
 class QueryPlan {
 public:
 	QueryPlan(Statistics* st);
-	~QueryPlan() { if (root) delete root; }
+	~QueryPlan();
 
 	void Plan();
 	void Print(std::ostream& os = std::cout) const;
@@ -96,6 +96,10 @@ protected:
 	static AndList* MoveSelectionDown(AndList*& alist, Schema* target);
 	static bool DoesSchemaContainOr(OrList* ors, Schema* target);
 	static bool DoesSchemaContainComparisonOp(ComparisonOp* cmp, Schema* target);
+
+
+	virtual void PrintLeftChild(std::ostream& os, int level = 0) const = 0;
+	virtual void PrintRightChild(std::ostream& os, int level = 0) const = 0;
 };
 
 class LeafQueryNode: private QueryNode {  // read from file
@@ -117,6 +121,10 @@ class LeafQueryNode: private QueryNode {  // read from file
 	void PrintChildren(std::ostream& os, int level) const {}
 
 	void Execute(Pipe** pipes, RelationalOp** relops);
+
+
+	void PrintLeftChild(std::ostream& os, int level) const {}
+	void PrintRightChild(std::ostream& os, int level) const {}
 };
 
 class OnePipeQueryNode: protected QueryNode {
@@ -130,6 +138,14 @@ protected:
 	virtual ~OnePipeQueryNode() { delete child; }
 	void PrintPipe(std::ostream& os, int level) const;
 	void PrintChildren(std::ostream& os, int level) const { child->Print(os, level+1); }
+
+	void PrintLeftChild(std::ostream& os, int level) const{
+		child->Print(os, level+1);
+	}
+
+	void PrintRightChild(std::ostream& os, int level) const{
+		// rightChild->Print(os, level+1);
+	}
 };
 
 class TwoPipeQueryNode: protected QueryNode {  // not including set operations.
@@ -148,6 +164,14 @@ protected:
 	void PrintPipe(std::ostream& os, int level) const;
 	void PrintChildren(std::ostream& os, int level) const{
 		leftChild->Print(os, level+1);
+		rightChild->Print(os, level+1);
+	}
+
+	void PrintLeftChild(std::ostream& os, int level) const{
+		leftChild->Print(os, level+1);
+	}
+
+	void PrintRightChild(std::ostream& os, int level) const{
 		rightChild->Print(os, level+1);
 	}
 };

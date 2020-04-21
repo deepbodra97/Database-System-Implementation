@@ -3,7 +3,7 @@
 #include "Interface.h"
 #include "Statistics.h"
 #include "QueryPlan.h"
-// #include "Ddl.h"
+#include "Ddl.h"
 
 using namespace std;
 
@@ -36,71 +36,53 @@ int PrintTables (){
 }
 
 void Interface::Run() {
-	/*char *statFileName = "Statistics.txt";
-    Statistics s;
+	char *fileName = "Statistics.txt";
+	Statistics s;
+	Ddl d; 
+	QueryPlan plan(&s);
+	cout<<"plan(): Done"<<endl;
 	while(true) {
-	    cout << "DeepDB> ";
-	    if (yyparse() != 0) {
-	    	cout << "Error parsing CNF"<<endl;
-	    	continue;
-	    }
+		s.Read(fileName);
+		cout<<"Statistics.txt has been loaded"<<endl;
+		// s.Print();
 
-	    s.Read(statFileName);
-	    cout<<"Statistics.txt has been loaded"<<endl;
-	    
-	    cout<<"-----Tables in the Query-----"<<endl;
-	    PrintTables();
+		cout << "DeepDB> ";
+		if (yyparse() != 0) {
+			cout << "Can't parse your CNF.\n";
+			continue;
+		}
+		cout<<"CNF is correct"<<endl;
+		PrintTables();
 
-
-
-  	}*/
-  	char *fileName = "Statistics.txt";
-  /*  Statistics s;
-  Ddl d; 
-  QueryPlan plan(&s); */
-  Statistics s;
-  // Ddl d; 
-  QueryPlan plan(&s);
-  cout<<"plan(): Done"<<endl;
-  // while(true) {
-    cout << "DeepDB> ";
-    if (yyparse() != 0) {
-      cout << "Can't parse your CNF.\n";
-      // continue;
-    }
-    cout<<"CNF is correct"<<endl;
-    s.Read(fileName);
-    cout<<"Statistics.txt has been loaded"<<endl;
-    // PrintTables();
-    /*if (newtable) {
-      if (d.createTable()) cout << "Create table " << newtable << std::endl;
-      else cout << "Table " << newtable << " already exists." << std::endl;
-    } else if (oldtable && newfile) {
-      if (d.insertInto()) cout << "Insert into " << oldtable << std::endl;
-      else cout << "Insert failed." << std::endl;
-    } else if (oldtable && !newfile) {
-      if (d.dropTable()) cout << "Drop table " << oldtable << std::endl;
-      else cout << "Table " << oldtable << " does not exist." << std::endl;
-    } else if (deoutput) {
-      plan.setOutput(deoutput);
-    } else if (attsToSelect || finalFunction) {*/
-      plan.SetOutput("output.txt");
-      plan.Plan();
-      plan.Print();
-      // plan.Execute();
-    // }
-    // Clear();
-  // }
+		if (newtable) {
+			if (d.createTable()) cout << "Create table " << newtable << std::endl;
+			else cout << "Table " << newtable << " already exists." << std::endl;
+		} else if (oldtable && newfile) {
+			if (d.insertInto()) cout << "Insert into " << oldtable << std::endl;
+			else cout << "Insert failed." << std::endl;
+		} else if (oldtable && !newfile) {
+			if (d.dropTable()) cout << "Drop table " << oldtable << std::endl;
+			else cout << "Table " << oldtable << " does not exist." << std::endl;
+		} else if (deoutput) {
+			plan.SetOutput(deoutput);
+		} else if (attsToSelect || finalFunction) {
+			plan.SetOutput("output.txt");
+			plan.Plan();
+			plan.Print();
+			// plan.Execute();
+		}
+		Clear();
+	}
 }
 
 void Interface::Clear() {
-  newattrs = NULL;
-  finalFunction = NULL;
-  tables = NULL;
-  boolean = NULL;
-  groupingAtts = NULL;
-  attsToSelect = NULL;
-  newtable = oldtable = newfile = deoutput = NULL;
-  distinctAtts = distinctFunc = 0;
-  !remove ("*.tmp");
+	newattrs = NULL;
+	finalFunction = NULL;
+	tables = NULL;
+	boolean = NULL;
+	groupingAtts = NULL;
+	attsToSelect = NULL;
+	newtable = oldtable = newfile = deoutput = NULL;
+	distinctAtts = distinctFunc = 0;
+	!remove ("*.tmp");
 }

@@ -8,7 +8,7 @@ public:
   bool createTable();
   bool insertInto();
   bool dropTable();
-  void setOutput();
+  void SetOutput();
 
 private:
   bool exists(const char* relName);
