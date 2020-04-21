@@ -1,0 +1,1 @@
+INSERT 'test1.tbl' INTO test1

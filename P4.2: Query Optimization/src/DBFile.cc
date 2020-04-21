@@ -35,18 +35,41 @@ int DBFile::Create (char *name, fType fileType, void *startup) {
 
 
 int DBFile::Open (char *f_path) {
-	char meta_path[20];
-	sprintf(meta_path,"%s.meta",f_path);
+	// char meta_path[20];
+	// sprintf(meta_path,"%s.meta",f_path);
 
-	FILE *meta =  fopen(meta_path, "r");;
-	char f_type[10];
+	// FILE *meta =  fopen(meta_path, "r");;
+	// char f_type[10];
 
-	fscanf(meta,"%s",f_type);
-	if(strcmp(f_type, "heap")==0){
+	// fscanf(meta,"%s",f_type);
+	// if(strcmp(f_type, "heap")==0){
+	// 	HeapFile *heapFile = new HeapFile();
+	// 	this->file = heapFile;
+	// }
+	// else if(strcmp(f_type, "sorted")==0){
+	// 	SortedFile *sortedFile = new SortedFile();
+	// 	this->file= sortedFile;	
+
+	// }
+	// file->Open(f_path);
+
+	string meta_path("./"+string(f_path) + ".meta");
+
+	ifstream meta;
+	meta.open(meta_path);
+	/*if(!meta){
+		cout<<".meta file does not exist"<<endl;
+		exit(EXIT_FAILURE);
+	}*/
+	string f_type;
+	meta >> f_type;
+	cout<<"f_type="<<f_type<<endl;
+	if(f_type.compare("heap") == 0){
+		cout<<"This is Heap File"<<endl;
 		HeapFile *heapFile = new HeapFile();
 		this->file = heapFile;
 	}
-	else if(strcmp(f_type, "sorted")==0){
+	else if(f_type.compare("sorted") == 0){
 		SortedFile *sortedFile = new SortedFile();
 		this->file= sortedFile;	
 

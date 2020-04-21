@@ -34,6 +34,7 @@ bool Ddl::createTable() { // CREATE TABLE
   if (exists(newtable)) return false;
   std::ofstream ofmeta ((std::string(newtable)+".meta").c_str());
   fType t = (sortattrs ? sorted : heap);
+  cout<<"fType="<<t<<endl;
   ofmeta << t << endl;   // 1 Filetype
 
   // 2 Schema
@@ -65,7 +66,7 @@ bool Ddl::createTable() { // CREATE TABLE
   struct SortInfo { OrderMaker* myOrder; int runLength; } info = {&sortOrder, 256};
   DBFile newTable;
   newTable.Create((char*)(std::string(newtable)+".bin").c_str(), t, (void*)&info); // create ".bin" files
-  newTable.Close();
+  // newTable.Close();
 
   delete[] atts;
   ofmeta.close(); ofcat.close();
