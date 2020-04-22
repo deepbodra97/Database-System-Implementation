@@ -99,92 +99,99 @@
 
 %%
 
-SQL: SELECT WhatIWant FROM Tables WHERE AndList
+
+SQL: SELECT WhatIWant FROM Tables WHERE AndList ';'
 {
 	tables = $4;
 	boolean = $6;	
 	groupingAtts = NULL;
+        YYACCEPT;
 }
 
-| SELECT WhatIWant FROM Tables WHERE AndList GROUP BY Atts
+| SELECT WhatIWant FROM Tables WHERE AndList GROUP BY Atts ';'
 {
 	tables = $4;
 	boolean = $6;	
 	groupingAtts = $9;
+        YYACCEPT;
 }
 
-| CREATE TABLE Name '(' NewAtts ')' AS HEAP
-	{	
-		newtable = $3;	
-		newattrs = $5;	
-	}	
-		
-	| CREATE TABLE Name '(' NewAtts ')' AS SORTED ON SortAtts	
-	{	
-		newtable = $3;	
-		newattrs = $5;	
-		sortattrs = $10;	
-	}	
-		
-	| INSERT String INTO Name
-	{	
-		newfile = $2;	
-		oldtable = $4;	
-	}	
-		
-	| DROP TABLE Name	
-	{	
-		oldtable = $3;	
-	}	
-		
-	| SET OUTPUT Name	
-	{	
-		outputName = $3;	
-	}	
-	;	
-		
-	NewAtts: Name Name	
-	{	
-		$$ = (struct AttrList *) malloc (sizeof (struct AttrList));	
-		$$->name = $1;	
-		if(strcmp($2,"INTEGER")==0)	
-			$$->type = 0;	
-		else if(strcmp($2,"DOUBLE")==0)	
-			$$->type = 1;	
-		else if(strcmp($2,"STRING")==0)	
-			$$->type = 2;	
-		//$$->type = $2;	
-		$$->next = NULL;	
-	}	
-		
-	| Name Name ',' NewAtts	
-	{	
-		$$ = (struct AttrList *) malloc (sizeof (struct AttrList));	
-		$$->name = $1;	
-		if(strcmp($2,"INTEGER")==0)	
-			$$->type = 0;	
-		else if(strcmp($2,"DOUBLE")==0)	
-			$$->type = 1;	
-		else if(strcmp($2,"STRING")==0)	
-			$$->type = 2;	
-		//$$->type = $4;	
-		$$->next = $4;	
-	};	
-		
-	SortAtts: Name	
-	{	
-		$$ = (struct NameList *) malloc (sizeof (struct NameList));	
-		$$->name = $1;	
-		$$->next = NULL;	
-	}	
-		
-	| Name ',' SortAtts	
-	{	
-		$$ = (struct NameList *) malloc (sizeof (struct NameList));	
-		$$->name = $1;	
-		$$->next = $3;
+| CREATE TABLE Name '(' NewAtts ')' AS HEAP ';'
+{
+	newtable = $3;
+	newattrs = $5;
+        YYACCEPT;
+}
+
+| CREATE TABLE Name '(' NewAtts ')' AS SORTED ON SortAtts ';'
+{
+	newtable = $3;
+	newattrs = $5;
+	sortattrs = $10;
+        YYACCEPT;
+}
+
+| INSERT String INTO Name ';'
+{
+	newfile = $2;
+	oldtable = $4;
+        YYACCEPT;
+}
+
+| DROP TABLE Name ';'
+{
+	oldtable = $3;
+        YYACCEPT;
+}
+
+| SET OUTPUT Name ';'
+{
+	outputName = $3;
+        YYACCEPT;
 }
 ;
+
+NewAtts: Name Name
+{
+	$$ = (struct AttrList *) malloc (sizeof (struct AttrList));
+	$$->name = $1;
+	if(strcmp($2,"INTEGER")==0)
+		$$->type = 0;
+	else if(strcmp($2,"DOUBLE")==0)
+		$$->type = 1;
+	else if(strcmp($2,"STRING")==0)
+		$$->type = 2;
+	//$$->type = $2;
+	$$->next = NULL;
+}
+
+| Name Name ',' NewAtts
+{
+	$$ = (struct AttrList *) malloc (sizeof (struct AttrList));
+	$$->name = $1;
+	if(strcmp($2,"INTEGER")==0)
+		$$->type = 0;
+	else if(strcmp($2,"DOUBLE")==0)
+		$$->type = 1;
+	else if(strcmp($2,"STRING")==0)
+		$$->type = 2;
+	//$$->type = $4;
+	$$->next = $4;
+};
+
+SortAtts: Name
+{
+	$$ = (struct NameList *) malloc (sizeof (struct NameList));
+	$$->name = $1;
+	$$->next = NULL;
+}
+
+| Name ',' SortAtts
+{
+	$$ = (struct NameList *) malloc (sizeof (struct NameList));
+	$$->name = $1;
+	$$->next = $3;
+};
 
 WhatIWant: Function ',' Atts 
 {
@@ -226,9 +233,7 @@ Function: SUM '(' CompoundExp ')'
 
 Atts: Name
 {
-	std::cout<<"case 19"<<std::endl;
 	$$ = (struct NameList *) malloc (sizeof (struct NameList));
-	std::cout<<"case 19 no malloc error"<<std::endl;
 	$$->name = $1;
 	$$->next = NULL;
 } 
@@ -242,9 +247,7 @@ Atts: Name
 
 Tables: Name AS Name 
 {
-	std::cout<<"case 21"<<std::endl;
 	$$ = (struct TableList *) malloc (sizeof (struct TableList));
-	std::cout<<"case 21 no malloc error"<<std::endl;
 	$$->tableName = $1;
 	$$->aliasAs = $3;
 	$$->next = NULL;
@@ -332,7 +335,6 @@ Op: '-'
 
 AndList: '(' OrList ')' AND AndList
 {
-		std::cout<<"case 32"<<std::endl;
         // here we need to pre-pend the OrList to the AndList
         // first we allocate space for this node
         $$ = (struct AndList *) malloc (sizeof (struct AndList));
@@ -347,10 +349,8 @@ AndList: '(' OrList ')' AND AndList
 
 | '(' OrList ')'
 {
-		std::cout<<"case 33"<<std::endl;
         // just return the OrList!
         $$ = (struct AndList *) malloc (sizeof (struct AndList));
-		std::cout<<"case 33 no malloc error"<<std::endl;
         $$->left = $2;
         $$->rightAnd = NULL;
 }

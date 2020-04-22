@@ -306,7 +306,9 @@ QueryNode::QueryNode(const std::string& op, Schema* out, char* rNames[], int num
 }
 
 QueryNode::~QueryNode() {
-	delete outputSchema;
+	// if(outputSchema != NULL){
+	// 	delete outputSchema;
+	// }
 	for (int i=0; i<numRels; ++i){
 		delete[] relNames[i];
 	}
