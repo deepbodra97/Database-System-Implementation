@@ -87,7 +87,6 @@ void HeapFile::Add (Record &rec) {
 		page.EmptyItOut(); // empty out the newly added page because the content is same as the previous page
 		page.Append(&rec); // add the record to the page
 	}
-	cout<<"Added 1 record"<<endl;
 }
 
 int HeapFile::GetNext (Record &fetchme) {
@@ -120,9 +119,7 @@ int HeapFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
 
 	ComparisonEngine comparisonEngine;
 	while(GetNext(fetchme)){ // while there are records
-		cout<<"Asked for next record macthing CNF"<<endl;
 		if(comparisonEngine.Compare(&fetchme, &literal, &cnf) == 1){ // when the fetched records matches the CNF
-			cout<<"Fetched 1 record"<<endl;
 			return 1;
 		}
 	}

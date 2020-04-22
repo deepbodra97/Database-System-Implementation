@@ -1,4 +1,4 @@
-#include <stdio.h> // remove, move, etc
+#include <stdio.h>
 #include <string>
 #include <fstream>
 
@@ -11,7 +11,7 @@ using std::ifstream;
 using std::string;
 using std::endl;
 
-extern struct FuncOperator *finalFunction; // the aggregate function (NULL if no agg)
+extern struct FuncOperator *finalFunction; // aggregate function (NULL if no agg)
 extern struct TableList *tables; // the list of tables and aliases in the query
 extern struct AndList *boolean; // the predicate in the WHERE clause
 extern struct NameList *groupingAtts; // grouping atts (NULL if no grouping)

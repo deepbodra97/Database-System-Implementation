@@ -43,7 +43,7 @@ void Interface::Run() {
 	cout<<"plan(): Done"<<endl;
 	while(true) {
 		s.Read(fileName);
-		cout<<"Statistics.txt has been loaded"<<endl;
+		// cout<<"Statistics.txt has been loaded"<<endl;
 		// s.Print();
 
 		cout << "DeepDB> ";
@@ -51,7 +51,7 @@ void Interface::Run() {
 			cout << "Can't parse your CNF.\n";
 			continue;
 		}
-		cout<<"CNF is correct"<<endl;
+		// cout<<"CNF is correct"<<endl;
 		PrintTables();
 
 		if (newtable) {
