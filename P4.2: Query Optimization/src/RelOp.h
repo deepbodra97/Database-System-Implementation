@@ -23,8 +23,6 @@ public:
 	OrderMaker *groupAtts;
 	Pipe *inPipeR;
 	FILE *outFile;
-	std::vector<Record*> outputCache;
-	Schema *outputSchema;
 
 	RelationalOpThreadMemberHolder(Schema *mySchema, Pipe *inPipe, DBFile *inFile, Pipe *outPipe, FILE *outFile, CNF *selOp, Record *literal, int numAttsInput, int numAttsOutput, int *keepMe, int runLength, Function *function, OrderMaker *groupAtts, Pipe *inPipeR){
 		this->mySchema = mySchema;
@@ -55,17 +53,6 @@ public:
 	virtual void Use_n_Pages (int n=100);
 	int runLength = 100; //default runlength
 	int GetRunLength (void) {return runLength;}
-
-	// debug
-	Schema* outputSchema;
-	
-	void PrintCache(std::vector<Record*> cache, Schema *mySchema){
-		Record record;
-		for(vector<Record*>::iterator it=cache.begin();it!=cache.end();++it){
-        	(*it)->Print(mySchema);
-    	}
-	};
-	// debug end
 
 protected:
 	pthread_t operatorThread;

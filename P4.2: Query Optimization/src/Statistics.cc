@@ -54,7 +54,6 @@ void Statistics::Read(char *fromWhere){
 	}
 	statMap.clear();
 	ifstream statFile;
-	cout<<"statFile fromWhere="<<fromWhere<<endl;
 	statFile.open(fromWhere);
 	if(!statFile){ // if statFile not found then create new file and write "EOF" to it
 		cout<<"Statistics.txt is empty"<<endl;
@@ -122,9 +121,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 		}
 		return statMap[relNames[0]]->numTuples;
 	}
-
-	cout<<"relNames:"<<relNames[0]<<endl;
-	cout<<"numToJoin:"<<numToJoin<<endl;
 	double cost = 0.0, ANDMultiplier = 1.0, ORMultiplier = 1.0;
 	struct AndList *ptrAND = parseTree;
 	struct OrList *ptrOR;
@@ -140,8 +136,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 	bool isDependencyHandled = false;
 
 	map<string, int> attributeToComparisonTypeMap;
-	cout<<"ptrAND:"<<ptrAND<<endl;
-	// Print();
 	while (ptrAND != NULL) { // traversing the parseTree wrt AND
 
 		ptrOR = ptrAND->left;
@@ -156,9 +150,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 				exit(EXIT_FAILURE);
 				return -1;
 			} else {
-				cout<<"left child of type NAME"<<endl;
 				leftAttribute = ptrComparisonOp->left->value;
-				cout<<"leftAttribute="<<leftAttribute<<endl;
 				if(leftAttribute.compare(previousAttribute) == 0){ // leftAttribute is same as previous attribute
 					isDependentOnPreviousAttribute=true; // i.e. leftAttribute is dependent on previous attribute
 				}
@@ -167,11 +159,9 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 			}
 
 			if (ptrComparisonOp->right->code == NAME) {// if right child is also of type NAME
-				cout<<"right child of type NAME"<<endl;
 				isJoin = true; // then it is a join
 				isJoinPerformed = true; //
 				rightAttribute = ptrComparisonOp->right->value;
-				cout<<"rightAttribute="<<rightAttribute<<endl;
 				rightRelation = GetRelation(rightAttribute); // find the relation which has the leftAttribute
 				if(leftRelation.compare(rightRelation) == 0){return -1;}
 			}
@@ -185,7 +175,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 				}
 				leftJoinRelation = leftRelation;
 				rightJoinRelation = rightRelation;
-				cout<<"join relations:"<<leftJoinRelation<<"<->"<<rightJoinRelation<<endl;
 			} else { // if this is not a join
 				if(isDependentOnPreviousAttribute){ // if leftAttribute depends on previous attribute
 					if(!isDependencyHandled){
@@ -251,7 +240,6 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 					if(relNames[i] == NULL){
 						continue;
 					}
-					cout<<"relNames[i]:"<<relNames[i]<<endl;
 
 					if(statMap.find(relNames[i]) != statMap.end()){ // if relNames[i] is in statMap
 						attributeCount = statMap[relNames[i]]->attributes.count(iter_attributeToComparisonTypeMap->first); // find how many attributes have iter_attributeToComparisonTypeMap->first

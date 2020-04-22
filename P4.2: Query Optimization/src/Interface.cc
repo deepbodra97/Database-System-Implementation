@@ -3,7 +3,7 @@
 #include "Interface.h"
 #include "Statistics.h"
 #include "QueryPlan.h"
-#include "Ddl.h"
+#include "DataDefinitionLanguage.h"
 
 using namespace std;
 
@@ -11,22 +11,22 @@ extern "C" {
 	int yyparse(void);   // defined in y.tab.c
 }
 
-extern struct FuncOperator *finalFunction; // the aggregate function (NULL if no agg)
-extern struct TableList *tables; // the list of tables and aliases in the query
-extern struct AndList *boolean; // the predicate in the WHERE clause
-extern struct NameList *groupingAtts; // grouping atts (NULL if no grouping)
-extern struct NameList *attsToSelect; // the set of attributes in the SELECT (NULL if no such atts)
-extern int distinctAtts; // 1 if there is a DISTINCT in a non-aggregate query 
-extern int distinctFunc;  // 1 if there is a DISTINCT in an aggregate query
+extern struct FuncOperator *finalFunction; // aggregate function
+extern struct TableList *tables; // tables and aliases in query
+extern struct AndList *boolean; // condition in WHERE in the query
+extern struct NameList *groupingAtts; // grouping attributes
+extern struct NameList *attsToSelect; // attributes to select
+extern int distinctAtts; // 1=DISTINCT for aggregation-less query 
+extern int distinctFunc; // 1=DISTINCT for aggregation query
 
 
 extern char* newtable;
 extern char* oldtable;
 extern char* newfile;
-extern char* deoutput;
-extern struct AttrList *newattrs; //Use this to build Attribute* array and record schema
+extern char* outputName;
+extern struct AttrList *newattrs; //to create Attribute array and record schema
 
-
+// Debug only
 int PrintTables (){
 	TableList *t = tables;
 	while(t!=0){
@@ -36,37 +36,40 @@ int PrintTables (){
 }
 
 void Interface::Run() {
-	char *fileName = "Statistics.txt";
+	char *fileName = "Statistics.txt"; // statistics file name
 	Statistics s;
-	Ddl d; 
+	DataDefinitionLanguage d;
 	QueryPlan plan(&s);
-	cout<<"plan(): Done"<<endl;
 	while(true) {
 		s.Read(fileName);
-		// cout<<"Statistics.txt has been loaded"<<endl;
-		// s.Print();
-
 		cout << "DeepDB> ";
 		if (yyparse() != 0) {
 			cout << "Can't parse your CNF.\n";
 			continue;
 		}
-		// cout<<"CNF is correct"<<endl;
-		PrintTables();
 
-		if (newtable) {
-			if (d.createTable()) cout << "Create table " << newtable << std::endl;
-			else cout << "Table " << newtable << " already exists." << std::endl;
-		} else if (oldtable && newfile) {
-			if (d.insertInto()) cout << "Insert into " << oldtable << std::endl;
-			else cout << "Insert failed." << std::endl;
-		} else if (oldtable && !newfile) {
-			if (d.dropTable()) cout << "Drop table " << oldtable << std::endl;
-			else cout << "Table " << oldtable << " does not exist." << std::endl;
-		} else if (deoutput) {
-			plan.SetOutput(deoutput);
+		if (newtable) { // create table query
+			if (d.Create()) {
+				cout << "Table Creation Success: table " << newtable << std::endl;
+			}
+			else{ 
+				cout << "CreateError: Table " << newtable << " already exists" << std::endl;
+			}
+		} else if (oldtable && newfile) { // insert query
+			if (d.Insert()) {
+				cout << "Insertion Success: table:" << oldtable << std::endl;
+			}
+			else{
+				cout << "InsertionError" << std::endl;
+			}
+		} else if (oldtable && !newfile) { // drop table query
+			if (d.Drop()) {
+				cout << "Drop Table Success " << oldtable << std::endl;
+			}
+			else cout << "DropError: Table" << oldtable << " does not exist." << std::endl;
+		} else if (outputName) { // set output query
+			plan.SetOutput(outputName);
 		} else if (attsToSelect || finalFunction) {
-			plan.SetOutput("output.txt");
 			plan.Plan();
 			plan.Print();
 			plan.Execute();
@@ -82,7 +85,7 @@ void Interface::Clear() {
 	boolean = NULL;
 	groupingAtts = NULL;
 	attsToSelect = NULL;
-	newtable = oldtable = newfile = deoutput = NULL;
+	newtable = oldtable = newfile = outputName = NULL;
 	distinctAtts = distinctFunc = 0;
 	!remove ("*.tmp");
 }

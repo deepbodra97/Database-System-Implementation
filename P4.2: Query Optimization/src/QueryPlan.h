@@ -45,10 +45,6 @@ private:
 	void CreateWriteOutQueryNodes();
   	int EstimateJoinPermutationCost(std::vector<QueryNode*> operands, Statistics st, int bestFound); // intentional copy
 
-	/*void recycleList(AndList* alist) {
-		ConcatenateAndList(used, alist);
-	}*/
-	
 	static void ConcatenateAndList(AndList*& left, AndList*& right);
 
 	QueryPlan(const QueryPlan&);
