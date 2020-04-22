@@ -40,12 +40,12 @@ void Interface::Run() {
 	Statistics s;
 	DataDefinitionLanguage d;
 	QueryPlan plan(&s);
-	while(true) {
+	// while(true) {
 		s.Read(fileName);
-		cout << "DeepDB> ";
+		// cout << "DeepDB> ";
 		if (yyparse() != 0) {
 			cout << "Can't parse your CNF.\n";
-			continue;
+			// continue;
 		}
 
 		if (newtable) { // create table query
@@ -75,7 +75,7 @@ void Interface::Run() {
 			plan.Execute();
 		}
 		Clear();
-	}
+	// }
 }
 
 void Interface::Clear() {

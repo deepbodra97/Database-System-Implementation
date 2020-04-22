@@ -511,9 +511,6 @@ void GroupByQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 void JoinQueryNode::Execute(Pipe** pipes, RelationalOp** relops) {
 	leftChild -> Execute(pipes, relops); rightChild -> Execute(pipes, relops);
 	Join* j = new Join();
-
-	j->outputSchema = outputSchema;
-
 	pipes[outputPipeId] = new Pipe(PIPE_SIZE);
 	relops[outputPipeId] = j;
 	j -> Run(*pipes[leftInputPipeId], *pipes[rightInputPipeId], *pipes[outputPipeId], selOp, literal);
