@@ -32,10 +32,14 @@ extern char* tpch_dir;
 
 bool Ddl::createTable() { // CREATE TABLE
   if (exists(newtable)) return false;
-  std::ofstream ofmeta ((std::string(newtable)+".meta").c_str());
+  std::ofstream ofmeta ((std::string(newtable)+".bin.meta").c_str());
   fType t = (sortattrs ? sorted : heap);
   cout<<"fType="<<t<<endl;
-  ofmeta << t << endl;   // 1 Filetype
+  if (t == heap){
+    ofmeta << "heap" << endl;   // 1 Filetype
+  } else if (t == sorted){
+    ofmeta << "sorted" << endl;
+  }
 
   // 2 Schema
   int numAtts = 0;
@@ -66,7 +70,7 @@ bool Ddl::createTable() { // CREATE TABLE
   struct SortInfo { OrderMaker* myOrder; int runLength; } info = {&sortOrder, 256};
   DBFile newTable;
   newTable.Create((char*)(std::string(newtable)+".bin").c_str(), t, (void*)&info); // create ".bin" files
-  // newTable.Close();
+  newTable.Close();
 
   delete[] atts;
   ofmeta.close(); ofcat.close();
@@ -108,7 +112,7 @@ bool Ddl::dropTable() { // DROP TABLE
   // delete bin, meta
   if (exists) {
     remove ((relName+".bin").c_str());
-    remove ((relName+".meta").c_str());
+    remove ((relName+".bin.meta").c_str());
     return true;
   }
   return false;

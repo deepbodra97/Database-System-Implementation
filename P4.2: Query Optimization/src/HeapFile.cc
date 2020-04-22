@@ -55,6 +55,9 @@ void HeapFile::MoveFirst () {
 	readPageRecordNumber = 0;
 	SwitchToReadMode(); // change to read mode
 	currentPageNumber = 0; // read from start
+	if(file.GetLength()-2 < 0){
+		return;
+	}
 	file.GetPage(&page, currentPageNumber); // get the first page
 	page.GetFirst(ptrCurrentRecord); // initialise the current pointer to the first record
 }
@@ -84,6 +87,7 @@ void HeapFile::Add (Record &rec) {
 		page.EmptyItOut(); // empty out the newly added page because the content is same as the previous page
 		page.Append(&rec); // add the record to the page
 	}
+	cout<<"Added 1 record"<<endl;
 }
 
 int HeapFile::GetNext (Record &fetchme) {
@@ -116,7 +120,9 @@ int HeapFile::GetNext (Record &fetchme, CNF &cnf, Record &literal) {
 
 	ComparisonEngine comparisonEngine;
 	while(GetNext(fetchme)){ // while there are records
+		cout<<"Asked for next record macthing CNF"<<endl;
 		if(comparisonEngine.Compare(&fetchme, &literal, &cnf) == 1){ // when the fetched records matches the CNF
+			cout<<"Fetched 1 record"<<endl;
 			return 1;
 		}
 	}
@@ -142,11 +148,15 @@ void HeapFile::SwitchToReadMode(){
 	if(fileMode==READ){ // if file mode is already read
 		return;
 	}
+	if(file.GetLength()-2 < 0){
+		return;
+	}
 	fileMode = READ; // change fileMode to read
 	if(page.GetNumRecs() != 0){ // if the current page has records
 		file.AddPage(&page, currentPageNumber); // add the dirty page to the file
 		page.EmptyItOut();
 	}
+
 	file.GetPage(&page, readPageNumber); // get the page that was being read earlier(before the write started)
 	Record temp;
 	for(int i=0; i<readPageRecordNumber; i++){ // move to the record that was being pointed to earlier (before the write started)

@@ -69,7 +69,7 @@ void Interface::Run() {
 			plan.SetOutput("output.txt");
 			plan.Plan();
 			plan.Print();
-			// plan.Execute();
+			plan.Execute();
 		}
 		Clear();
 	}

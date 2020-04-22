@@ -152,4 +152,14 @@ s_acctbal
 9955
 s_comment
 10000
+relation
+test1
+3
+attributes
+t11
+1
+t12
+3
+t13
+3
 EOF

@@ -13,8 +13,8 @@ extern struct AndList *final;
 
 int main () {
 	// Professor
-	/*
-	// try to parse the CNF
+	
+	/*// try to parse the CNF
 	cout << "Enter in your CNF: ";
   	if (yyparse() != 0) {
 		cout << "Can't parse your CNF.\n";
@@ -54,8 +54,8 @@ int main () {
 
 		if (comp.Compare (&temp, &literal, &myComparison))
         	temp.Print (&mySchema);
-        }
-	*/
+    }*/
+	
 
 
 
@@ -99,7 +99,7 @@ int main () {
 
 
 	// Test: Sequence of reads and writes
-	Schema mySchema ("catalog", "lineitem");
+	/*Schema mySchema ("catalog", "lineitem");
 	FILE *tableFile = fopen ("../../data/tpch-10mb/lineitem.tbl", "r");
 	Record temp1;
 	Record temp2;
@@ -147,7 +147,7 @@ int main () {
 	}
 	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 
-	dbfile.Close();
+	dbfile.Close();*/
 		
 
 
@@ -207,6 +207,23 @@ int main () {
 	}
 	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.pageNumber<<endl;*/
     // return 0;
+
+	// Project 5 insert test(scan)
+	Schema mySchema ("catalog", "test1");
+
+	DBFile dbfile;
+	dbfile.Open((char *)"./test1.bin");
+
+	Record temp1;
+	
+	// read dbfile from start
+	dbfile.MoveFirst();
+	int counter=0;
+	while(dbfile.GetNext(temp1)){
+		temp1.Print(&mySchema);
+		counter++;
+	}
+	cout<<"nRead:"<<counter<<" PageNumber:"<<dbfile.currentPageNumber<<endl;
 }
 
 
