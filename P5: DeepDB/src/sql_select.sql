@@ -1,0 +1,1 @@
+SELECT t.t13 FROM test1 AS t WHERE (t.t13 = 'Florida')
