@@ -6,7 +6,7 @@ using namespace std;
 
 char* catalog_path = "catalog";
 char* dbfile_dir = "";
-char* tpch_dir = "../../data/tpch-1gb";
+char* tpch_dir = "";
 
 
 int main (int argc, char* argv[]) {

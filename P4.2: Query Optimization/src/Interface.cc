@@ -72,7 +72,7 @@ void Interface::Run() {
 		} else if (attsToSelect || finalFunction) {
 			plan.Plan();
 			plan.Print();
-			plan.Execute();
+			// plan.Execute();
 		}
 		Clear();
 	// }

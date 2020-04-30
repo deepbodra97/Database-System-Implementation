@@ -306,9 +306,7 @@ QueryNode::QueryNode(const std::string& op, Schema* out, char* rNames[], int num
 }
 
 QueryNode::~QueryNode() {
-	// if(outputSchema != NULL){
-	// 	delete outputSchema;
-	// }
+	// delete outputSchema;
 	for (int i=0; i<numRels; ++i){
 		delete[] relNames[i];
 	}
@@ -351,7 +349,7 @@ bool QueryNode::DoesSchemaContainComparisonOp(ComparisonOp* comparisonOp, Schema
 
 //*************************************************************************************************
 // LeafQueryNode
-LeafQueryNode::LeafQueryNode(AndList*& boolean, AndList*& pushed, char* relName, char* alias, Statistics* st): QueryNode("Select File", new Schema(catalog_path, relName, alias), relName, st), isDBfileOpen(false) {
+LeafQueryNode::LeafQueryNode(AndList*& boolean, AndList*& pushed, char* relName, char* alias, Statistics* st): QueryNode("SELECT FILE", new Schema(catalog_path, relName, alias), relName, st), isDBfileOpen(false) {
 	pushed = MoveSelectionDown(boolean, outputSchema);
 	estimatedCost = statistics->Estimate(pushed, relNames, numRels);
 	statistics->Apply(pushed, relNames, numRels);
@@ -366,7 +364,6 @@ OnePipeQueryNode::OnePipeQueryNode(const std::string& opName, Schema* out, Query
 // TwoPipeQueryNode
 TwoPipeQueryNode::TwoPipeQueryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st): QueryNode (opName, new Schema(*l->outputSchema, *r->outputSchema), st),
 leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInputPipeId(rightChild->outputPipeId) {
-	outputSchema->Print();
 	for (int i=0; i<l->numRels;){
 		relNames[numRels++] = strdup(l->relNames[i++]);
 	}
@@ -377,7 +374,7 @@ leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInpu
 
 //*************************************************************************************************
 // Project
-ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* node): OnePipeQueryNode("Project", NULL, node, NULL), numInputAttributes(node->outputSchema->GetNumAtts()), numOutputAttributes(0) {
+ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* node): OnePipeQueryNode("PROJECT", NULL, node, NULL), numInputAttributes(node->outputSchema->GetNumAtts()), numOutputAttributes(0) {
 	Schema* cSchema = node->outputSchema;
 	Attribute resultAtts[MAX_ATTS];
 
@@ -399,11 +396,11 @@ ProjectQueryNode::ProjectQueryNode(NameList* atts, QueryNode* node): OnePipeQuer
 
 //*************************************************************************************************
 // Distinct
-DistinctQueryNode::DistinctQueryNode(QueryNode* node): OnePipeQueryNode("Deduplication", new Schema(*node->outputSchema), node, NULL), orderMakerDistinct(node->outputSchema) {}
+DistinctQueryNode::DistinctQueryNode(QueryNode* node): OnePipeQueryNode("DISTINCT", new Schema(*node->outputSchema), node, NULL), orderMakerDistinct(node->outputSchema) {}
 
 //*************************************************************************************************
 // Join
-JoinQueryNode::JoinQueryNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode* r, Statistics* st): TwoPipeQueryNode("Join", l, r, st) {
+JoinQueryNode::JoinQueryNode(AndList*& boolean, AndList*& pushed, QueryNode* l, QueryNode* r, Statistics* st): TwoPipeQueryNode("JOIN", l, r, st) {
 	pushed = MoveSelectionDown(boolean, outputSchema);
 	estimatedCost = statistics->Estimate(pushed, relNames, numRels);
 	statistics->Apply(pushed, relNames, numRels);
@@ -413,7 +410,7 @@ JoinQueryNode::JoinQueryNode(AndList*& boolean, AndList*& pushed, QueryNode* l, 
 
 //*************************************************************************************************
 // Sum
-SumQueryNode::SumQueryNode(FuncOperator* parseTree, QueryNode* node): OnePipeQueryNode("Sum", resultSchema(parseTree, node), node, NULL) {
+SumQueryNode::SumQueryNode(FuncOperator* parseTree, QueryNode* node): OnePipeQueryNode("SUM", resultSchema(parseTree, node), node, NULL) {
 	function.GrowFromParseTree (parseTree, *node->outputSchema);
 }
 
@@ -425,7 +422,7 @@ Schema* SumQueryNode::resultSchema(FuncOperator* parseTree, QueryNode* node) {
 }
 //*************************************************************************************************
 // GroupBy
-GroupByQueryNode::GroupByQueryNode(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node): OnePipeQueryNode("Group by", resultSchema(groupingAttributes, parseTree, node), node, NULL) {
+GroupByQueryNode::GroupByQueryNode(NameList* groupingAttributes, FuncOperator* parseTree, QueryNode* node): OnePipeQueryNode("GROUPBY", resultSchema(groupingAttributes, parseTree, node), node, NULL) {
 	orderMakerGroupBy.growFromParseTree(groupingAttributes, node->outputSchema);
 	function.GrowFromParseTree (parseTree, *node->outputSchema);
 }
@@ -449,7 +446,7 @@ Schema* GroupByQueryNode::resultSchema(NameList* groupingAttributes, FuncOperato
 
 //*************************************************************************************************
 // Writeout
-WriteOutQueryNode::WriteOutQueryNode(FILE*& out, QueryNode* node): OnePipeQueryNode("WriteOut", new Schema(*node->outputSchema), node, NULL), outputFile(out) {}
+WriteOutQueryNode::WriteOutQueryNode(FILE*& out, QueryNode* node): OnePipeQueryNode("WRITEOUT(PROJECT)", new Schema(*node->outputSchema), node, NULL), outputFile(out) {}
 
 
 /**************************************************************************************************

@@ -112,7 +112,7 @@ double Statistics::Estimate(struct AndList *parseTree, char **relNames, int numT
 	
 	if(parseTree == NULL){
 		if(numToJoin>1){
-			cout<<"Error: parseTree=NULL and numToJoin>1";
+			// cout<<"Error: parseTree=NULL and numToJoin>1";
 			return -1;
 		}
 		if(statMap.find(relNames[0]) == statMap.end()){

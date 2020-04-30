@@ -27,6 +27,13 @@ public:
 	void SetOutput(char* out);
 	void Execute();
 
+	// gtest access functions
+	QueryNode* GetRoot(){return root;}
+	std::vector<QueryNode*> GetNodes(){return nodes;}
+	void CreateLeaves(){CreateLeafQueryNodes();};
+	// gtest access functions end
+
+
 private:
 	QueryNode* root;
 	std::vector<QueryNode*> nodes;
@@ -65,6 +72,10 @@ class QueryNode {
 
 public:
 	virtual ~QueryNode();
+
+	Schema* GetOutputSchema(){
+		return outputSchema;
+	}
 
 protected:
 	std::string opName;
@@ -126,10 +137,6 @@ protected:
 	virtual ~OnePipeQueryNode() { delete child; }
 	void PrintPipe(std::ostream& os, int level) const;
 	void PrintChildren(std::ostream& os, int level) const { child->Print(os, level+1); }
-
-	void PrintLeftChild(std::ostream& os, int level) const{
-		child->Print(os, level+1);
-	}
 };
 
 class TwoPipeQueryNode: protected QueryNode {  // not including set operations.

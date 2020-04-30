@@ -82,7 +82,7 @@ void Interface::Run() {
 			plan.Execute();
 		}
 		end_time = clock();
-		cout<<"Total Time for the query: "<<calculateExecutionTime()<<" ms"<<endl;
+		cout<<endl<<endl<<"Total Time for the query: "<<calculateExecutionTime()<<" ms"<<endl<<endl;
 		Clear();
 	}
 }

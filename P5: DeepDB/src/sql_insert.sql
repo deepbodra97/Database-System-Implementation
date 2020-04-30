@@ -1,1 +1,1 @@
-INSERT 'test1.tbl' INTO test1
+INSERT 'person.tbl' INTO person;

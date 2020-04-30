@@ -7,6 +7,9 @@ ifdef linux
 tag = -n
 endif
 
+gtest_q_optimize.out: Interface.o QueryPlan.o DataDefinitionLanguage.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o gtest_q_optimize.o
+	$(CC) -o gtest_q_optimize.out Interface.o QueryPlan.o DataDefinitionLanguage.o Statistics.o Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o RelOp.o Function.o y.tab.o lex.yy.o gtest_q_optimize.o -lfl -lpthread -lgtest
+
 gtest_statistics.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o gtest_statistics.o
 	$(CC) -o gtest_statistics.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFile.o GenericDBFile.o HeapFile.o SortedFile.o Pipe.o Statistics.o y.tab.o lex.yy.o gtest_statistics.o -lfl -lpthread -lgtest
 
@@ -30,6 +33,9 @@ a2test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o BigQ.o DBFi
 
 a1test.out: Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o
 	$(CC) -o a1test.out Record.o Comparison.o ComparisonEngine.o Schema.o File.o DBFile.o Pipe.o y.tab.o lex.yy.o a1-test.o -lfl
+
+gtest_q_optimize.o: gtest_q_optimize.cc
+	$(CC) -g -c gtest_q_optimize.cc
 
 gtest_relop.o: gtest_relop.cc
 	$(CC) -g -c gtest_relop.cc

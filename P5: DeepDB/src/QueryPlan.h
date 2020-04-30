@@ -127,9 +127,6 @@ protected:
 	void PrintPipe(std::ostream& os, int level) const;
 	void PrintChildren(std::ostream& os, int level) const { child->Print(os, level+1); }
 
-	void PrintLeftChild(std::ostream& os, int level) const{
-		child->Print(os, level+1);
-	}
 };
 
 class TwoPipeQueryNode: protected QueryNode {  // not including set operations.

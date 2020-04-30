@@ -118,7 +118,9 @@ void QueryPlan::Plan() {
 }
 
 void QueryPlan::Print(std::ostream& os) const {
+	cout<<"------------------------------------------------------------QUERY PLAN------------------------------------------------------------"<<endl;
 	root->Print(os);
+	// cout<<"----------------------------------------------------------------------------------------------------------------------------------"<<endl;
 }
 
 void QueryPlan::SetOutput(char* out) {
@@ -128,6 +130,12 @@ void QueryPlan::SetOutput(char* out) {
 void QueryPlan::Execute() {
 	outputFile = (outName == "STDOUT" ? stdout : outName == "NONE" ? NULL : fopen(outName.c_str(), "a"));   // closed by query executor
 	if (outputFile) {
+		if(outName == "STDOUT"){
+			cout<<"--------------------------------------------------------------OUTPUT--------------------------------------------------------------"<<endl;
+		} else{
+			cout<<"Output saved in "<<outName<<endl;
+		}
+
 		int numNodes = root->pipeId;
 		Pipe** pipes = new Pipe*[numNodes];
 		RelationalOp** relops = new RelationalOp*[numNodes];
@@ -364,7 +372,6 @@ OnePipeQueryNode::OnePipeQueryNode(const std::string& opName, Schema* out, Query
 // TwoPipeQueryNode
 TwoPipeQueryNode::TwoPipeQueryNode(const std::string& opName, QueryNode* l, QueryNode* r, Statistics* st): QueryNode (opName, new Schema(*l->outputSchema, *r->outputSchema), st),
 leftChild(l), rightChild(r), leftInputPipeId(leftChild->outputPipeId), rightInputPipeId(rightChild->outputPipeId) {
-	outputSchema->Print();
 	for (int i=0; i<l->numRels;){
 		relNames[numRels++] = strdup(l->relNames[i++]);
 	}

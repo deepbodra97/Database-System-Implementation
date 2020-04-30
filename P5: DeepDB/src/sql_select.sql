@@ -1,1 +1,1 @@
-SELECT t.t13 FROM test1 AS t WHERE (t.t13 = 'Florida')
+SELECT p.id, p.phone, p.comment FROM person AS p WHERE (p.id > 25) AND (p.id < 50);
