@@ -2,6 +2,7 @@
 
 
 ![DeepDB](https://drive.google.com/uc?export=view&id=1oK3rZqOpOBucAB2IsjFmd2z0cVr_KXMP)
+
 DeepDB is a relational database that is implemented in C++. Feel free to scroll down to the features section.
 
 It is a project for the course COP6726: Database System Implementation at the University of Florida
