@@ -42,8 +42,8 @@ It is a project for the course COP6726: Database System Implementation at the Un
     - Project 4.2: Query Plan
         1. Given a SELECT query, permute all the possible query plans and find the one which has the minimum cost
 - Project 5: Complete DB
-        1. Given a SELECT query, run the query using the minimum cost query plan, on the database
-        2. Support for CREATE, INSERT, SELECT and DROP on user defined tables
+    1. Given a SELECT query, run the query using the minimum cost query plan, on the database
+    2. Support for CREATE, INSERT, SELECT and DROP on user defined tables
 
 # Want to try it out?
 
