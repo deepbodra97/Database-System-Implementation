@@ -56,9 +56,13 @@ Each project subdirectory has a Report with a brief explanation of the implement
 
 # Want to contribute?
 - Drop a star if it helped you in your project
+- Send a pull request if you want to add B+ tree functionality to this project
 
 # Todos
  - Bonus (B+ tree for indexing)
  - Front end
+ 
+ # Clonebait
+ - Grade: A
 
 **Free Project, Hell Yeah!**
