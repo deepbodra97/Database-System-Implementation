@@ -1,14 +1,14 @@
 # DeepDB
 
 
-![DeepDB](https://drive.google.com/uc?export=view&id=1oK3rZqOpOBucAB2IsjFmd2z0cVr_KXMP)
+![DeepDB](https://github.com/deepbodra97/Database-System-Implementation/blob/master/P5:%20DeepDB/DeepDB.png)
 
 DeepDB is a relational database that is implemented in C++. Feel free to scroll down to the features section.
 
 It is a project for the course COP6726: Database System Implementation at the University of Florida
 
 # Demo
-[![Demo](https://drive.google.com/uc?export=view&id=18DTROUYBPlCaDLLz8X9jVhVTMIc3Za4V)](https://www.youtube.com/watch?v=x9PuqaW_HBE)
+[![Demo](https://github.com/deepbodra97/Database-System-Implementation/blob/master/P5:%20DeepDB/Database%20System%20Implementation%20(Demo).mp4%20-%20VLC%20media%20player%2024-04-2020%2000_08_41.png)](https://www.youtube.com/watch?v=x9PuqaW_HBE)
 
 # Features
 
